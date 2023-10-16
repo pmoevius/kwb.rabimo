@@ -4,6 +4,7 @@ Version: 0.0.0.9000
 Authors@R: c(
     person("Hauke", "Sonnenberg", , "hauke.sonnenberg@kompetenz-wasser.de", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9134-2871")),
+    person("Francesco", "Del Punta", , "francesco.del-punta@kompetenz-wasser.de", role = c("aut")),
     person("Kompetenzzentrum Wasser Berlin gGmbH (KWB)", role = "cph")
   )
 Description: The code in this package has been transferred from the C++
