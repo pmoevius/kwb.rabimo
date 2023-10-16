@@ -4,37 +4,59 @@
 #'
 #' @param usage value of column NUTZUNG in input data frame
 #' @param type value of column TYP in input data frame
+#' @param include_inputs logical indicating whether or not to include the
+#'   input values in the output
 #' @return list with elements \code{usage}, \code{yield}, \code{irrigation}
 #' @export
 #' @examples
 #' getUsageTuple(10, 10)
-getUsageTuple <- function(usage, type)
+#' getUsageTuple(10, 1:3)
+getUsageTuple <- function(usage, type, include_inputs = FALSE)
 {
   #usage = 10L; type = 10L
   #usage = 10L; type = 333L
+
+  # Prepare data for which to lookup value combinations in the lookup table
   data <- data.frame(
     berlin_usage = usage,
     berlin_type = type
   )
 
-  result <- merge(BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION, data)
+  key_columns <- names(data)
+  value_columns <- c("usage", "yield", "irrigation")
 
-  # If there was no match, try to find a default for the given berlin_usage
-  if (nrow(result) != 1L) {
-    data$berlin_type <- -1L
-    result <- merge(BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION, data)
+  # Provide lookup table (replace -1 with NA)
+  lookup <- BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION
+  lookup$berlin_type[lookup$berlin_type == -1L] <- NA
+
+  result <- value_columns %>%
+    lapply(function(value_column) {
+      kwb.utils::multiColumnLookup(
+        data = data,
+        lookup = lookup[, c(key_columns, value_column)],
+        value = value_column
+      )
+    }) %>%
+    stats::setNames(value_columns) %>%
+    do.call(what = data.frame)
+
+  is_missing <- is.na(result[[value_columns[1L]]])
+
+  if (!any(is_missing)) {
+
+    if (include_inputs) {
+      result <- cbind(data, result)
+    }
+
+    return(result)
   }
 
-  if (nrow(result) != 1L) {
-    kwb.utils::stopFormatted(
-      paste(
-        "Could not find a (usage, yield, irrigation) tuple for",
-        "NUTZUNG = %d, TYP = %d"
-      ),
-      usage,
-      type
-    )
-  }
-
-  as.list(kwb.utils::removeColumns(result, c("berlin_usage", "berlin_type")))
+  kwb.utils::stopFormatted(
+    "Could not find a (usage, yield, irrigation) tuple for %s",
+    paste(collapse = ", ", sprintf(
+      "(NUTZUNG = %d, TYP = %d)",
+      usage[is_missing],
+      type[is_missing]
+    ))
+  )
 }
