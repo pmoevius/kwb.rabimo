@@ -18,3 +18,12 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
 Suggests: 
     covr
+Imports: 
+    dplyr,
+    methods,
+    kwb.abimo,
+    kwb.utils,
+    magrittr
+Remotes: 
+    github::kwb-r/kwb.abimo,
+    github::kwb-r/kwb.utils
