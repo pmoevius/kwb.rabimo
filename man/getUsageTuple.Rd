@@ -4,12 +4,15 @@
 \alias{getUsageTuple}
 \title{Get Usage Tuple (Usage, Yield, Irrigation) from NUTZUNG and TYP}
 \usage{
-getUsageTuple(usage, type)
+getUsageTuple(usage, type, include_inputs = FALSE)
 }
 \arguments{
 \item{usage}{value of column NUTZUNG in input data frame}
 
 \item{type}{value of column TYP in input data frame}
+
+\item{include_inputs}{logical indicating whether or not to include the
+input values in the output}
 }
 \value{
 list with elements \code{usage}, \code{yield}, \code{irrigation}
@@ -19,4 +22,5 @@ Get Usage Tuple (Usage, Yield, Irrigation) from NUTZUNG and TYP
 }
 \examples{
 getUsageTuple(10, 10)
+getUsageTuple(10, 1:3)
 }
