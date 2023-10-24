@@ -4,12 +4,25 @@
 \alias{getPotentialEvaporation}
 \title{Provide Data on Potential Evaporation}
 \usage{
-getPotentialEvaporation(input, config)
+getPotentialEvaporation(
+  input,
+  config,
+  default_etp = 660L,
+  default_etps = 530L,
+  default_etp_waterbody = 775L
+)
 }
 \arguments{
 \item{input}{data frame with columns \code{usage}, \code{district}}
 
 \item{config}{list with entry \code{potentialEvaporation}}
+
+\item{default_etp}{default value for etp}
+
+\item{default_etps}{default value for etps}
+
+\item{default_etp_waterbody}{default value for etp for usage = 110
+(waterbody)}
 }
 \description{
 Provide Data on Potential Evaporation
