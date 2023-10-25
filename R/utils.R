@@ -46,6 +46,33 @@ helpers_index <- function(x, values)
   which.min(abs(x - values)) - 1L
 }
 
+# index_string_to_integers -----------------------------------------------------
+#' Convert String of Integer Ranges to Vector of Integer
+#'
+#' Convert e.g. "1,4-6,10-11,20" to c(1L, 4L, 5L, 6L, 10L, 11L, 20L)
+#'
+#' @param x vector of character of length one representing a string
+#'   of integer ranges, e.g. \code{"1,4-6,10-11,20"}
+#' @param splits characters at which to 1. split \code{x} into range strings, 2.
+#'  split the range strings into begin and end values of the ranges. Default:
+#'  \code{c(",", "-")}
+#' @return vector of integer
+#' @export
+#' @examples
+#' index_string_to_integers("1,4-6,10-11,20")
+#'
+index_string_to_integers <- function(x, splits = c(",", "-"))
+{
+  do.call(c, lapply(strsplit(x, splits[1L])[[1L]], function(range_string) {
+    from_to <- strsplit(range_string, splits[2L])[[1L]]
+    seq.int(
+      as.integer(from_to[1L]),
+      as.integer(from_to[1L + (length(from_to) > 1L)]),
+      by = 1L
+    )
+  }))
+}
+
 # list_to_data_frame_with_keys -------------------------------------------------
 
 #' Convert List of Similar Flat Sublists to a Data Frame
