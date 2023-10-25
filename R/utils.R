@@ -36,6 +36,10 @@ call_with_data <- function(FUN, data, ..., simplify = TRUE)
   )
 }
 
+# cat_if -----------------------------------------------------------------------
+#' @importFrom kwb.utils catIf
+cat_if <- kwb.utils::catIf
+
 # helpers_index ----------------------------------------------------------------
 helpers_index <- function(x, values)
 {
@@ -78,12 +82,24 @@ list_to_data_frame_with_keys <- function(
 
   stopifnot(is.list(x), all(grepl(key_pattern, elements)))
 
-  result <- kwb.utils::safeRowBindAll(lapply(x, as.data.frame))
+  result <- safe_row_bind_all(lapply(x, as.data.frame))
 
   result[[key_name]] <- convert(gsub(key_pattern, "\\1", elements))
 
-  kwb.utils::moveColumnsToFront(result, key_name)
+  move_columns_to_front(result, key_name)
 }
+
+# move_columns_to_front --------------------------------------------------------
+#' @importFrom kwb.utils moveColumnsToFront
+move_columns_to_front <- kwb.utils::moveColumnsToFront
+
+# multi_column_lookup ----------------------------------------------------------
+#' @importFrom kwb.utils multiColumnLookup
+multi_column_lookup <- kwb.utils::multiColumnLookup
+
+# print_if ---------------------------------------------------------------------
+#' @importFrom kwb.utils printIf
+print_if <- kwb.utils::printIf
 
 # range_to_seq -----------------------------------------------------------------
 
@@ -98,6 +114,18 @@ range_to_seq <- function(x, by = 1)
   do.call(seq, c(as.list(range(x)), list(by = by)))
 }
 
+# remove_columns ---------------------------------------------------------------
+#' @importFrom kwb.utils removeColumns
+remove_columns <- kwb.utils::removeColumns
+
+# rename_columns ---------------------------------------------------------------
+#' @importFrom kwb.utils renameColumns
+rename_columns <- kwb.utils::renameColumns
+
+# safe_row_bind_all ------------------------------------------------------------
+#' @importFrom kwb.utils safeRowBindAll
+safe_row_bind_all <- kwb.utils::safeRowBindAll
+
 # select_columns ---------------------------------------------------------------
 #' @importFrom kwb.utils selectColumns
 select_columns <- kwb.utils::selectColumns
@@ -105,3 +133,7 @@ select_columns <- kwb.utils::selectColumns
 # select_elements --------------------------------------------------------------
 #' @importFrom kwb.utils selectElements
 select_elements <- kwb.utils::selectElements
+
+# stop_formatted ---------------------------------------------------------------
+#' @importFrom kwb.utils stopFormatted
+stop_formatted <- kwb.utils::stopFormatted

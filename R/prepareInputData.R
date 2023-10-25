@@ -42,7 +42,7 @@ prepareInputData <- function(input_data)
   )
 
   # Rename columns
-  input <- kwb.utils::renameColumns(input_data, renamings)
+  input <- rename_columns(input_data, renamings)
 
   # Calculate addtional columns (e.g. percentage to fraction)
   input$totalArea <- input$mainArea + input$roadArea

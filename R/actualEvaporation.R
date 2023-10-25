@@ -31,7 +31,7 @@ actualEvaporation <- function(
     meanPotentialCapillaryRiseRate = soilProperties$meanPotentialCapillaryRiseRate
   )
 
-  kwb.utils::catIf(log, "calculated n-value: ", effectivity, "\n\n")
+  cat_if(log, "calculated n-value: ", effectivity, "\n\n")
 
   result <- realEvapoTranspiration(
     precipitation$perYearCorrectedFloat +

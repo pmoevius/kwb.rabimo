@@ -31,7 +31,7 @@ getUsageTuple <- function(usage, type, include_inputs = FALSE)
 
   result <- value_columns %>%
     lapply(function(value_column) {
-      kwb.utils::multiColumnLookup(
+      multi_column_lookup(
         data = data,
         lookup = lookup[, c(key_columns, value_column)],
         value = value_column
@@ -51,7 +51,7 @@ getUsageTuple <- function(usage, type, include_inputs = FALSE)
     return(result)
   }
 
-  kwb.utils::stopFormatted(
+  stop_formatted(
     "Could not find a (usage, yield, irrigation) tuple for %s",
     paste(collapse = ", ", sprintf(
       "(NUTZUNG = %d, TYP = %d)",

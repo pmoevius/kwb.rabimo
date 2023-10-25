@@ -35,5 +35,5 @@ BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION <- local({
       y = read_csv("tuples", c("integer", "character", "numeric", "numeric")),
       by = "tuple_id"
     ) %>%
-    kwb.utils::removeColumns(c("group", "tuple_id"))
+    remove_columns(c("group", "tuple_id"))
 })

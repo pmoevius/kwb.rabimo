@@ -37,7 +37,7 @@ yRatio <- function(efficiency, xRatio)
 {
   df <- calculate_bagrov_table(n_values = efficiency)
 
-  # kwb.utils::printIf(TRUE, nrow(df), caption = "chatty's nrow(df)")
+  # print_if(TRUE, nrow(df), caption = "chatty's nrow(df)")
 
   abs_diffs <- abs(df$P_over_E_p - xRatio)
 
@@ -57,7 +57,7 @@ yRatio_2 <- function(efficiency, xRatio)
     delta_Ea = 1
   )
 
-  # kwb.utils::printIf(TRUE, nrow(df))
+  # print_if(TRUE, nrow(df))
 
   abs_diffs <- abs(df$P_over_Ep - xRatio)
 
