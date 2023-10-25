@@ -40,6 +40,12 @@ call_with_data <- function(FUN, data, ..., simplify = TRUE)
 #' @importFrom kwb.utils catIf
 cat_if <- kwb.utils::catIf
 
+# filter_elements --------------------------------------------------------------
+filter_elements <- function(x, pattern)
+{
+  x[grepl(pattern, names(x))]
+}
+
 # helpers_index ----------------------------------------------------------------
 helpers_index <- function(x, values)
 {
