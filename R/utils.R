@@ -151,9 +151,17 @@ range_to_seq <- function(x, by = 1)
 #' @importFrom kwb.utils removeColumns
 remove_columns <- kwb.utils::removeColumns
 
+# remove_elements --------------------------------------------------------------
+#' @importFrom kwb.utils removeElements
+remove_elements <- kwb.utils::removeElements
+
 # rename_columns ---------------------------------------------------------------
 #' @importFrom kwb.utils renameColumns
 rename_columns <- kwb.utils::renameColumns
+
+# reset_row_names --------------------------------------------------------------
+#' @importFrom kwb.utils resetRowNames
+reset_row_names <- kwb.utils::resetRowNames
 
 # safe_row_bind_all ------------------------------------------------------------
 #' @importFrom kwb.utils safeRowBindAll
