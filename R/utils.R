@@ -31,7 +31,7 @@ call_with_data <- function(FUN, data, ..., simplify = TRUE)
         MoreArgs = more_args,
         SIMPLIFY = simplify
       ),
-      kwb.utils::selectColumns(data, given_columns)
+      select_columns(data, given_columns)
     )
   )
 }
@@ -42,7 +42,7 @@ helpers_index <- function(x, values)
   which.min(abs(x - values)) - 1L
 }
 
-# list_to_data_frame_with_integer_keys -----------------------------------------
+# list_to_data_frame_with_keys -------------------------------------------------
 
 #' Convert List of Similar Flat Sublists to a Data Frame
 #'
@@ -52,29 +52,37 @@ helpers_index <- function(x, values)
 #'   the integer values that are constructed from the element names in \code{x}
 #' @param key_pattern regular expression matching all element names in \code{x}.
 #'   The expression must contain one pair of parentheses enclosing the part that
-#'   can be converted to integer, e.g. \code{"element_([0-9]+)"}
+#'   is to be used as key, e.g. \code{"element_([0-9]+)"}
+#' @param convert function to be applied to the (character) key. Set e.g.
+#'   \code{convert = as.integer} to generate integer keys. Default:
+#'   \code{\link{identity}}
 #' @return data frame with keys in a column named according to \code{key_name}
 #'   and value columns according to the list elements in the sublists of
 #'   \code{x}
 #' @export
 #' @examples
-#' list_to_data_frame_with_integer_keys(
+#' list_to_data_frame_with_keys(
 #'   x = list(
 #'     element_1 = list(a = 100, b = 10),
 #'     element_2 = list(a = 200, b = 20)
 #'   ),
 #'   key_name = "element",
-#'   key_pattern = "element_([0-9]+)"
+#'   key_pattern = "element_([0-9]+)",
+#'   convert = as.integer
 #' )
-list_to_data_frame_with_integer_keys <- function(x, key_name, key_pattern)
+list_to_data_frame_with_keys <- function(
+    x, key_name, key_pattern, convert = identity
+)
 {
-  stopifnot(is.list(x), all(grepl(key_pattern, names(x))))
+  elements <- names(x)
 
-  result <- kwb.utils::rbindAll(lapply(x, as.data.frame), key_name)
+  stopifnot(is.list(x), all(grepl(key_pattern, elements)))
 
-  result[[key_name]] <- as.integer(gsub(key_pattern, "\\1", result[[key_name]]))
+  result <- kwb.utils::safeRowBindAll(lapply(x, as.data.frame))
 
-  result
+  result[[key_name]] <- convert(gsub(key_pattern, "\\1", elements))
+
+  kwb.utils::moveColumnsToFront(result, key_name)
 }
 
 # range_to_seq -----------------------------------------------------------------
@@ -89,3 +97,11 @@ range_to_seq <- function(x, by = 1)
 {
   do.call(seq, c(as.list(range(x)), list(by = by)))
 }
+
+# select_columns ---------------------------------------------------------------
+#' @importFrom kwb.utils selectColumns
+select_columns <- kwb.utils::selectColumns
+
+# select_elements --------------------------------------------------------------
+#' @importFrom kwb.utils selectElements
+select_elements <- kwb.utils::selectElements

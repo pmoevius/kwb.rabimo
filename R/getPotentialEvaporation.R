@@ -26,9 +26,6 @@ getPotentialEvaporation <- function(
   #input <- kwb.abimo::abimo_input_2019[1:10, ]
   #config <- getDefaultConfiguration(1)
 
-  select_elements <- kwb.utils::selectElements
-  select_columns <- kwb.utils::selectColumns
-
   # If more than one row is given, call this function for each row
   if (nrow(input) > 1L) {
 
