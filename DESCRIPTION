@@ -20,10 +20,11 @@ Suggests:
     covr
 Imports: 
     dplyr,
-    methods,
     kwb.abimo,
     kwb.utils,
-    magrittr
+    magrittr,
+    methods,
+    xml2
 Remotes: 
     github::kwb-r/kwb.abimo,
     github::kwb-r/kwb.utils

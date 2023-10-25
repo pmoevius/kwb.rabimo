@@ -1,0 +1,50 @@
+# getPotentialEvaporation2 -----------------------------------------------------
+
+#' Provide Data on Potential Evaporation
+#'
+#' @param isWaterbody (vector of) logical indicating whether a block area is
+#'   of type (from the type/yield/irrigation tuple) "waterbody"
+#' @param district (vector of) integer indicating the district number of the
+#'   plot area (from the original input column "BEZIRK")
+#' @param abimo_config list structure as returned by
+#'   \code{kwb.abimo:::read_config}
+#' @export
+#' @examples
+#' \dontrun{
+#' abimo_config <- kwb.abimo:::read_config()
+#' getPotentialEvaporation(
+#'   is_waterbody = TRUE,
+#'   district = 1,
+#'   abimo_config = abimo_config
+#' )
+#' }
+#'
+getPotentialEvaporation2 <- function(isWaterbody, district, abimo_config)
+{
+  #`%>%` <- magrittr::`%>%`
+  #kwb.utils::assignPackageObjects("kwb.rabimo")
+  #abimo_config <- kwb.abimo:::read_config()
+
+  #data <- data.frame(isWaterbody = FALSE, district = 10L)
+  #data <- data.frame(isWaterbody = c(FALSE, TRUE, FALSE), district = 22:24)
+
+  # Prepare input data for multi_column_lookup
+  data <- data.frame(
+    isWaterbody = isWaterbody,
+    district = district
+  )
+
+  # Create lookup table from abimo configuration object
+  lookup <- abimo_config %>%
+    abimo_config_to_config() %>%
+    select_elements("potentialEvaporation")
+
+  result <- c(perYearInteger = "etp", inSummerInteger = "etps") %>%
+    lapply(function(column) {
+      multi_column_lookup(data, select_columns(lookup, c(names(data), column)))
+    })
+
+  result[["perYearFloat"]] <- as.double(result[["perYearInteger"]])
+
+  result
+}
