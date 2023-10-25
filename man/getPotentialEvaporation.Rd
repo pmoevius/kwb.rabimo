@@ -4,32 +4,29 @@
 \alias{getPotentialEvaporation}
 \title{Provide Data on Potential Evaporation}
 \usage{
-getPotentialEvaporation(
-  input,
-  config,
-  default_etp = 660L,
-  default_etps = 530L,
-  default_etp_waterbody = 775L
-)
+getPotentialEvaporation(isWaterbody, district, config)
 }
 \arguments{
-\item{input}{data frame with columns \code{usage}, \code{district}}
+\item{isWaterbody}{(vector of) logical indicating whether a block area is
+of type (from the type/yield/irrigation tuple) "waterbody"}
 
-\item{config}{list with entry \code{potentialEvaporation}}
+\item{district}{(vector of) integer indicating the district number of the
+plot area (from the original input column "BEZIRK")}
 
-\item{default_etp}{default value for etp}
-
-\item{default_etps}{default value for etps}
-
-\item{default_etp_waterbody}{default value for etp for usage = 110
-(waterbody)}
+\item{config}{list structure as returned by
+\code{\link{abimo_config_to_config}}}
 }
 \description{
 Provide Data on Potential Evaporation
 }
 \examples{
-getPotentialEvaporation(data.frame(usage = 10, district = 1), config = list(
- potentialEvaporation = list(district_1 = list(etp = 100, etps = 200))
-))
+\dontrun{
+config <- abimo_config_to_config(kwb.abimo:::read_config())
+getPotentialEvaporation(
+  is_waterbody = TRUE,
+  district = 1,
+  config = config
+)
+}
 
 }

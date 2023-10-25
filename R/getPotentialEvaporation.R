@@ -1,62 +1,53 @@
-# getPotentialEvaporation ------------------------------------------------------
+# getPotentialEvaporation -----------------------------------------------------
 
 #' Provide Data on Potential Evaporation
 #'
-#' @param input data frame with columns \code{usage}, \code{district}
-#' @param config list with entry \code{potentialEvaporation}
-#' @param default_etp default value for etp
-#' @param default_etps default value for etps
-#' @param default_etp_waterbody default value for etp for usage = 110
-#'   (waterbody)
+#' @param isWaterbody (vector of) logical indicating whether a block area is
+#'   of type (from the type/yield/irrigation tuple) "waterbody"
+#' @param district (vector of) integer indicating the district number of the
+#'   plot area (from the original input column "BEZIRK")
+#' @param config list structure as returned by
+#'   \code{\link{abimo_config_to_config}}
 #' @export
 #' @examples
-#' getPotentialEvaporation(data.frame(usage = 10, district = 1), config = list(
-#'  potentialEvaporation = list(district_1 = list(etp = 100, etps = 200))
-#' ))
+#' \dontrun{
+#' config <- abimo_config_to_config(kwb.abimo:::read_config())
+#' getPotentialEvaporation(
+#'   is_waterbody = TRUE,
+#'   district = 1,
+#'   config = config
+#' )
+#' }
 #'
-getPotentialEvaporation <- function(
-    input,
-    config,
-    default_etp = 660L,
-    default_etps = 530L,
-    default_etp_waterbody = 775L
-)
+getPotentialEvaporation <- function(isWaterbody, district, config)
 {
+  #`%>%` <- magrittr::`%>%`
   #kwb.utils::assignPackageObjects("kwb.rabimo")
-  #input <- kwb.abimo::abimo_input_2019[1:10, ]
-  #config <- getDefaultConfiguration(1)
+  #abimo_config <- kwb.abimo:::read_config()
 
-  # If more than one row is given, call this function for each row
-  if (nrow(input) > 1L) {
+  #data <- data.frame(isWaterbody = FALSE, district = 10L)
+  #data <- data.frame(isWaterbody = c(FALSE, TRUE, FALSE), district = 22:24)
 
-    results <- lapply(seq_len(nrow(input)), function(i) {
-      as.data.frame(getPotentialEvaporation(input[i, ], config))
+  # Prepare input data for multi_column_lookup
+  data <- data.frame(
+    isWaterbody = isWaterbody,
+    district = district
+  )
+
+  # Create lookup table from abimo configuration object
+  lookup <- select_elements(config, "potentialEvaporation")
+
+  result <- c(perYearInteger = "etp", inSummerInteger = "etps") %>%
+    lapply(function(column) {
+      multi_column_lookup(data, select_columns(lookup, c(names(data), column)))
     })
 
-    return(do.call(rbind, results))
+  result[["perYearFloat"]] <- as.double(result[["perYearInteger"]])
+
+
+  if (all(lengths(result) == 1L)) {
+    return(result)
   }
 
-  # waterbody?
-  result <- if (select_elements(input, "usage") == 110) {
-
-    list(
-      perYearInteger = default_etp_waterbody,
-      inSummerInteger = -1 # check that
-    )
-
-  } else {
-
-    element <- paste0("district_", select_columns(input, "district"))
-    x <- select_elements(config, "potentialEvaporation")[[element]]
-    given <- !is.null(x)
-
-    list(
-      perYearInteger = if (given) select_elements(x, "etp") else default_etp,
-      inSummerInteger = if (given) select_elements(x, "etps") else default_etps
-    )
-  }
-
-  result[["perYearFloat"]] = as.double(result[["perYearInteger"]])
-
-  result
+  as.data.frame(result)
 }
