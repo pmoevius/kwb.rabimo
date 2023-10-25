@@ -4,15 +4,15 @@
 \alias{index_string_to_integers}
 \title{Convert String of Integer Ranges to Vector of Integer}
 \usage{
-index_string_to_integers(index_string, splits = c(",", "-"))
+index_string_to_integers(x, splits = c(",", "-"))
 }
 \arguments{
+\item{x}{vector of character of length one representing a string
+of integer ranges, e.g. \code{"1,4-6,10-11,20"}}
+
 \item{splits}{characters at which to 1. split \code{x} into range strings, 2.
 split the range strings into begin and end values of the ranges. Default:
 \code{c(",", "-")}}
-
-\item{x}{vector of character of length one representing a string
-of integer ranges, e.g. \code{"1,4-6,10-11,20"}}
 }
 \value{
 vector of integer
