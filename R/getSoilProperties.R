@@ -112,7 +112,9 @@ getMeanPotentialCapillaryRiseRate <- function(
     ]
   )
 
-  as.integer(estimateDaysOfGrowth(usage, yieldPower) * kr)
+  days_of_growth <- estimateDaysOfGrowth(usage, yieldPower)
+
+  as.integer(round(days_of_growth * kr))
 }
 
 # MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX ----------------------------
