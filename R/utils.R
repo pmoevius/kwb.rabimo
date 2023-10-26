@@ -47,9 +47,11 @@ filter_elements <- function(x, pattern)
 }
 
 # helpers_index ----------------------------------------------------------------
-helpers_index <- function(x, values)
+helpers_index <- function(x, values, epsilon = 0.0001)
 {
-  which.min(abs(x - values)) - 1L
+  indices <- which(x <= values + epsilon)
+
+  ifelse(length(indices), min(indices), length(values)) - 1L
 }
 
 # index_string_to_integers -----------------------------------------------------

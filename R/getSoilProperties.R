@@ -112,7 +112,9 @@ getMeanPotentialCapillaryRiseRate <- function(
     ]
   )
 
-  as.integer(estimateDaysOfGrowth(usage, yieldPower) * kr)
+  days_of_growth <- estimateDaysOfGrowth(usage, yieldPower)
+
+  as.integer(round(days_of_growth * kr))
 }
 
 # MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX ----------------------------
@@ -152,24 +154,20 @@ MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX <- local({
 })
 
 # estimateDaysOfGrowth ---------------------------------------------------------
-estimateDaysOfGrowth <- function(usage, yield)
+estimateDaysOfGrowth <- function(usage, yield, default = 50)
 {
+  # Special case for agricultural use
   if (usage == "agricultural_L") {
     return(ifelse(yield <= 50, 60, 75))
   }
 
-  if (usage == "vegetationless_D") {
-    return(50)
-  }
+  # Constant estimates for other uses
+  days_of_growth <- list(
+    vegetationless_D = 50,
+    horticultural_K = 100,
+    forested_W = 90
+  )
 
-  if (usage == "horticultural_K") {
-    return(100)
-  }
-
-  if (usage == "forested_W") {
-    return(90)
-  }
-
-  # default value for any other case
-  50
+  # Lookup constant estimate. Return default if use is not in list
+  kwb.utils::defaultIfNULL(days_of_growth[[usage]], default)
 }
