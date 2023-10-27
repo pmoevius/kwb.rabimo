@@ -1,44 +1,30 @@
-# call_with_data ---------------------------------------------------------------
-
-#' Call a Function with Argument Combinations from a Data Frame
-#'
-#' @param FUN function to be called
-#' @param data data frame with one column per argument of \code{FUN}
-#' @param \dots further arguments passed to \code{\link{mapply}} via
-#'   \code{MoreArgs}
-#' @param simplify passed to \code{\link{mapply}}
-#' @return vector of length \code{nrow(data)} with the result values returned by
-#'   \code{FUN}
-#' @importFrom methods formalArgs
-#' @export
-#' @examples
-#' combis <- expand.grid(x = 1:2, y = c(10, 20, 30))
-#' combis
-#'
-#' call_with_data(`+`, combis)
-call_with_data <- function(FUN, data, ..., simplify = TRUE)
-{
-  more_args <- list(...)
-
-  given_columns <- setdiff(methods::formalArgs(FUN), names(more_args))
-
-  #sapply(seq_len(nrow(data)), function(i) do.call(FUN, arg_data[i, ]))
-  do.call(
-    mapply,
-    args = c(
-      list(
-        FUN = FUN,
-        MoreArgs = more_args,
-        SIMPLIFY = simplify
-      ),
-      select_columns(data, given_columns)
-    )
-  )
-}
+# cat_and_run ------------------------------------------------------------------
+#' @importFrom kwb.utils catAndRun
+cat_and_run <- kwb.utils::catAndRun
 
 # cat_if -----------------------------------------------------------------------
 #' @importFrom kwb.utils catIf
 cat_if <- kwb.utils::catIf
+
+# check_for_missing_columns ----------------------------------------------------
+#' @importFrom kwb.utils checkForMissingColumns
+check_for_missing_columns <- kwb.utils::checkForMissingColumns
+
+# default_if_null --------------------------------------------------------------
+#' @importFrom kwb.utils defaultIfNULL
+default_if_null <- kwb.utils::defaultIfNULL
+
+# expand_to_vector -------------------------------------------------------------
+expand_to_vector <- function(x, indices)
+{
+  stopifnot(length(x) == length(indices))
+
+  result <- list()
+
+  result[unlist(indices)] <- rep(x, lengths(indices))
+
+  result
+}
 
 # filter_elements --------------------------------------------------------------
 filter_elements <- function(x, pattern)
@@ -132,6 +118,12 @@ move_columns_to_front <- kwb.utils::moveColumnsToFront
 #' @importFrom kwb.utils multiColumnLookup
 multi_column_lookup <- kwb.utils::multiColumnLookup
 
+# n_dims -----------------------------------------------------------------------
+n_dims <- function(x)
+{
+  length(dim(x))
+}
+
 # print_if ---------------------------------------------------------------------
 #' @importFrom kwb.utils printIf
 print_if <- kwb.utils::printIf
@@ -147,6 +139,17 @@ print_if <- kwb.utils::printIf
 range_to_seq <- function(x, by = 1)
 {
   do.call(seq, c(as.list(range(x)), list(by = by)))
+}
+
+# rbind_first_rows -------------------------------------------------------------
+rbind_first_rows <- function(x)
+{
+  stopifnot(is.list(x), all(sapply(x, n_dims) == 2L))
+
+  x %>%
+    lapply(utils::head, 1L) %>%
+    do.call(what = rbind) %>%
+    reset_row_names()
 }
 
 # remove_columns ---------------------------------------------------------------
@@ -176,6 +179,20 @@ select_columns <- kwb.utils::selectColumns
 # select_elements --------------------------------------------------------------
 #' @importFrom kwb.utils selectElements
 select_elements <- kwb.utils::selectElements
+
+# seq_along_rows ---------------------------------------------------------------
+seq_along_rows <- function(data)
+{
+  seq_len(nrow(data))
+}
+
+# split_into_identical_rows ----------------------------------------------------
+split_into_identical_rows <- function(data)
+{
+  data %>%
+    cbind(row. = seq_along_rows(data)) %>%
+    split(f = data, drop = TRUE)
+}
 
 # stop_formatted ---------------------------------------------------------------
 #' @importFrom kwb.utils stopFormatted
