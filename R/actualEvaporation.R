@@ -112,7 +112,8 @@ getEffectivityParameter <- function(
     summer_correction_factor <- stats::approx(
       x = summer_corr_df$water_availability,
       y = summer_corr_df$correction_factor,
-      xout = height/potentialEvaporationSummer
+      xout = height/potentialEvaporationSummer,
+      rule = 2L
     )$y
 
     result <- result * summer_correction_factor
