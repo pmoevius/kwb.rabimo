@@ -77,8 +77,11 @@ call_with_data <- function(
     return(results)
   }
 
-  expand_to_vector(
-    x = results,
-    indices = lapply(sets, select_columns, "row.")
+  cat_and_run(
+    "-> Expanding the results to the extent of the input",
+    expand_to_vector(
+      x = results,
+      indices = lapply(sets, select_columns, "row.")
+    )
   )
 }
