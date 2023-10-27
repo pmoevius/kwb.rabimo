@@ -16,11 +16,17 @@ actualEvaporation <- function(
     log = TRUE
 )
 {
+  epot_per_year <- potentialEvaporation$perYearFloat
+
   # for water bodies return the potential evaporation
-  # in this test version not implemented
+  # ??? in this test version not implemented ???
+  # TODO: Check with Francesco
+  if (usageTuple$usage == "waterbody_G") {
+    return(epot_per_year)
+  }
 
   # otherwise calculate the real evapotranspiration
-  stopifnot(potentialEvaporation$perYearFloat > 0)
+  stopifnot(epot_per_year > 0)
 
   # determine effectivity parameter for unsealed surfaces
   effectivity <- getEffectivityParameter(
@@ -37,7 +43,7 @@ actualEvaporation <- function(
     precipitation$perYearCorrectedFloat +
       soilProperties$meanPotentialCapillaryRiseRate +
       usageTuple$irrigation,
-    potentialEvaporation$perYearFloat,
+    epot_per_year,
     effectivity
   )
 
@@ -45,7 +51,7 @@ actualEvaporation <- function(
 
   if(tas < 0){
     factor <- exp(soilProperties$depthToWaterTable / tas)
-    result <- result + (potentialEvaporation$perYearFloat - result) * factor;
+    result <- result + (epot_per_year - result) * factor;
   }
 
   return(result)
