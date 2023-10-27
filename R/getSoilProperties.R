@@ -169,5 +169,5 @@ estimateDaysOfGrowth <- function(usage, yield, default = 50)
   )
 
   # Lookup constant estimate. Return default if use is not in list
-  kwb.utils::defaultIfNULL(days_of_growth[[usage]], default)
+  default_if_null(days_of_growth[[usage]], default)
 }
