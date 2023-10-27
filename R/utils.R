@@ -67,6 +67,10 @@ index_string_to_integers <- function(x, splits = c(",", "-"))
   }))
 }
 
+# in_range ---------------------------------------------------------------------
+#' @importFrom kwb.utils inRange
+in_range <- kwb.utils::inRange
+
 # list_to_data_frame_with_keys -------------------------------------------------
 
 #' Convert List of Similar Flat Sublists to a Data Frame

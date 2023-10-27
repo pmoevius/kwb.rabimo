@@ -90,8 +90,11 @@ getEffectivityParameter <- function(
   is_not_summer <- !(precipitationSummer > 0.0) && potentialEvaporationSummer == 0
 
   # g02 value
-  stopifnot(usableFieldCapacity > 0 & usableFieldCapacity < length(tableLookup_G02))
-  g02 <- tableLookup_G02[as.integer(round(usableFieldCapacity))]
+  index <- as.integer(usableFieldCapacity + 0.5) + 1L
+
+  stopifnot(in_range(index, 1L, length(tableLookup_G02)))
+
+  g02 <- tableLookup_G02[index]
 
   if (is_forest){
     result <- bag0_forest(g02)
