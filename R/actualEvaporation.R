@@ -96,16 +96,17 @@ getEffectivityParameter <- function(
 
   g02 <- tableLookup_G02[index]
 
-  if (is_forest){
-    result <- bag0_forest(g02)
+  result <- if (is_forest){
+    bag0_forest(g02)
   } else {
-    result <- bag0_default(
+    bag0_default(
       g02,
       usageTuple$yield,
       usageTuple$irrigation,
       is_not_summer
     )
   }
+
   if (is_summer){
     # calculation of the water availability
     height <- precipitationSummer +
