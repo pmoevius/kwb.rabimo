@@ -41,15 +41,18 @@ prepareInputData <- function(input_data)
     FELD_150 = "fieldCapacity_150"
   ))
 
-  # Short helper functions for safe column access
-  quotient <- function(a, b) select_columns(input, a) / select_columns(input, b)
-  fraction_of_total <- function(x) quotient(x, "totalArea")
+  # Helper function to select column and divide by 100
   by_100 <- function(x) select_columns(input, x) / 100
 
   # Calculate addtional columns (e.g. percentage to fraction)
-  input[["totalArea"]] <- quotient("mainArea", "roadArea")
-  input[["areaFractionMain"]] <- fraction_of_total("mainArea")
-  input[["areaFractionRoad"]] <- fraction_of_total("roadArea")
+  main_area <- select_columns(input, "mainArea")
+  road_area <- select_columns(input, "roadArea")
+  total_area <-  main_area + road_area
+
+  input[["totalArea"]] <- total_area
+  input[["areaFractionMain"]] <- select_columns(input, "mainArea") / total_area
+  input[["areaFractionRoad"]] <- select_columns(input, "roadArea") / total_area
+
   input[["mainFractionBuiltSealed"]] <- by_100("mainPercentageBuiltSealed")
   input[["mainFractionUnbuiltSealed"]] <- by_100("mainPercentageUnbuiltSealed")
   input[["roadFractionSealed"]] <- by_100("roadPercentageSealed")
