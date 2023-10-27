@@ -25,9 +25,6 @@ call_with_data <- function(
     threshold = 0.5
 )
 {
-  #dot_args <- list(...)
-  dot_args <- list(SIMPLIFY = FALSE)
-
   # What arguments does FUN have?
   all_args <- methods::formalArgs(FUN)
 
@@ -71,7 +68,7 @@ call_with_data <- function(
         } else {
           arg_data
         },
-        dot_args
+        list(...)
       )
     )
   )
