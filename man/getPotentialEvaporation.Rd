@@ -4,7 +4,7 @@
 \alias{getPotentialEvaporation}
 \title{Provide Data on Potential Evaporation}
 \usage{
-getPotentialEvaporation(isWaterbody, district, config)
+getPotentialEvaporation(isWaterbody, district, lookup)
 }
 \arguments{
 \item{isWaterbody}{(vector of) logical indicating whether a block area is

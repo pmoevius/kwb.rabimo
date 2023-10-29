@@ -21,15 +21,8 @@
 #' )
 #' }
 #'
-getPotentialEvaporation <- function(isWaterbody, district, config)
+getPotentialEvaporation <- function(isWaterbody, district, lookup)
 {
-  #`%>%` <- magrittr::`%>%`
-  #kwb.utils::assignPackageObjects("kwb.rabimo")
-  #abimo_config <- kwb.abimo:::read_config()
-
-  #data <- data.frame(isWaterbody = FALSE, district = 10L)
-  #data <- data.frame(isWaterbody = c(FALSE, TRUE, FALSE), district = 22:24)
-
   # Prepare input data for multi_column_lookup
   data <- data.frame(
     isWaterbody = isWaterbody,
