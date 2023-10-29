@@ -6,8 +6,10 @@
 #'   of type (from the type/yield/irrigation tuple) "waterbody"
 #' @param district (vector of) integer indicating the district number of the
 #'   plot area (from the original input column "BEZIRK")
-#' @param config list structure as returned by
-#'   \code{\link{abimo_config_to_config}}
+#' @param lookup data frame with key columns \code{isWaterbody}, \code{district}
+#'   and value columns \code{etp}, \code{etps}. A data frame of the required
+#'   structure is returned by \code{\link{abimo_config_to_config}} in list
+#'   element \code{"potentialEvaporation"}
 #' @export
 #' @examples
 #' \dontrun{
@@ -15,7 +17,7 @@
 #' getPotentialEvaporation(
 #'   is_waterbody = TRUE,
 #'   district = 1,
-#'   config = config
+#'   lookup = config$potentialEvaporation
 #' )
 #' }
 #'
@@ -34,16 +36,19 @@ getPotentialEvaporation <- function(isWaterbody, district, config)
     district = district
   )
 
-  # Create lookup table from abimo configuration object
-  lookup <- select_elements(config, "potentialEvaporation")
-
-  result <- c(perYearInteger = "etp", inSummerInteger = "etps") %>%
+  # One after another, lookup values for "etp", "etps" in the lookup table
+  result <- c(
+    perYearInteger = "etp",
+    inSummerInteger = "etps"
+  ) %>%
     lapply(function(column) {
-      multi_column_lookup(data, select_columns(lookup, c(names(data), column)))
+      multi_column_lookup(
+        data = data,
+        lookup = select_columns(lookup, c(names(data), column))
+      )
     })
 
   result[["perYearFloat"]] <- as.double(result[["perYearInteger"]])
-
 
   if (all(lengths(result) == 1L)) {
     return(result)
