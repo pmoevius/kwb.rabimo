@@ -4,19 +4,31 @@
 \alias{call_with_data}
 \title{Call a Function with Argument Combinations from a Data Frame}
 \usage{
-call_with_data(FUN, data, ..., threshold = 0.5)
+call_with_data(
+  FUN,
+  data,
+  ...,
+  threshold = 0.5,
+  SIMPLIFY = TRUE,
+  USE.NAMES = TRUE
+)
 }
 \arguments{
 \item{FUN}{function to be called}
 
 \item{data}{data frame with one column per argument of \code{FUN}}
 
-\item{\dots}{further arguments passed to \code{\link{mapply}}}
+\item{\dots}{further (constant) arguments to \code{FUN} that are passed to
+\code{\link{mapply}} via \code{MoreArgs}}
 
 \item{threshold}{if the ratio of unique value combinations in the relevant
 columns in data to all value combinations in these columns is below this
 threshold value then FUN will be called only with the unique value
 combinations. This should increase performance.}
+
+\item{SIMPLIFY}{passed to\code{\link{mapply}}, default: \code{TRUE}}
+
+\item{USE.NAMES}{passed to\code{\link{mapply}}, default: \code{TRUE}}
 }
 \value{
 vector of length \code{nrow(data)} with the result values returned by

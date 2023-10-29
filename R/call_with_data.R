@@ -4,11 +4,14 @@
 #'
 #' @param FUN function to be called
 #' @param data data frame with one column per argument of \code{FUN}
-#' @param \dots further arguments passed to \code{\link{mapply}}
+#' @param \dots further (constant) arguments to \code{FUN} that are passed to
+#'   \code{\link{mapply}} via \code{MoreArgs}
 #' @param threshold if the ratio of unique value combinations in the relevant
 #'   columns in data to all value combinations in these columns is below this
 #'   threshold value then FUN will be called only with the unique value
 #'   combinations. This should increase performance.
+#' @param SIMPLIFY passed to\code{\link{mapply}}, default: \code{TRUE}
+#' @param USE.NAMES passed to\code{\link{mapply}}, default: \code{TRUE}
 #' @return vector of length \code{nrow(data)} with the result values returned by
 #'   \code{FUN}
 #' @importFrom methods formalArgs
@@ -22,7 +25,9 @@ call_with_data <- function(
     FUN,
     data,
     ...,
-    threshold = 0.5
+    threshold = 0.5,
+    SIMPLIFY = TRUE,
+    USE.NAMES = TRUE
 )
 {
   # What arguments does FUN have?
@@ -59,18 +64,25 @@ call_with_data <- function(
         fun_name, n_all
       )
     },
-    expr = do.call(
-      what = mapply,
-      args = c(
-        list(FUN = FUN),
-        if (run_unique) {
-          remove_columns(rbind_first_rows(sets), "row.")
-        } else {
-          arg_data
-        },
-        list(...)
+    expr = {
+
+      more_args <- list(...)
+
+      mapply_args_fix <- list(
+        FUN = FUN,
+        MoreArgs = if (length(more_args)) more_args,
+        SIMPLIFY = SIMPLIFY,
+        USE.NAMES = USE.NAMES
       )
-    )
+
+      mapply_args_var <- if (run_unique) {
+        remove_columns(rbind_first_rows(sets), "row.")
+      } else {
+        arg_data
+      }
+
+      do.call(mapply, c(mapply_args_fix, mapply_args_var))
+    }
   )
 
   if (!run_unique) {
