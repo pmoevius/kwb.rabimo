@@ -1,7 +1,9 @@
 #' Convert Abimo Configuration to List
 #'
 #' @param abimo_config as returned by \code{kwb.abimo:::read_config}
-#' @return list of data frames
+#' @return list with elements \code{"potentialEvaporation"},
+#'   \code{"runoffFactors"}, \code{"bagrovValues"}, \code{"diverse"},
+#'   \code{"resultDigits"}
 #' @export
 abimo_config_to_config <- function(abimo_config)
 {
@@ -37,7 +39,39 @@ abimo_config_to_config <- function(abimo_config)
   result[["potentialEvaporation"]] <- rbind(evap_water, evap_else) %>%
     move_columns_to_front("isWaterbody")
 
-  remove_elements(result, c(element_water, element_else))
+  convert_element <- function(config, from, to, convert = identity) {
+    x <- select_elements(config, from)
+    config[[to]] <- stats::setNames(
+      convert(select_columns(x, "value")),
+      select_columns(x, "key")
+    )
+    remove_elements(config, from)
+  }
+
+  result %>%
+    remove_elements(c(
+      element_water,
+      element_else
+    )) %>%
+    convert_element(
+      from = "Infiltrationsfaktoren",
+      to = "runoffFactors",
+      convert = function(x) 1 - as.numeric(x)
+    ) %>%
+    convert_element(
+      from = "Bagrovwerte",
+      to = "bagrovValues",
+      convert = as.numeric
+    ) %>%
+    convert_element(
+      from = "Diverse",
+      to = "diverse"
+    ) %>%
+    convert_element(
+      from = "ErgebnisNachkommaStellen",
+      to = "resultDigits",
+      convert = as.numeric
+    )
 }
 
 # get_all_item_data ------------------------------------------------------------
