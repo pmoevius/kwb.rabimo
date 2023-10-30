@@ -61,7 +61,7 @@ actualEvaporation <- function(
   result
 }
 
-# determineBagrovParameter -----------------------------------------------------
+# determineBagrovParameter (C++ name: getEffectivityParameter) -----------------
 determineBagrovParameter <- function(
     usageTuple,
     usableFieldCapacity,
