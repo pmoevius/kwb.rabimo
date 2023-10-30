@@ -78,11 +78,7 @@ determineBagrovParameter <- function(
   is_not_summer <- !(precipitationSummer > 0.0) && potentialEvaporationSummer == 0
 
   # g02 value
-  index <- as.integer(usableFieldCapacity + 0.5) + 1L
-
-  stopifnot(in_range(index, 1L, length(LOOKUP_G002)))
-
-  g02 <- LOOKUP_G002[index]
+  g02 <- lookup_g02(usableFieldCapacity)
 
   result <- if (is_forest) {
     bag0_forest(g02)
@@ -115,8 +111,18 @@ determineBagrovParameter <- function(
   result
 }
 
+# lookup_g02 -------------------------------------------------------------------
+lookup_g02 <- function(usableFieldCapacity)
+{
+  index <- as.integer(usableFieldCapacity + 0.5) + 1L
+
+  stopifnot(all(index %in% seq_along(LOOKUP_G02)))
+
+  LOOKUP_G02[index]
+}
+
 # lookup table for the G02 value
-LOOKUP_G002 <- c(
+LOOKUP_G02 <- c(
   0.0,   0.0,  0.0,  0.0,  0.3,  0.8,  1.4,  2.4,  3.7,  5.0,
   6.3,   7.7,  9.3, 11.0, 12.4, 14.7, 17.4, 21.0, 26.0, 32.0,
   39.4, 44.7, 48.0, 50.7, 52.7, 54.0, 55.0, 55.0, 55.0, 55.0,
