@@ -123,15 +123,23 @@ LOOKUP_G002 <- c(
   55.0
 )
 
-# bag0_forest ----------------------------------------------------------------
-bag0_forest <- function(g02){
-  if(g02 <= 10.0){
-    return(3.0)
+# bag0_forest ------------------------------------------------------------------
+bag0_forest <- function(g02)
+{
+  breaks <- c(-Inf, 10.0, 25.0, Inf)
+  values <- c(3.0,  4.0,  8.0)
+
+  index <- if (length(g02) > 1L) {
+    findInterval(g02, breaks, left.open = TRUE)
+  } else if (g02 <= breaks[2L]) {
+    1L
+  } else if (g02 <= breaks[3L]) {
+    2L
+  } else {
+    3L
   }
-  if(g02 <= 25.0){
-    return(4.0)
-  }
-  return(8.0)
+
+  values[index]
 }
 
 # bag0_default -----------------------------------------------------------------
