@@ -7,7 +7,7 @@
 realEvapoTranspiration(
   precipitation,
   potentialEvaporation,
-  efficiency,
+  bagrovParameter,
   xRatio = NULL
 )
 }
@@ -16,7 +16,7 @@ realEvapoTranspiration(
 
 \item{potentialEvaporation}{potential evaporation in mm}
 
-\item{efficiency}{so-called Bagrov value}
+\item{bagrovParameter}{so-called Bagrov value}
 
 \item{xRatio}{optional. Instead of \code{precipitation} and
 \code{potentialEvaporation} the quotient of both may be passed to this
