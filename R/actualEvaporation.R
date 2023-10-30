@@ -225,6 +225,7 @@ EFFECTIVITY_COEFFICIENTS <- c(
 # lookup table for the summer correction factor
 SUMMER_CORRECTION_MATRIX <- matrix(
   ncol = 2L,
+  byrow = TRUE,
   dimnames = list(
     NULL,
     c("water_availability", "correction_factor")
