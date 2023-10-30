@@ -4,7 +4,7 @@
 #'
 #' @param precipitation precipitation in mm
 #' @param potentialEvaporation potential evaporation in mm
-#' @param efficiency so-called Bagrov value
+#' @param bagrovParameter Bagrov parameter (n-value)
 #' @param xRatio optional. Instead of \code{precipitation} and
 #'   \code{potentialEvaporation} the quotient of both may be passed to this
 #'   function. The idea is to calculate the quotient out of the function and to
@@ -14,7 +14,7 @@
 realEvapoTranspiration <- function(
     precipitation, # P or P + KR + BER
     potentialEvaporation, # ETP
-    efficiency, # n
+    bagrovParameter, # n
     xRatio = NULL
 )
 {
@@ -25,8 +25,8 @@ realEvapoTranspiration <- function(
 
   # Estimate the y-ratio (of real evaporation to potential evaporation)...
 
-  #y_ratio_1 <- yRatio(efficiency, xRatio)
-  y_ratio_2 <- yRatio_2(efficiency, xRatio)
+  #y_ratio_1 <- yRatio(bagrovParameter, xRatio)
+  y_ratio_2 <- yRatio_2(bagrovParameter, xRatio)
 
   #stopifnot(identical(y_ratio_1, y_ratio_2))
 
@@ -35,9 +35,9 @@ realEvapoTranspiration <- function(
 }
 
 # yRatio -----------------------------------------------------------------------
-yRatio <- function(efficiency, xRatio)
+yRatio <- function(bagrovParameter, xRatio)
 {
-  df <- calculate_bagrov_table(n_values = efficiency)
+  df <- calculate_bagrov_table(n_values = bagrovParameter)
 
   # print_if(TRUE, nrow(df), caption = "chatty's nrow(df)")
 
@@ -51,10 +51,10 @@ yRatio <- function(efficiency, xRatio)
 }
 
 # yRatio_2 ---------------------------------------------------------------------
-yRatio_2 <- function(efficiency, xRatio)
+yRatio_2 <- function(bagrovParameter, xRatio)
 {
   df <- kwb.abimo::calculate_bagrov_curve(
-    effectivity = efficiency,
+    effectivity = bagrovParameter,
     P_over_Ep_max = xRatio + 0.1,
     delta_Ea = 1
   )
@@ -74,7 +74,7 @@ yRatio_2 <- function(efficiency, xRatio)
 calculate_bagrov_table <- function(n_values) {
 
   # test
-  # n_values <- efficiency
+  # n_values <- bagrovParameter
 
   # Initialize values
   E_a <- 0

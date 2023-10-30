@@ -28,8 +28,8 @@ actualEvaporation <- function(
   # otherwise calculate the real evapotranspiration
   stopifnot(epot_per_year > 0)
 
-  # determine effectivity parameter for unsealed surfaces
-  effectivity <- getEffectivityParameter(
+  # determine the BAGROV parameter for unsealed surfaces
+  bagrovParameter <- determineBagrovParameter(
     usageTuple,
     usableFieldCapacity = soilProperties$usableFieldCapacity,
     precipitationSummer = precipitation$inSummerInteger,
@@ -37,7 +37,7 @@ actualEvaporation <- function(
     meanPotentialCapillaryRiseRate = soilProperties$meanPotentialCapillaryRiseRate
   )
 
-  cat_if(log, "calculated n-value: ", effectivity, "\n\n")
+  cat_if(log, "calculated n-value: ", bagrovParameter, "\n\n")
 
   xRatio <- (
     precipitation$perYearCorrectedFloat +
@@ -48,7 +48,7 @@ actualEvaporation <- function(
   result <- realEvapoTranspiration(
     potentialEvaporation = epot_per_year,
     xRatio = xRatio,
-    efficiency = effectivity
+    bagrovParameter = bagrovParameter
   )
 
   tas <- soilProperties$potentialCapillaryRise_TAS
@@ -61,8 +61,8 @@ actualEvaporation <- function(
   result
 }
 
-# getEffectivityParameter ------------------------------------------------------
-getEffectivityParameter <- function(
+# determineBagrovParameter -----------------------------------------------------
+determineBagrovParameter <- function(
     usageTuple,
     usableFieldCapacity,
     precipitationSummer,
@@ -70,28 +70,6 @@ getEffectivityParameter <- function(
     meanPotentialCapillaryRiseRate
 )
 {
-
-  # lookup table for the G02 value
-  tableLookup_G02 <- c(
-    0.0,   0.0,  0.0,  0.0,  0.3,  0.8,  1.4,  2.4,  3.7,  5.0,
-    6.3,   7.7,  9.3, 11.0, 12.4, 14.7, 17.4, 21.0, 26.0, 32.0,
-    39.4, 44.7, 48.0, 50.7, 52.7, 54.0, 55.0, 55.0, 55.0, 55.0,
-    55.0
-  )
-
-  # lookup table for the summer correction factor
-  summer_corr_df <- data.frame(
-    water_availability = c(
-      0.45, 0.50, 0.55, 0.60, 0.65,
-      0.70, 0.75, 0.80, 0.85, 0.90,
-      0.95, 1.00, 1.05, 1.10
-    ),
-    correction_factor = c(
-      0.65, 0.75, 0.82, 0.90, 1.00,
-      1.06, 1.15, 1.22, 1.30, 1.38,
-      1.47, 1.55, 1.63, 1.70
-    )
-  )
   # variable is_forest
   is_forest <- usageTuple$usage == "forested_W"
 
@@ -102,11 +80,11 @@ getEffectivityParameter <- function(
   # g02 value
   index <- as.integer(usableFieldCapacity + 0.5) + 1L
 
-  stopifnot(in_range(index, 1L, length(tableLookup_G02)))
+  stopifnot(in_range(index, 1L, length(LOOKUP_G002)))
 
-  g02 <- tableLookup_G02[index]
+  g02 <- LOOKUP_G002[index]
 
-  result <- if (is_forest){
+  result <- if (is_forest) {
     bag0_forest(g02)
   } else {
     bag0_default(
@@ -117,15 +95,16 @@ getEffectivityParameter <- function(
     )
   }
 
-  if (is_summer){
+  if (is_summer) {
+
     # calculation of the water availability
     height <- precipitationSummer +
       usageTuple$irrigation +
       meanPotentialCapillaryRiseRate
 
     summer_correction_factor <- stats::approx(
-      x = summer_corr_df$water_availability,
-      y = summer_corr_df$correction_factor,
+      x = SUMMER_CORRECTION_MATRIX[, "water_availability"],
+      y = SUMMER_CORRECTION_MATRIX[, "correction_factor"],
       xout = height/potentialEvaporationSummer,
       rule = 2L
     )$y
@@ -133,8 +112,16 @@ getEffectivityParameter <- function(
     result <- result * summer_correction_factor
   }
 
-  return(result)
+  result
 }
+
+# lookup table for the G02 value
+LOOKUP_G002 <- c(
+  0.0,   0.0,  0.0,  0.0,  0.3,  0.8,  1.4,  2.4,  3.7,  5.0,
+  6.3,   7.7,  9.3, 11.0, 12.4, 14.7, 17.4, 21.0, 26.0, 32.0,
+  39.4, 44.7, 48.0, 50.7, 52.7, 54.0, 55.0, 55.0, 55.0, 55.0,
+  55.0
+)
 
 # bag0_forest ----------------------------------------------------------------
 bag0_forest <- function(g02){
@@ -233,4 +220,29 @@ EFFECTIVITY_COEFFICIENTS <- c(
   0.155  ,  1.5   , 2.64999,  0.0725 , 0.001249 ,
   0.20041,  2.0918, 3.69999,  0.08   , 0.001999 ,
   0.33895,  3.721 , 6.69999, -0.07   , 0.013
+)
+
+# lookup table for the summer correction factor
+SUMMER_CORRECTION_MATRIX <- matrix(
+  ncol = 2L,
+  dimnames = list(
+    NULL,
+    c("water_availability", "correction_factor")
+  ),
+  data = c(
+    0.45, 0.65,
+    0.50, 0.75,
+    0.55, 0.82,
+    0.60, 0.90,
+    0.65, 1.00,
+    0.70, 1.06,
+    0.75, 1.15,
+    0.80, 1.22,
+    0.85, 1.30,
+    0.90, 1.38,
+    0.95, 1.47,
+    1.00, 1.55,
+    1.05, 1.63,
+    1.10, 1.70
+  )
 )
