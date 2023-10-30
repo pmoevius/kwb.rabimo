@@ -4,7 +4,12 @@
 \alias{realEvapoTranspiration}
 \title{Calculate Actual Evapotranspiration with Bagrov}
 \usage{
-realEvapoTranspiration(precipitation, potentialEvaporation, efficiency)
+realEvapoTranspiration(
+  precipitation,
+  potentialEvaporation,
+  efficiency,
+  xRatio = NULL
+)
 }
 \arguments{
 \item{precipitation}{precipitation in mm}
@@ -12,6 +17,11 @@ realEvapoTranspiration(precipitation, potentialEvaporation, efficiency)
 \item{potentialEvaporation}{potential evaporation in mm}
 
 \item{efficiency}{so-called Bagrov value}
+
+\item{xRatio}{optional. Instead of \code{precipitation} and
+\code{potentialEvaporation} the quotient of both may be passed to this
+function. The idea is to calculate the quotient out of the function and to
+reuse the quotient instead of recalculating it.}
 }
 \value{
 estimated actual evapotranspiration in mm

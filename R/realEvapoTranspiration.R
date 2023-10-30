@@ -5,21 +5,23 @@
 #' @param precipitation precipitation in mm
 #' @param potentialEvaporation potential evaporation in mm
 #' @param efficiency so-called Bagrov value
+#' @param xRatio optional. Instead of \code{precipitation} and
+#'   \code{potentialEvaporation} the quotient of both may be passed to this
+#'   function. The idea is to calculate the quotient out of the function and to
+#'   reuse the quotient instead of recalculating it.
 #' @return estimated actual evapotranspiration in mm
 #' @export
 realEvapoTranspiration <- function(
     precipitation, # P or P + KR + BER
     potentialEvaporation, # ETP
-    efficiency # n
+    efficiency, # n
+    xRatio = NULL
 )
 {
-  # test
-  #precipitation <- precipitation$perYearCorrectedFloat
-  #potentialEvaporation <- potentialEvaporation$perYearFloat
-  #efficiency <- config$bagrovValues["Dachflaechen"]
-
   # Calculate the x-factor of the Bagrov relation
-  xRatio <- precipitation / potentialEvaporation
+  if (is.null(xRatio)) {
+    xRatio <- precipitation / potentialEvaporation
+  }
 
   # Estimate the y-ratio (of real evaporation to potential evaporation)...
 
