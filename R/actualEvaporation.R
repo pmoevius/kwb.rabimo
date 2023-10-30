@@ -39,22 +39,26 @@ actualEvaporation <- function(
 
   cat_if(log, "calculated n-value: ", effectivity, "\n\n")
 
-  result <- realEvapoTranspiration(
+  xRatio <- (
     precipitation$perYearCorrectedFloat +
       soilProperties$meanPotentialCapillaryRiseRate +
-      usageTuple$irrigation,
-    epot_per_year,
-    effectivity
+      usageTuple$irrigation
+  ) / epot_per_year
+
+  result <- realEvapoTranspiration(
+    potentialEvaporation = epot_per_year,
+    xRatio = xRatio,
+    efficiency = effectivity
   )
 
   tas <- soilProperties$potentialCapillaryRise_TAS
 
-  if(tas < 0){
+  if (tas < 0) {
     factor <- exp(soilProperties$depthToWaterTable / tas)
     result <- result + (epot_per_year - result) * factor;
   }
 
-  return(result)
+  result
 }
 
 # getEffectivityParameter ------------------------------------------------------
