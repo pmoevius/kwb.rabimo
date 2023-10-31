@@ -9,6 +9,10 @@
 #' @param dbg logical indicating whether or not to show debug messages
 #' @param \dots further arguments passed to \code{\link{realEvapoTranspiration}}
 #'   such as \code{runParallel}, \code{blocksize}
+#' @param digits optional. If given, the BAGROV parameter values are rounded to
+#'   this number of digits. This reduces the number of BAGROV curves that need
+#'   to be calculated and thus improves the performance (by reducing the
+#'   precision of the output)
 #' @export
 actualEvaporationWaterbodyOrPervious <- function(
     usageTuple,
@@ -16,7 +20,8 @@ actualEvaporationWaterbodyOrPervious <- function(
     soilProperties,
     precipitation,
     dbg = TRUE,
-    ...
+    ...,
+    digits = NULL
 )
 {
   epYear <- potentialEvaporation$perYearFloat
@@ -42,7 +47,7 @@ actualEvaporationWaterbodyOrPervious <- function(
   # otherwise calculate the real evapotranspiration
   stopifnot(all(epYear[i] > 0)) # ???
 
-  # determine the BAGROV parameter for unsealed surfaces
+  # determine the BAGROV parameter(s) for unsealed surfaces
   bagrovParameter <- getBagrovParameterUnsealed(
     g02 = lookupG02(soilProperties$usableFieldCapacity[i]),
     usage = usageTuple$usage[i],
@@ -54,7 +59,18 @@ actualEvaporationWaterbodyOrPervious <- function(
       soilProperties$meanPotentialCapillaryRiseRate[i]
   )
 
-  cat_if(dbg, "range of calculated n-value(s): ", range(bagrovParameter), "\n")
+  if (!is.null(digits)) {
+    bagrovParameter <- cat_and_run(
+      sprintf("Rounding BAGROV parameters to %d digits", digits),
+      round(bagrovParameter, digits)
+    )
+  }
+
+  cat_if(dbg, sprintf(
+    "Range of calculated %sn-value(s): %s\n",
+    ifelse(is.null(digits), "", "and rounded "),
+    paste(range(bagrovParameter), collapse = " - ")
+  ))
 
   y[i] <- realEvapoTranspiration(
     potentialEvaporation = epYear[i],

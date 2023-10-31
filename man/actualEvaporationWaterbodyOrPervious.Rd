@@ -10,7 +10,8 @@ actualEvaporationWaterbodyOrPervious(
   soilProperties,
   precipitation,
   dbg = TRUE,
-  ...
+  ...,
+  digits = NULL
 )
 }
 \arguments{
@@ -26,6 +27,11 @@ actualEvaporationWaterbodyOrPervious(
 
 \item{\dots}{further arguments passed to \code{\link{realEvapoTranspiration}}
 such as \code{runParallel}, \code{blocksize}}
+
+\item{digits}{optional. If given, the BAGROV parameter values are rounded to
+this number of digits. This reduces the number of BAGROV curves that need
+to be calculated and thus improves the performance (by reducing the
+precision of the output)}
 }
 \description{
 Calculate Actual Evapotranspiration for Waterbodies or Pervious Areas
