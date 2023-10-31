@@ -1,19 +1,22 @@
-# actualEvaporation ------------------------------------------------------------
+# actualEvaporationWaterbodyOrPervious -----------------------------------------
 
-#' Calculate Actual Evapotranspiration for Impervious Areas
+#' Calculate Actual Evapotranspiration for Waterbodies or Pervious Areas
 #'
 #' @param usageTuple list as returned by \code{\link{getUsageTuple}}
 #' @param potentialEvaporation potential evaporation in mm
 #' @param soilProperties list as returned by \code{\link{getSoilProperties}}
 #' @param precipitation precipitation in mm
-#' @param log logical indicating whether or not to show debug messages
+#' @param dbg logical indicating whether or not to show debug messages
+#' @param \dots further arguments passed to \code{\link{realEvapoTranspiration}}
+#'   such as \code{runParallel}, \code{blocksize}
 #' @export
-actualEvaporation <- function(
+actualEvaporationWaterbodyOrPervious <- function(
     usageTuple,
     potentialEvaporation,
     soilProperties,
     precipitation,
-    log = TRUE
+    dbg = TRUE,
+    ...
 )
 {
   epYear <- potentialEvaporation$perYearFloat
@@ -26,7 +29,12 @@ actualEvaporation <- function(
   # TODO: Check with Francesco
   isWater <- (usageTuple$usage == "waterbody_G")
 
-  y[isWater] <- epYear
+  y[isWater] <- epYear[isWater]
+
+  # if all block areas are waterbodies, return
+  if (all(isWater)) {
+    return(y)
+  }
 
   # indices of entries related to any other usage
   i <- which(!isWater)
@@ -46,7 +54,7 @@ actualEvaporation <- function(
       soilProperties$meanPotentialCapillaryRiseRate[i]
   )
 
-  cat_if(log, "calculated n-value(s): ", bagrovParameter[i], "\n\n")
+  cat_if(dbg, "range of calculated n-value(s): ", range(bagrovParameter), "\n")
 
   y[i] <- realEvapoTranspiration(
     potentialEvaporation = epYear[i],
@@ -55,7 +63,8 @@ actualEvaporation <- function(
         soilProperties$meanPotentialCapillaryRiseRate[i] +
         usageTuple$irrigation[i]
     ) / epYear[i],
-    bagrovParameter = bagrovParameter
+    bagrovParameter = bagrovParameter,
+    ...
   )
 
   rises <- soilProperties$potentialCapillaryRise_TAS
