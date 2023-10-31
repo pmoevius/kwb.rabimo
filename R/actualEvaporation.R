@@ -69,6 +69,24 @@ actualEvaporation <- function(
   y
 }
 
+# lookupG02 --------------------------------------------------------------------
+lookupG02 <- function(usableFieldCapacity)
+{
+  index <- as.integer(usableFieldCapacity + 0.5) + 1L
+
+  stopifnot(all(index %in% seq_along(LOOKUP_G02)))
+
+  LOOKUP_G02[index]
+}
+
+# LOOKUP_G02 -------------------------------------------------------------------
+LOOKUP_G02 <- c(
+  0.0,   0.0,  0.0,  0.0,  0.3,  0.8,  1.4,  2.4,  3.7,  5.0,
+  6.3,   7.7,  9.3, 11.0, 12.4, 14.7, 17.4, 21.0, 26.0, 32.0,
+  39.4, 44.7, 48.0, 50.7, 52.7, 54.0, 55.0, 55.0, 55.0, 55.0,
+  55.0
+)
+
 # getBagrovParameterUnsealed (C++ name: getEffectivityParameter) ---------------
 getBagrovParameterUnsealed <- function(
     g02,
@@ -111,51 +129,6 @@ getBagrovParameterUnsealed <- function(
   )
 }
 
-# isDrySummer ------------------------------------------------------------------
-# TODO: Remove redundancy. Variables are (almost!) one another's opposite!
-isDrySummer <- function(precipitationSummer, potentialEvaporationSummer)
-{
-  precipitationSummer <= 0 & potentialEvaporationSummer <= 0
-}
-
-# isWetSummer ------------------------------------------------------------------
-# TODO: Remove redundancy. Variables are (almost!) one another's opposite!
-isWetSummer <- function(precipitationSummer, potentialEvaporationSummer)
-{
-  precipitationSummer > 0 & potentialEvaporationSummer > 0
-}
-
-# wetSummerCorrectionFactor ----------------------------------------------------
-wetSummerCorrectionFactor <- function(
-    waterAvailability, potentialEvaporationSummer
-)
-{
-  stats::approx(
-    x = SUMMER_CORRECTION_MATRIX[, "water_availability"],
-    y = SUMMER_CORRECTION_MATRIX[, "correction_factor"],
-    xout = waterAvailability / potentialEvaporationSummer,
-    rule = 2L
-  )$y
-}
-
-# lookupG02 --------------------------------------------------------------------
-lookupG02 <- function(usableFieldCapacity)
-{
-  index <- as.integer(usableFieldCapacity + 0.5) + 1L
-
-  stopifnot(all(index %in% seq_along(LOOKUP_G02)))
-
-  LOOKUP_G02[index]
-}
-
-# lookup table for the G02 value
-LOOKUP_G02 <- c(
-  0.0,   0.0,  0.0,  0.0,  0.3,  0.8,  1.4,  2.4,  3.7,  5.0,
-  6.3,   7.7,  9.3, 11.0, 12.4, 14.7, 17.4, 21.0, 26.0, 32.0,
-  39.4, 44.7, 48.0, 50.7, 52.7, 54.0, 55.0, 55.0, 55.0, 55.0,
-  55.0
-)
-
 # lookupBagrovForest -----------------------------------------------------------
 lookupBagrovForest <- function(g02)
 {
@@ -179,12 +152,6 @@ lookupBagrovForest <- function(g02)
   }
 
   values[index]
-}
-
-# irrigationInDrySummerCorrectionFactor ----------------------------------------
-irrigationInDrySummerCorrectionFactor <- function(irrigation)
-{
-  0.9985 + 0.00284 * irrigation - 0.00000379762 * irrigation^2
 }
 
 # lookupBagrovUnsealed ---------------------------------------------------------
@@ -234,7 +201,8 @@ yield_to_k_index <- function(yield)
 
 # BAGROV_COEFFICIENTS ----------------------------------------------------------
 
-# Define lookup table for effectivity (n or Bagrov-Value)
+# Coefficients for linear or squared equations used to calculate the BAGROV
+# parameters
 BAGROV_COEFFICIENTS <- c(
   0.04176, -0.647 , 0.218  ,  0.01472, 0.0002089,
   0.04594, -0.314 , 0.417  ,  0.02463, 0.0001143,
@@ -251,10 +219,43 @@ BAGROV_COEFFICIENTS <- c(
   0.33895,  3.721 , 6.69999, -0.07   , 0.013
 )
 
-# SUMMER_CORRECTION_MATRIX -----------------------------------------------------
+# isDrySummer ------------------------------------------------------------------
+# TODO: Remove redundancy with isWetSummer.
+# Variables are (almost!) one another's opposite!
+isDrySummer <- function(precipitationSummer, potentialEvaporationSummer)
+{
+  precipitationSummer <= 0 & potentialEvaporationSummer <= 0
+}
 
-# lookup table for the summer correction factor
-SUMMER_CORRECTION_MATRIX <- matrix(
+# irrigationInDrySummerCorrectionFactor ----------------------------------------
+irrigationInDrySummerCorrectionFactor <- function(irrigation)
+{
+  0.9985 + 0.00284 * irrigation - 0.00000379762 * irrigation^2
+}
+
+# isWetSummer ------------------------------------------------------------------
+# TODO: Remove redundancy with isDrySummer.
+# Variables are (almost!) one another's opposite!
+isWetSummer <- function(precipitationSummer, potentialEvaporationSummer)
+{
+  precipitationSummer > 0 & potentialEvaporationSummer > 0
+}
+
+# wetSummerCorrectionFactor ----------------------------------------------------
+wetSummerCorrectionFactor <- function(
+    waterAvailability, potentialEvaporationSummer
+)
+{
+  stats::approx(
+    x = WET_SUMMER_CORRECTION_MATRIX[, "water_availability"],
+    y = WET_SUMMER_CORRECTION_MATRIX[, "correction_factor"],
+    xout = waterAvailability / potentialEvaporationSummer,
+    rule = 2L
+  )$y
+}
+
+# WET_SUMMER_CORRECTION_MATRIX -------------------------------------------------
+WET_SUMMER_CORRECTION_MATRIX <- matrix(
   ncol = 2L,
   byrow = TRUE,
   dimnames = list(
