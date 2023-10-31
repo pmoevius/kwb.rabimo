@@ -16,103 +16,130 @@ actualEvaporation <- function(
     log = TRUE
 )
 {
-  epot_per_year <- potentialEvaporation$perYearFloat
+  epYear <- potentialEvaporation$perYearFloat
+
+  # Initialise result vector
+  y <- numeric(length = length(epYear))
 
   # for water bodies return the potential evaporation
   # ??? in this test version not implemented ???
   # TODO: Check with Francesco
-  if (usageTuple$usage == "waterbody_G") {
-    return(epot_per_year)
-  }
+  isWater <- (usageTuple$usage == "waterbody_G")
+
+  y[isWater] <- epYear
+
+  # indices of entries related to any other usage
+  i <- which(!isWater)
 
   # otherwise calculate the real evapotranspiration
-  stopifnot(epot_per_year > 0)
+  stopifnot(all(epYear[i] > 0)) # ???
 
   # determine the BAGROV parameter for unsealed surfaces
-  bagrovParameter <- determineBagrovParameter(
-    usageTuple,
-    usableFieldCapacity = soilProperties$usableFieldCapacity,
-    precipitationSummer = precipitation$inSummerInteger,
-    potentialEvaporationSummer = potentialEvaporation$inSummerInteger,
-    meanPotentialCapillaryRiseRate = soilProperties$meanPotentialCapillaryRiseRate
+  bagrovParameter <- getBagrovParameterUnsealed(
+    g02 = lookupG02(soilProperties$usableFieldCapacity[i]),
+    usage = usageTuple$usage[i],
+    yield = usageTuple$yield[i],
+    irrigation = usageTuple$irrigation[i],
+    precipitationSummer = precipitation$inSummerInteger[i],
+    potentialEvaporationSummer = potentialEvaporation$inSummerInteger[i],
+    meanPotentialCapillaryRiseRate =
+      soilProperties$meanPotentialCapillaryRiseRate[i]
   )
 
-  cat_if(log, "calculated n-value: ", bagrovParameter, "\n\n")
+  cat_if(log, "calculated n-value(s): ", bagrovParameter[i], "\n\n")
 
-  xRatio <- (
-    precipitation$perYearCorrectedFloat +
-      soilProperties$meanPotentialCapillaryRiseRate +
-      usageTuple$irrigation
-  ) / epot_per_year
-
-  result <- realEvapoTranspiration(
-    potentialEvaporation = epot_per_year,
-    xRatio = xRatio,
+  y[i] <- realEvapoTranspiration(
+    potentialEvaporation = epYear[i],
+    xRatio = (
+      precipitation$perYearCorrectedFloat[i] +
+        soilProperties$meanPotentialCapillaryRiseRate[i] +
+        usageTuple$irrigation[i]
+    ) / epYear[i],
     bagrovParameter = bagrovParameter
   )
 
-  tas <- soilProperties$potentialCapillaryRise_TAS
+  rises <- soilProperties$potentialCapillaryRise_TAS
+  depths <- soilProperties$depthToWaterTable
 
-  if (tas < 0) {
-    factor <- exp(soilProperties$depthToWaterTable / tas)
-    result <- result + (epot_per_year - result) * factor;
-  }
+  # indices of entries related to non-water usage and capillary rises < 0
+  i <- which(!isWater & rises < 0)
 
-  result
+  y[i] <- y[i] + (epYear[i] - y[i]) * exp(depths[i] / rises[i])
+
+  y
 }
 
-# determineBagrovParameter (C++ name: getEffectivityParameter) -----------------
-determineBagrovParameter <- function(
-    usageTuple,
-    usableFieldCapacity,
+# getBagrovParameterUnsealed (C++ name: getEffectivityParameter) ---------------
+getBagrovParameterUnsealed <- function(
+    g02,
+    usage,
+    yield,
+    irrigation,
     precipitationSummer,
     potentialEvaporationSummer,
     meanPotentialCapillaryRiseRate
 )
 {
-  # variable is_forest
-  is_forest <- usageTuple$usage == "forested_W"
+  # Initialise result vector
+  y <- numeric(length = length(g02))
 
-  # summer variables (they are not necessary one another's opposite)
-  is_summer <- precipitationSummer > 0.0 && potentialEvaporationSummer > 0
-  is_not_summer <- !(precipitationSummer > 0.0) && potentialEvaporationSummer == 0
+  isForest <- (usage == "forested_W")
+  noForest <- !isForest
 
-  # g02 value
-  g02 <- lookup_g02(usableFieldCapacity)
+  y[isForest] <- lookupBagrovForest(g02[isForest])
 
-  result <- if (is_forest) {
-    bag0_forest(g02)
-  } else {
-    bag0_default(
-      g02,
-      usageTuple$yield,
-      usageTuple$irrigation,
-      is_not_summer
-    )
-  }
+  y[noForest] <- lookupBagrovUnsealed(g02[noForest], yield[noForest]) * ifelse(
+    test = irrigation[noForest] > 0 & isDrySummer(
+      precipitationSummer[noForest],
+      potentialEvaporationSummer[noForest]
+    ),
+    yes = irrigationInDrySummerCorrectionFactor(irrigation[noForest]),
+    no = 1
+  )
 
-  if (is_summer) {
-
-    # calculation of the water availability
-    height <- precipitationSummer +
-      usageTuple$irrigation +
-      meanPotentialCapillaryRiseRate
-
-    summer_correction_factor <- stats::approx(
-      x = SUMMER_CORRECTION_MATRIX[, "water_availability"],
-      y = SUMMER_CORRECTION_MATRIX[, "correction_factor"],
-      xout = height/potentialEvaporationSummer,
-      rule = 2L
-    )$y
-
-    result <- result * summer_correction_factor
-  }
-
-  result
+  # in case of a "wet" summer, correct the BAGROV parameter with a factor
+  y * ifelse(
+    test = isWetSummer(precipitationSummer, potentialEvaporationSummer),
+    yes = wetSummerCorrectionFactor(
+      waterAvailability =
+        precipitationSummer +
+        irrigation +
+        meanPotentialCapillaryRiseRate,
+      potentialEvaporationSummer = potentialEvaporationSummer
+    ),
+    no = 1
+  )
 }
 
-# lookup_g02 -------------------------------------------------------------------
-lookup_g02 <- function(usableFieldCapacity)
+# isDrySummer ------------------------------------------------------------------
+# TODO: Remove redundancy. Variables are (almost!) one another's opposite!
+isDrySummer <- function(precipitationSummer, potentialEvaporationSummer)
+{
+  precipitationSummer <= 0 & potentialEvaporationSummer <= 0
+}
+
+# isWetSummer ------------------------------------------------------------------
+# TODO: Remove redundancy. Variables are (almost!) one another's opposite!
+isWetSummer <- function(precipitationSummer, potentialEvaporationSummer)
+{
+  precipitationSummer > 0 & potentialEvaporationSummer > 0
+}
+
+# wetSummerCorrectionFactor ----------------------------------------------------
+wetSummerCorrectionFactor <- function(
+    waterAvailability, potentialEvaporationSummer
+)
+{
+  stats::approx(
+    x = SUMMER_CORRECTION_MATRIX[, "water_availability"],
+    y = SUMMER_CORRECTION_MATRIX[, "correction_factor"],
+    xout = waterAvailability / potentialEvaporationSummer,
+    rule = 2L
+  )$y
+}
+
+# lookupG02 --------------------------------------------------------------------
+lookupG02 <- function(usableFieldCapacity)
 {
   index <- as.integer(usableFieldCapacity + 0.5) + 1L
 
@@ -129,13 +156,19 @@ LOOKUP_G02 <- c(
   55.0
 )
 
-# bag0_forest ------------------------------------------------------------------
-bag0_forest <- function(g02)
+# lookupBagrovForest -----------------------------------------------------------
+lookupBagrovForest <- function(g02)
 {
+  n <- length(g02)
+
+  if (n == 0L) {
+    return(numeric(0))
+  }
+
   breaks <- c(-Inf, 10.0, 25.0, Inf)
   values <- c(3.0,  4.0,  8.0)
 
-  index <- if (length(g02) > 1L) {
+  index <- if (n > 1L) {
     findInterval(g02, breaks, left.open = TRUE)
   } else if (g02 <= breaks[2L]) {
     1L
@@ -148,59 +181,40 @@ bag0_forest <- function(g02)
   values[index]
 }
 
-# bag0_default -----------------------------------------------------------------
-bag0_default <- function(g02, yield, irrigation, isNotSummer){
-
-  # yield <- usageTuple$yield
-  # irrigation <- usageTuple$irrigation
-
-  result <- tableLookup_parameter(g02, yield)
-
-  if(irrigation > 0 && isNotSummer) {
-    nonSummerCorrectionFactor <- 0.9985 + 0.00284 * irrigation -
-      0.00000379762 * irrigation^2
-    result <- result * nonSummerCorrectionFactor
-  }
-
-  return(result)
+# irrigationInDrySummerCorrectionFactor ----------------------------------------
+irrigationInDrySummerCorrectionFactor <- function(irrigation)
+{
+  0.9985 + 0.00284 * irrigation - 0.00000379762 * irrigation^2
 }
 
-# tableLookup_parameter --------------------------------------------------------
-tableLookup_parameter <- function(g02, yield, do_correction = TRUE)
+# lookupBagrovUnsealed ---------------------------------------------------------
+lookupBagrovUnsealed <- function(g02, yield, do_correction = TRUE)
 {
   # Calculate the k index (integer)
   k <- yield_to_k_index(yield)
 
   # Calculate result based on the k index
-  result <- EFFECTIVITY_COEFFICIENTS[k] +
-    EFFECTIVITY_COEFFICIENTS[k + 1L] * g02 +
-    EFFECTIVITY_COEFFICIENTS[k + 2L] * g02^2
+  y <-
+    BAGROV_COEFFICIENTS[k] +
+    BAGROV_COEFFICIENTS[k + 1L] * g02 +
+    BAGROV_COEFFICIENTS[k + 2L] * g02^2
 
-  # Return the result if no correction is required
+  # Return y if no correction is required
   if (!do_correction) {
-    return(result)
+    return(y)
   }
 
-  # Apply correction if needed
-  if ((result >= 2.0 && yield < 60) || (g02 >= 20.0 && yield >= 60)) {
-    result <- EFFECTIVITY_COEFFICIENTS[k - 2L] * g02 +
-      EFFECTIVITY_COEFFICIENTS[k - 1L]
-  }
+  # Apply correction where needed
+  i <- which(
+    (y >= 2.0 & yield < 60) |
+      (g02 >= 20.0 & yield >= 60)
+  )
 
-  # C++ code
-  #
-  # float result =
-  #   EFFECTIVENESS_PARAMETER_VALUES.at(k - 1) +
-  #   EFFECTIVENESS_PARAMETER_VALUES.at(k) * g02 +
-  #   EFFECTIVENESS_PARAMETER_VALUES.at(k + 1) * g02 * g02;
-  #
-  # if ((result >= 2.0 && yield < 60) || (g02 >= 20.0 && yield >= 60)) {
-  #   result =
-  #     EFFECTIVENESS_PARAMETER_VALUES.at(k - 3) * g02 +
-  #     EFFECTIVENESS_PARAMETER_VALUES.at(k - 2);
-  # }
+  y[i] <-
+    BAGROV_COEFFICIENTS[k[i] - 2L] * g02[i] +
+    BAGROV_COEFFICIENTS[k[i] - 1L]
 
-  result
+  y
 }
 
 # yield_to_k_index -------------------------------------------------------------
@@ -209,18 +223,19 @@ yield_to_k_index <- function(yield)
   k <- as.integer(ifelse(yield < 50, yield / 5, yield / 10 + 5))
 
   # make sure that k is at least 1
-  k <- max(1L, k)
+  k <- pmax(1L, k)
 
   # if k is at least 4, reduce it by one
-  if (k >= 4L){
-    k <- k - 1L
-  }
+  selected <- k >= 4L
+  k[selected] <- k[selected] - 1L
 
-  5 * min(k, 13L) - 2L
+  5L * pmin(k, 13L) - 2L
 }
 
+# BAGROV_COEFFICIENTS ----------------------------------------------------------
+
 # Define lookup table for effectivity (n or Bagrov-Value)
-EFFECTIVITY_COEFFICIENTS <- c(
+BAGROV_COEFFICIENTS <- c(
   0.04176, -0.647 , 0.218  ,  0.01472, 0.0002089,
   0.04594, -0.314 , 0.417  ,  0.02463, 0.0001143,
   0.05177, -0.010 , 0.596  ,  0.02656, 0.0002786,
@@ -235,6 +250,8 @@ EFFECTIVITY_COEFFICIENTS <- c(
   0.20041,  2.0918, 3.69999,  0.08   , 0.001999 ,
   0.33895,  3.721 , 6.69999, -0.07   , 0.013
 )
+
+# SUMMER_CORRECTION_MATRIX -----------------------------------------------------
 
 # lookup table for the summer correction factor
 SUMMER_CORRECTION_MATRIX <- matrix(
