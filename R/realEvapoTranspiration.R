@@ -9,13 +9,19 @@
 #'   \code{potentialEvaporation} the quotient of both may be passed to this
 #'   function. The idea is to calculate the quotient out of the function and to
 #'   reuse the quotient instead of recalculating it.
+#' @param FUN_yRatio function to be called to calculate the yRatio(s) from the
+#'   given xRatio(s). Default: \code{kwb.rabimo:::yRatio_3}
+#' @param \dots further arguments passed to \code{FUN_yRatio}
 #' @return estimated actual evapotranspiration in mm
+#' @importFrom parallel detectCores makeCluster parLapply stopCluster
 #' @export
 realEvapoTranspiration <- function(
     precipitation, # P or P + KR + BER
     potentialEvaporation, # ETP
     bagrovParameter, # n
-    xRatio = NULL
+    xRatio = NULL,
+    FUN_yRatio = yRatio_3,
+    ...
 )
 {
   # Calculate the x-factor of the Bagrov relation
@@ -25,13 +31,8 @@ realEvapoTranspiration <- function(
 
   # Estimate the y-ratio (of real evaporation to potential evaporation)...
 
-  #y_ratio_1 <- yRatio(bagrovParameter, xRatio)
-  y_ratio_2 <- yRatio_2(bagrovParameter, xRatio)
-
-  #stopifnot(identical(y_ratio_1, y_ratio_2))
-
   # ... and calculate the real evapotransporation using the estimated y-ratio
-  y_ratio_2 * potentialEvaporation
+  FUN_yRatio(bagrovParameter, xRatio, ...) * potentialEvaporation
 }
 
 # yRatio -----------------------------------------------------------------------
@@ -68,6 +69,106 @@ yRatio_2 <- function(bagrovParameter, xRatio)
   #cat("min(abs_diffs): ", abs_diffs[index], "\n")
 
   df$Ea_over_Ep[index]
+}
+
+# yRatio_3 ---------------------------------------------------------------------
+
+#' Lookup yRatio for given xRatio on a BAGROV curve
+#'
+#' @param runParallel logical indicating whether or not parallel processing is
+#'   to be used. By default it is used if more than 1000 values are to be
+#'   calculated
+#' @param blocksize in case of parallel processing this is the size of the
+#'   data frames that are processed by \code{\link{call_with_data}} on different
+#'   cores
+yRatio_3 <- function(
+    bagrovParameter,
+    xRatio,
+    runParallel = length(bagrovParameter) > 10L,
+    blocksize = 10L
+)
+{
+  if (length(bagrovParameter) == 1L) {
+    stopifnot(length(xRatio) == 1L)
+    return(yRatio_2(bagrovParameter, xRatio))
+  }
+
+  # Split combinations of bagrovParameter and xRatio into blocks with
+  # the same bagrovParameter
+  combis <- data.frame(
+    bagrovParameter = bagrovParameter,
+    xRatio = xRatio,
+    index = seq_along(bagrovParameter)
+  )
+
+  combisets <- split(combis, combis$bagrovParameter)
+
+  P_over_Ep_max <- max(xRatio) + 0.1
+
+  # Function to be called for each combiset
+  getBagrovCurve <- function(combiset) {
+    bagrov <- combiset$bagrovParameter[1L]
+    cat_and_run(
+      paste("Calculating BAGROV curve for BAGROV parameter =", bagrov),
+      kwb.abimo::calculate_bagrov_curve(
+        effectivity = bagrov,
+        P_over_Ep_max = P_over_Ep_max,
+        delta_Ea = 1
+      )
+    )
+  }
+
+  # Calculate the BAGROV curves for the different bagrovParameter values
+
+  # Should we do parallel processing?
+  curves <- if (runParallel && (ncores <- parallel::detectCores() - 1L) > 1L) {
+
+    # Prepare parallel processing
+    cl <- parallel::makeCluster(ncores)
+    on.exit(parallel::stopCluster(cl))
+
+    cat("running in parallel on", ncores, "cores...\n")
+
+    # Call the call_with_data function in a (parallel) loop
+    parallel::parLapply(cl, combisets, fun = getBagrovCurve)
+
+  } else {
+
+    # Calculate the Bagrov curves for the different bagrovParameter values
+    lapply(combisets, FUN = getBagrovCurve)
+  }
+
+  result <- do.call(rbind, mapply(
+    FUN = function(curve, combiset) {
+      cat_and_run(
+        sprintf(
+          "Reading %d yRatio values from the BAGROV curve (n = %f)",
+          nrow(combiset),
+          combiset$bagrovParameter[1L]
+        ),
+        expr = {
+          n <- nrow(curve)
+          M <- matrix(rep(combiset$xRatio, each = n), nrow = n)
+          indices <- apply(abs(curve$P_over_Ep - M), 2L, which.min)
+          cbind(
+            index = combiset$index,
+            yRatio = curve$Ea_over_Ep[indices]
+          )
+        }
+      )
+    },
+    curves,
+    combisets,
+    SIMPLIFY = FALSE
+  ))
+
+  # initialise result vector
+  yratios <- numeric(length(bagrovParameter))
+
+  # set the yRatio values at the indices of the related xRatio input values
+  yratios[result[, "index"]] <- result[, "yRatio"]
+
+  yratios
 }
 
 # calculate_bagrov_table -------------------------------------------------------
