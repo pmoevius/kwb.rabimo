@@ -4,21 +4,17 @@
 \alias{yRatio_3}
 \title{Lookup yRatio for given xRatio on a BAGROV curve}
 \usage{
-yRatio_3(
-  bagrovParameter,
-  xRatio,
-  runParallel = length(bagrovParameter) > 10L,
-  blocksize = 10L
-)
+yRatio_3(bagrovParameter, xRatio, minSizeForParallel = 10L)
 }
 \arguments{
-\item{runParallel}{logical indicating whether or not parallel processing is
-to be used. By default it is used if more than 1000 values are to be
-calculated}
+\item{bagrovParameter}{(vector of) BAGROV parameter(s)}
 
-\item{blocksize}{in case of parallel processing this is the size of the
-data frames that are processed by \code{\link{call_with_data}} on different
-cores}
+\item{xRatio}{(vector of) x-ratio(s) (between precipitation and potential
+evaporation) for which to look up the corresponding y-ratio(s) (between
+actual evaporation and potential evaporation) on the BAGROV curve(s)}
+
+\item{minSizeForParallel}{minimum number of BAGROV curves to start
+parallel processing}
 }
 \description{
 Lookup yRatio for given xRatio on a BAGROV curve

@@ -75,17 +75,16 @@ yRatio_2 <- function(bagrovParameter, xRatio)
 
 #' Lookup yRatio for given xRatio on a BAGROV curve
 #'
-#' @param runParallel logical indicating whether or not parallel processing is
-#'   to be used. By default it is used if more than 1000 values are to be
-#'   calculated
-#' @param blocksize in case of parallel processing this is the size of the
-#'   data frames that are processed by \code{\link{call_with_data}} on different
-#'   cores
+#' @param bagrovParameter (vector of) BAGROV parameter(s)
+#' @param xRatio (vector of) x-ratio(s) (between precipitation and potential
+#'   evaporation) for which to look up the corresponding y-ratio(s) (between
+#'  actual evaporation and potential evaporation) on the BAGROV curve(s)
+#' @param minSizeForParallel minimum number of BAGROV curves to start
+#'   parallel processing
 yRatio_3 <- function(
     bagrovParameter,
     xRatio,
-    runParallel = length(bagrovParameter) > 10L,
-    blocksize = 10L
+    minSizeForParallel = 10L
 )
 {
   if (length(bagrovParameter) == 1L) {
@@ -121,21 +120,37 @@ yRatio_3 <- function(
   # Calculate the BAGROV curves for the different bagrovParameter values
 
   # Should we do parallel processing?
-  curves <- if (runParallel && (ncores <- parallel::detectCores() - 1L) > 1L) {
+  doParallel <- length(combisets) >= minSizeForParallel &&
+    (ncores <- parallel::detectCores() - 1L) > 1L
+
+  curves <- if (doParallel) {
 
     # Prepare parallel processing
     cl <- parallel::makeCluster(ncores)
     on.exit(parallel::stopCluster(cl))
 
-    cat("running in parallel on", ncores, "cores...\n")
-
-    # Call the call_with_data function in a (parallel) loop
-    parallel::parLapply(cl, combisets, fun = getBagrovCurve)
+    cat_and_run(
+      sprintf(
+        "Calculating %d BAGROV curves in parallel on %d cores",
+        length(combisets),
+        ncores
+      ),
+      expr = {
+        # Call the call_with_data function in a (parallel) loop
+        parallel::parLapply(cl, combisets, fun = getBagrovCurve)
+      }
+    )
 
   } else {
 
-    # Calculate the Bagrov curves for the different bagrovParameter values
-    lapply(combisets, FUN = getBagrovCurve)
+    cat_and_run(
+      sprintf("Calculating %d BAGROV curves", length(combisets)),
+      newLine = 3L,
+      expr = {
+        # Calculate the Bagrov curves for the different bagrovParameter values
+        lapply(combisets, FUN = getBagrovCurve)
+      }
+    )
   }
 
   result <- do.call(rbind, mapply(
