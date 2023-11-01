@@ -1,36 +1,3 @@
-# MAIN: test original Bagrov calculation ---------------------------------------
-if (FALSE)
-{
-  x <- seq(0, 1, length.out = 10L) + 0.01
-  bag <- 0.5
-
-  plot(
-    x = NA,
-    y = NA,
-    xlim = c(0, 1),
-    ylim = c(0, 1),
-    xlab = "xratio",
-    ylab = "yratio"
-  )
-
-  lines(x, yratio_cpp(bag = 0.7, x = x))
-  lines(x, yratio_cpp(bag = 0.8, x = x))
-  lines(x, yratio_cpp(bag = 0.9, x = x))
-  lines(x, yratio_cpp(bag = 1.0, x = x))
-
-  lines(x, yratio_cpp(bag = 2.0, x = x))
-  lines(x, yratio_cpp(bag = 3.0, x = x))
-
-  lines(x, yratio_cpp(bag = 4.0, x = x))
-  lines(x, yratio_cpp(bag = 5.0, x = x))
-  lines(x, yratio_cpp(bag = 6.0, x = x))
-
-  lines(x, yratio_cpp(bag = 0.6, x = x))
-  lines(x, yratio_cpp(bag = 0.5, x = x))
-  lines(x, yratio_cpp(bag = 0.4, x = x))
-  lines(x, yratio_cpp(bag = 0.3, x = x))
-}
-
 # Global variables -------------------------------------------------------------
 UPPER_LIMIT_EYN <- 0.7
 
@@ -137,7 +104,7 @@ yratio_cpp <- function(bag, x)
 }
 
 # second_approximation ---------------------------------------------------------
-second_approximation <- function(bag, xi, y0i)
+second_approximation <- function(bag, xi, y0i, dbg = FALSE)
 {
   stopifnot(length(bag) == 1L)
   stopifnot(length(y0i) == 1L)
@@ -182,8 +149,8 @@ second_approximation <- function(bag, xi, y0i)
     y0i <- y0i + h
 
     # Break out of this loop if a condition is met
-    kwb.utils::printIf(TRUE, h)
-    kwb.utils::printIf(TRUE, y0i)
+    kwb.utils::printIf(dbg, h)
+    kwb.utils::printIf(dbg, y0i)
 
     if (abs(h) / y0i < 0.007) {
       break;
@@ -193,11 +160,13 @@ second_approximation <- function(bag, xi, y0i)
   }
 
   if (y0i > 0.9) {
-    stop("Not implemented: y0i > 0.9")
-    #bagrov(&bag, &x, &y);
-  }
 
-  y0i
+    bagrov(bag, xi)
+
+  } else {
+
+    y0i
+  }
 }
 
 # second_approximation_vectorised (not working!) -------------------------------
@@ -260,3 +229,102 @@ second_approximation_vectorised <- function(bag, x, y0)
     # j++
   }
 }
+
+# bagrov -----------------------------------------------------------------------
+bagrov <- function(bagf, x0)
+{
+  #qDebug() << "In bagrov()...";
+
+  i <- 0L
+
+  if (x0 == 0.0) {
+    return(0.0)
+  }
+
+  y0 <- 0.99
+
+  doloop <- FALSE
+
+  # NUMERISCHE INTEGRATION DER BAGROVBEZIEHUNG
+
+  while (TRUE) {
+
+    j <- 1L
+    du <- 2.0 * y0
+    h <- 1.0 + 1.0 / (1.0 -  exp(bagf * log(y0)))
+    si <- h * du / 4.0
+    sg <- 0.0
+    su <- 0.0
+
+    again <- TRUE
+
+    while (again) {
+
+      s <- si
+      j <- j * 2L
+      du <- du / 2.0
+      sg <- sg + su
+
+      su <- 0.0
+      u <- du / 2.0
+
+      ii <- 1L
+
+      while (ii <= j) {
+        su <- su + 1.0 / (1.0 -  exp(bagf * log(u)))
+        u <- u + du
+        ii <- ii + 2L
+      }
+
+      si <- (2.0 * sg + 4.0 * su + h) * du / 6.0
+
+      again <- abs(s - si) > 0.001 * s
+    }
+
+    x <- si
+
+    # ENDE DER NUMERISCHEN INTEGRATION
+    skip <- FALSE
+
+    if (doloop) {
+
+      delta <- (x0 - x) * (1.0 -  exp(bagf *  log(y0)))
+      y0 <- y0 + delta
+
+      if (y0 >= 1.0) {
+        y0 <- 0.99
+        skip <- TRUE
+      }
+
+      if (!skip && y0 <= 0.0) {
+        y0 <- 0.01
+        skip <- TRUE
+      }
+
+      if (!skip && abs(delta) < 0.01) {
+        return(y0)
+      }
+
+      if (i < 10L) {
+        i <- i + 1L
+        skip <- TRUE
+      }
+
+    } # end of if (doloop)
+
+    if (!skip) {
+
+      if (x0 > x) {
+        return(1.0)
+      }
+
+      y0 <- 0.5
+      i <- 1
+    }
+
+    # SCHLEIFE I = 1(1)10 ZUR BERECHNUNG VON DELTA
+    doloop <- TRUE
+
+  } # end of while (TRUE)
+
+} # end of function
