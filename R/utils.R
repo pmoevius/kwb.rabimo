@@ -201,3 +201,7 @@ split_into_identical_rows <- function(data)
 # stop_formatted ---------------------------------------------------------------
 #' @importFrom kwb.utils stopFormatted
 stop_formatted <- kwb.utils::stopFormatted
+
+# string_list ------------------------------------------------------------------
+#' @importFrom kwb.utils stringList
+string_list <- kwb.utils::stringList
