@@ -8,13 +8,15 @@
 #' @param depthToWaterTable depth to water table
 #' @param fieldCapacity_30 field capacity in 30 cm depth
 #' @param fieldCapacity_150 field capacity in 150 cm depth
+#' @param defaultForWaterbodies value to be used for waterbodies. Default: NA
 #' @export
 getSoilProperties <- function(
     usage,
     yield,
     depthToWaterTable,
     fieldCapacity_30,
-    fieldCapacity_150
+    fieldCapacity_150,
+    defaultForWaterbodies = NA
 )
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
@@ -38,7 +40,7 @@ getSoilProperties <- function(
   # Feldkapazitaet
   result$usableFieldCapacity <- ifelse(
     test = isWaterbody,
-    yes = NA,
+    yes = defaultForWaterbodies,
     no = estimateWaterHoldingCapacity(
       f30 = fieldCapacity_30,
       f150 = fieldCapacity_150,
@@ -50,7 +52,7 @@ getSoilProperties <- function(
   # potentielle Aufstiegshoehe
   result$potentialCapillaryRise_TAS <- ifelse(
     test = isWaterbody,
-    yes = NA,
+    yes = defaultForWaterbodies,
     no = result$depthToWaterTable - getRootingDepth(usage, yield)
   )
 
@@ -58,7 +60,7 @@ getSoilProperties <- function(
   # Kapillarer Aufstieg pro Jahr ID_KR neu, old: KR
   result$meanPotentialCapillaryRiseRate <- ifelse(
     test = isWaterbody,
-    yes = NA,
+    yes = defaultForWaterbodies,
     no = getMeanPotentialCapillaryRiseRate(
       result$potentialCapillaryRise_TAS,
       result$usableFieldCapacity,

@@ -9,7 +9,8 @@ getSoilProperties(
   yield,
   depthToWaterTable,
   fieldCapacity_30,
-  fieldCapacity_150
+  fieldCapacity_150,
+  defaultForWaterbodies = NA
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ getSoilProperties(
 \item{fieldCapacity_30}{field capacity in 30 cm depth}
 
 \item{fieldCapacity_150}{field capacity in 150 cm depth}
+
+\item{defaultForWaterbodies}{value to be used for waterbodies. Default: NA}
 }
 \description{
 Calculate Soil Properties
