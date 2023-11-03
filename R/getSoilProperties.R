@@ -20,7 +20,7 @@ getSoilProperties <- function(
   #Initialise variables that are relevant to calculate evaporation
   result <- list()
 
-  result$depthToWaterTable = depthToWaterTable
+  result$depthToWaterTable <- depthToWaterTable
 
   # Nothing to do for waterbodies
   if (usage == "waterbody_G") {
