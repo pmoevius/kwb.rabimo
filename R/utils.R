@@ -35,6 +35,12 @@ filter_elements <- function(x, pattern)
 # helpers_index ----------------------------------------------------------------
 helpers_index <- function(x, values, epsilon = 0.0001)
 {
+  if (length(x) > 1L) {
+    return(sapply(x, helpers_index, values, epsilon))
+  }
+
+  stopifnot(length(x) == 1L)
+
   indices <- which(x <= values + epsilon)
 
   ifelse(length(indices), min(indices), length(values)) - 1L
@@ -201,3 +207,7 @@ split_into_identical_rows <- function(data)
 # stop_formatted ---------------------------------------------------------------
 #' @importFrom kwb.utils stopFormatted
 stop_formatted <- kwb.utils::stopFormatted
+
+# string_list ------------------------------------------------------------------
+#' @importFrom kwb.utils stringList
+string_list <- kwb.utils::stringList
