@@ -81,15 +81,25 @@ yRatio_2 <- function(bagrovParameter, xRatio)
 #'  actual evaporation and potential evaporation) on the BAGROV curve(s)
 #' @param minSizeForParallel minimum number of BAGROV curves to start
 #'   parallel processing
+#' @param useAbimoAlgorithm whether or not to use the original algorithm that
+#'   is implemented in the C++ code (converted to R:
+#'   \code{kwb.rabimo:::yratio_cpp}). Default: \code{FALSE}
 yRatio_3 <- function(
     bagrovParameter,
     xRatio,
-    minSizeForParallel = 10L
+    minSizeForParallel = 10L,
+    useAbimoAlgorithm = FALSE
 )
 {
   if (length(bagrovParameter) == 1L) {
     stopifnot(length(xRatio) == 1L)
-    return(yRatio_2(bagrovParameter, xRatio))
+    return(
+      if (useAbimoAlgorithm) {
+        yRatio_2(bagrovParameter, xRatio)
+      } else {
+        yratio_cpp(bagrovParameter, xRatio)
+      }
+    )
   }
 
   # Split combinations of bagrovParameter and xRatio into blocks with
@@ -102,80 +112,95 @@ yRatio_3 <- function(
 
   combisets <- split(combis, combis$bagrovParameter)
 
-  P_over_Ep_max <- max(xRatio) + 0.1
+  if (useAbimoAlgorithm) {
 
-  # Function to be called for each combiset
-  getBagrovCurve <- function(combiset) {
-    bagrov <- combiset$bagrovParameter[1L]
-    cat_and_run(
-      paste("Calculating BAGROV curve for BAGROV parameter =", bagrov),
-      kwb.abimo::calculate_bagrov_curve(
-        effectivity = bagrov,
-        P_over_Ep_max = P_over_Ep_max,
-        delta_Ea = 1
-      )
-    )
-  }
-
-  # Calculate the BAGROV curves for the different bagrovParameter values
-
-  # Should we do parallel processing?
-  doParallel <- length(combisets) >= minSizeForParallel &&
-    (ncores <- parallel::detectCores() - 1L) > 1L
-
-  curves <- if (doParallel) {
-
-    # Prepare parallel processing
-    cl <- parallel::makeCluster(ncores)
-    on.exit(parallel::stopCluster(cl))
-
-    cat_and_run(
-      sprintf(
-        "Calculating %d BAGROV curves in parallel on %d cores",
-        length(combisets),
-        ncores
-      ),
-      expr = {
-        # Call the call_with_data function in a (parallel) loop
-        parallel::parLapply(cl, combisets, fun = getBagrovCurve)
-      }
-    )
+    result <- combisets %>%
+      lapply(function(df) {
+        df[["yRatio"]] <- yratio_cpp(
+          bag = df[["bagrovParameter"]][1L],
+          x = df[["xRatio"]]
+        )
+        df
+      }) %>%
+      do.call(what = rbind)
 
   } else {
 
-    cat_and_run(
-      sprintf("Calculating %d BAGROV curves", length(combisets)),
-      newLine = 3L,
-      expr = {
-        # Calculate the Bagrov curves for the different bagrovParameter values
-        lapply(combisets, FUN = getBagrovCurve)
-      }
-    )
-  }
+    P_over_Ep_max <- max(xRatio) + 0.1
 
-  result <- do.call(rbind, mapply(
-    FUN = function(curve, combiset) {
+    # Define function to be called for each combiset
+    getBagrovCurve <- function(combiset) {
+      bagrov <- combiset$bagrovParameter[1L]
+      cat_and_run(
+        paste("Calculating BAGROV curve for BAGROV parameter =", bagrov),
+        kwb.abimo::calculate_bagrov_curve(
+          effectivity = bagrov,
+          P_over_Ep_max = P_over_Ep_max,
+          delta_Ea = 1
+        )
+      )
+    }
+
+    # Calculate the BAGROV curves for the different bagrovParameter values
+
+    # Should we do parallel processing?
+    doParallel <- length(combisets) >= minSizeForParallel &&
+      (ncores <- parallel::detectCores() - 1L) > 1L
+
+    curves <- if (doParallel) {
+
+      # Prepare parallel processing
+      cl <- parallel::makeCluster(ncores)
+      on.exit(parallel::stopCluster(cl))
+
       cat_and_run(
         sprintf(
-          "Reading %d yRatio values from the BAGROV curve (n = %f)",
-          nrow(combiset),
-          combiset$bagrovParameter[1L]
+          "Calculating %d BAGROV curves in parallel on %d cores",
+          length(combisets),
+          ncores
         ),
         expr = {
-          n <- nrow(curve)
-          M <- matrix(rep(combiset$xRatio, each = n), nrow = n)
-          indices <- apply(abs(curve$P_over_Ep - M), 2L, which.min)
-          cbind(
-            index = combiset$index,
-            yRatio = curve$Ea_over_Ep[indices]
-          )
+          # Call the call_with_data function in a (parallel) loop
+          parallel::parLapply(cl, combisets, fun = getBagrovCurve)
         }
       )
-    },
-    curves,
-    combisets,
-    SIMPLIFY = FALSE
-  ))
+
+    } else {
+
+      cat_and_run(
+        sprintf("Calculating %d BAGROV curves", length(combisets)),
+        newLine = 3L,
+        expr = {
+          # Calculate the Bagrov curves for the different bagrovParameter values
+          lapply(combisets, FUN = getBagrovCurve)
+        }
+      )
+    }
+
+    result <- do.call(rbind, mapply(
+      FUN = function(curve, combiset) {
+        cat_and_run(
+          sprintf(
+            "Reading %d yRatio values from the BAGROV curve (n = %f)",
+            nrow(combiset),
+            combiset$bagrovParameter[1L]
+          ),
+          expr = {
+            n <- nrow(curve)
+            M <- matrix(rep(combiset$xRatio, each = n), nrow = n)
+            indices <- apply(abs(curve$P_over_Ep - M), 2L, which.min)
+            cbind(
+              index = combiset$index,
+              yRatio = curve$Ea_over_Ep[indices]
+            )
+          }
+        )
+      },
+      curves,
+      combisets,
+      SIMPLIFY = FALSE
+    ))
+  }
 
   # initialise result vector
   yratios <- numeric(length(bagrovParameter))
