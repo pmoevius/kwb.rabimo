@@ -55,20 +55,59 @@ getSoilProperties <- function(
 # estimateWaterHoldingCapacity -------------------------------------------------
 estimateWaterHoldingCapacity <- function(f30, f150, isForest)
 {
-  if (min(f30, f150) < 1) {
-    return(13.0)
-  }
+  n <- length(f30)
 
-  if (abs(f30 - f150) < min(f30, f150)) { # unwesentliche Abweichung
-    return(as.double(ifelse(isForest, f150, f30)))
-  }
+  stopifnot(length(f150) == n)
+  stopifnot(length(isForest) == n)
 
-  0.75 * as.double(ifelse(isForest, f150, f30)) +
-    0.25 * as.double(ifelse(isForest, f30, f150))
+  # Initialise result vector with the default result
+  y <- numeric(n)
+
+  # Smaller value of f30, f150 at each index
+  min_capacity <- pmin(f30, f150)
+
+  # Special case 1: smaller value below 1
+  todo <- min_capacity < 1
+  y[todo] <- 13.0
+
+  # Special case 2: minor difference
+  todo <- !todo & abs(f30 - f150) < min_capacity
+  y[todo] <- as.double(ifelse(isForest[todo], f150[todo], f30[todo]))
+
+  # Default result for the non-special cases
+  todo <- is.na(y)
+
+  y[todo] <- ifelse(isForest[todo],
+    0.25 * f30[todo] + 0.75 * f150[todo],
+    0.75 * f30[todo] + 0.25 * f150[todo]
+  )
+
+  y
 }
 
 # getRootingDepth --------------------------------------------------------------
 getRootingDepth <- function(usage, yield)
+{
+  n <- length(usage)
+  stopifnot(length(yield) == n)
+
+  y <- numeric(n)
+
+  todo <- usage == "agricultural_L"
+  y[todo] <- ifelse(yield[todo] <= 50, 0.6, 0.7)
+
+  y[usage == "vegetationless_D"] <- 0.2
+  y[usage == "horticultural_K"] <- 0.7
+  y[usage == "forested_W"] <- 1.0
+
+  # in any other case
+  y[is.na(y)] <- 0.2
+
+  y
+}
+
+# getRootingDepth_1 --------------------------------------------------------------
+getRootingDepth_1 <- function(usage, yield)
 {
   if (usage == "agricultural_L") {
     return(ifelse(yield <= 50, 0.6, 0.7))
