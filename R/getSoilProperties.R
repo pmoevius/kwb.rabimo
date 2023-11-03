@@ -17,36 +17,54 @@ getSoilProperties <- function(
     fieldCapacity_150
 )
 {
+  #kwb.utils::assignPackageObjects("kwb.rabimo")
+  if (FALSE) {
+    data <- kwb.rabimo::prepareInputData(kwb.abimo::abimo_input_2019[1:10,])
+    usage <- data$usage
+    yield <- data$yield
+    depthToWaterTable <- data$depthToWaterTable
+    fieldCapacity_30 <- data$fieldCapacity_30
+    fieldCapacity_150 <- data$fieldCapacity_150
+  }
+
   #Initialise variables that are relevant to calculate evaporation
   result <- list()
 
   result$depthToWaterTable <- depthToWaterTable
 
   # Nothing to do for waterbodies
-  if (usage == "waterbody_G") {
-    return(result)
-  }
+  isWaterbody <- usage == "waterbody_G"
 
   # Feldkapazitaet
-  result$usableFieldCapacity = estimateWaterHoldingCapacity(
-    f30 = fieldCapacity_30,
-    f150 = fieldCapacity_150,
-    isForest = (usage == "forested_W")
+  result$usableFieldCapacity <- ifelse(
+    test = isWaterbody,
+    yes = NA,
+    no = estimateWaterHoldingCapacity(
+      f30 = fieldCapacity_30,
+      f150 = fieldCapacity_150,
+      isForest = (usage == "forested_W")
+    )
   )
 
   # pot. Aufstiegshoehe TAS = FLUR - mittl. Durchwurzelungstiefe TWS
   # potentielle Aufstiegshoehe
-  result$potentialCapillaryRise_TAS <- result$depthToWaterTable -
-    getRootingDepth(usage, yield)
+  result$potentialCapillaryRise_TAS <- ifelse(
+    test = isWaterbody,
+    yes = NA,
+    no = result$depthToWaterTable - getRootingDepth(usage, yield)
+  )
 
   # mittlere pot. kapillare Aufstiegsrate kr (mm/d) des Sommerhalbjahres
   # Kapillarer Aufstieg pro Jahr ID_KR neu, old: KR
-  result$meanPotentialCapillaryRiseRate <-
-    getMeanPotentialCapillaryRiseRate(
+  result$meanPotentialCapillaryRiseRate <- ifelse(
+    test = isWaterbody,
+    yes = NA,
+    no = getMeanPotentialCapillaryRiseRate(
       result$potentialCapillaryRise_TAS,
       result$usableFieldCapacity,
-      daysOfGrowth = estimateDaysOfGrowth(usage, yieldPower)
+      daysOfGrowth = estimateDaysOfGrowth(usage, yield)
     )
+  )
 
   result
 }
