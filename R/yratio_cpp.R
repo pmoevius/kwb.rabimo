@@ -95,13 +95,6 @@ yratio_cpp <- function(bag, x)
     second_approximation(bag, xi = x[i], y0i = y0[i])
   })
 
-  isAbove09 <- y0 > 0.9
-
-  if (any(isAbove09)) {
-    #stop("Not implemented: y0 > 0.9 -> bagrov(&bag, &x, &y0)")
-    y0[isAbove09] <- sapply(x[isAbove09], bagrov, bagf = bag)
-  }
-
   # Return y0 (1.0 at maximum)
   pmin(y0, 1.0)
 }

@@ -4,7 +4,12 @@
 \alias{yRatio_3}
 \title{Lookup yRatio for given xRatio on a BAGROV curve}
 \usage{
-yRatio_3(bagrovParameter, xRatio, minSizeForParallel = 10L)
+yRatio_3(
+  bagrovParameter,
+  xRatio,
+  minSizeForParallel = 10L,
+  useAbimoAlgorithm = FALSE
+)
 }
 \arguments{
 \item{bagrovParameter}{(vector of) BAGROV parameter(s)}
@@ -15,6 +20,10 @@ actual evaporation and potential evaporation) on the BAGROV curve(s)}
 
 \item{minSizeForParallel}{minimum number of BAGROV curves to start
 parallel processing}
+
+\item{useAbimoAlgorithm}{whether or not to use the original algorithm that
+is implemented in the C++ code (converted to R:
+\code{kwb.rabimo:::yratio_cpp}). Default: \code{FALSE}}
 }
 \description{
 Lookup yRatio for given xRatio on a BAGROV curve
