@@ -109,6 +109,9 @@ getRootingDepth <- function(usage, yield)
 # getRootingDepth_1 --------------------------------------------------------------
 getRootingDepth_1 <- function(usage, yield)
 {
+  stopifnot(length(usage) == 1L)
+  stopifnot(length(yield) == 1L)
+
   if (usage == "agricultural_L") {
     return(ifelse(yield <= 50, 0.6, 0.7))
   }
