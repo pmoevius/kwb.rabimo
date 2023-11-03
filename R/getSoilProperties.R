@@ -141,6 +141,10 @@ getMeanPotentialCapillaryRiseRate <- function(
   # potentialCapillaryRise <- 0.39
   # usableFieldCapacity <- 8.2
 
+  n <- length(potentialCapillaryRise)
+  stopifnot(length(usableFieldCapacity) == n)
+  stopifnot(length(daysOfGrowth) == n)
+
   M <- MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX
 
   kr <- ifelse(
