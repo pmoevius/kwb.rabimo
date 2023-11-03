@@ -45,8 +45,7 @@ getSoilProperties <- function(
     getMeanPotentialCapillaryRiseRate(
       result$potentialCapillaryRise_TAS,
       result$usableFieldCapacity,
-      usage,
-      yield
+      daysOfGrowth = estimateDaysOfGrowth(usage, yieldPower)
     )
 
   result
@@ -136,8 +135,7 @@ getRootingDepth_1 <- function(usage, yield)
 getMeanPotentialCapillaryRiseRate <- function(
     potentialCapillaryRise,
     usableFieldCapacity,
-    usage,
-    yieldPower
+    daysOfGrowth
 )
 {
   # potentialCapillaryRise <- 0.39
@@ -154,9 +152,7 @@ getMeanPotentialCapillaryRiseRate <- function(
     ]
   )
 
-  days_of_growth <- estimateDaysOfGrowth(usage, yieldPower)
-
-  as.integer(round(days_of_growth * kr))
+  as.integer(round(daysOfGrowth * kr))
 }
 
 # MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX ----------------------------
@@ -194,7 +190,6 @@ MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX <- local({
     col_values = col_values
   )
 })
-
 
 # estimateDaysOfGrowth ---------------------------------------------------------
 estimateDaysOfGrowth <- function(usage, yield, default = 50L)
