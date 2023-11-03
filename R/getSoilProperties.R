@@ -91,7 +91,7 @@ getRootingDepth <- function(usage, yield)
   n <- length(usage)
   stopifnot(length(yield) == n)
 
-  y <- numeric(n)
+  y <- rep(NA_real_, n)
 
   todo <- usage == "agricultural_L"
   y[todo] <- ifelse(yield[todo] <= 50, 0.6, 0.7)
