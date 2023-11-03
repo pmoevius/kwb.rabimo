@@ -165,14 +165,12 @@ getMeanPotentialCapillaryRiseRate <- function(
 
   M <- MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX
 
-  kr <- ifelse(
-    potentialCapillaryRise <= 0.0,
-    7.0,
-    M[
-      helpers_index(usableFieldCapacity, attr(M, "row_values")) + 1L,
-      helpers_index(potentialCapillaryRise, attr(M, "col_values")) + 1L
-    ]
+  indices <- cbind(
+    helpers_index(usableFieldCapacity, attr(M, "row_values")) + 1L,
+    helpers_index(potentialCapillaryRise, attr(M, "col_values")) + 1L
   )
+
+  kr <- ifelse(potentialCapillaryRise <= 0.0, 7.0, M[indices])
 
   as.integer(round(daysOfGrowth * kr))
 }
