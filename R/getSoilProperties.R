@@ -195,9 +195,38 @@ MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX <- local({
   )
 })
 
+
 # estimateDaysOfGrowth ---------------------------------------------------------
-estimateDaysOfGrowth <- function(usage, yield, default = 50)
+estimateDaysOfGrowth <- function(usage, yield, default = 50L)
 {
+  n <- length(usage)
+
+  stopifnot(length(yield) == n)
+
+  # Initialise result vector
+  y <- rep(NA_integer_, n)
+
+  # Special case for agricultural use
+  isAgricultural <- usage == "agricultural_L"
+  y[isAgricultural] <- ifelse(yield[isAgricultural] <= 50, 60L, 75L)
+
+  # Constant estimates for other uses
+  y[usage == "vegetationless_D"] <- 50L
+  y[usage == "horticultural_K"] <- 100L
+  y[usage == "forested_W"] <- 90L
+
+  # Return default for any other use
+  y[is.na(y)] <- default
+
+  y
+}
+
+# estimateDaysOfGrowth_1 -------------------------------------------------------
+estimateDaysOfGrowth_1 <- function(usage, yield, default = 50)
+{
+  stopifnot(length(usage) == 1L)
+  stopifnot(length(yield) == 1L)
+
   # Special case for agricultural use
   if (usage == "agricultural_L") {
     return(ifelse(yield <= 50, 60, 75))
