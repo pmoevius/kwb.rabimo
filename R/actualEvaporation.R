@@ -268,15 +268,18 @@ isWetSummer <- function(precipitationSummer, potentialEvaporationSummer)
 
 # wetSummerCorrectionFactor ----------------------------------------------------
 wetSummerCorrectionFactor <- function(
-    waterAvailability, potentialEvaporationSummer
+    waterAvailability, potentialEvaporationSummer, useAbimoApprox = TRUE
 )
 {
-  stats::approx(
-    x = WET_SUMMER_CORRECTION_MATRIX[, "water_availability"],
-    y = WET_SUMMER_CORRECTION_MATRIX[, "correction_factor"],
-    xout = waterAvailability / potentialEvaporationSummer,
-    rule = 2L
-  )$y
+  xout <- waterAvailability / potentialEvaporationSummer
+  x <- WET_SUMMER_CORRECTION_MATRIX[, "water_availability"]
+  y <- WET_SUMMER_CORRECTION_MATRIX[, "correction_factor"]
+
+  if (useAbimoApprox) {
+    stats::approx(x = x, y = y, xout = xout, rule = 2L)$y
+  } else {
+    interpolate(x = x, y = y, xout = xout)
+  }
 }
 
 # WET_SUMMER_CORRECTION_MATRIX -------------------------------------------------
