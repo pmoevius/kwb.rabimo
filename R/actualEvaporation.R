@@ -273,9 +273,9 @@ wetSummerCorrectionFactor <- function(
   y <- WET_SUMMER_CORRECTION_MATRIX[, "correction_factor"]
 
   if (useAbimoApprox) {
-    stats::approx(x = x, y = y, xout = xout, rule = 2L)$y
-  } else {
     interpolate(x = x, y = y, xout = xout)
+  } else {
+    stats::approx(x = x, y = y, xout = xout, rule = 2L)$y
   }
 }
 
