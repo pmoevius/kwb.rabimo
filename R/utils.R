@@ -77,6 +77,52 @@ index_string_to_integers <- function(x, splits = c(",", "-"))
 #' @importFrom kwb.utils inRange
 in_range <- kwb.utils::inRange
 
+# interpolate ------------------------------------------------------------------
+interpolate <- function(x, y, xout)
+{
+  yout <- rep(NA_real_, length(xout))
+
+  nx <- length(x)
+
+  yout[xout <= x[1L]] <- y[1L]
+  yout[xout >= x[nx]] <- y[nx]
+
+  todo <- is.na(yout)
+
+  yout[todo] <- sapply(xout[todo], function(xi) {
+    i <- which(xi <= x[-1L])[1L] + 1L
+    (y[i - 1L] + y[i]) / 2
+  })
+
+  yout
+}
+
+interpolate_cpp <- function(xi, x, y)
+{
+  n <- length(x)
+  stopifnot(n == length(y))
+
+  if (xi <= x[1L]) {
+    return(y[1L])
+  }
+
+  if (xi >= x[n]) {
+    return(y[n])
+  }
+
+  for (i in seq_len(n)) {
+    print(i)
+    if (xi <= x[i + 1L]) {
+      print(y[i])
+      print(y[i+1])
+      print ((y[i] + y[i+1]) / 2.0)
+      return ((y[i] + y[i+1]) / 2.0)
+    }
+  }
+
+  return(0.0)
+}
+
 # list_to_data_frame_with_keys -------------------------------------------------
 
 #' Convert List of Similar Flat Sublists to a Data Frame
