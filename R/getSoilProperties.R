@@ -32,13 +32,13 @@ getSoilProperties <- function(
   #Initialise variables that are relevant to calculate evaporation
   result <- list()
 
-  result$depthToWaterTable <- depthToWaterTable
+  result[["depthToWaterTable"]] <- depthToWaterTable
 
   # Nothing to do for waterbodies
   isWaterbody <- usage == "waterbody_G"
 
   # Feldkapazitaet
-  result$usableFieldCapacity <- ifelse(
+  result[["usableFieldCapacity"]] <- ifelse(
     test = isWaterbody,
     yes = defaultForWaterbodies,
     no = estimateWaterHoldingCapacity(
@@ -50,7 +50,7 @@ getSoilProperties <- function(
 
   # pot. Aufstiegshoehe TAS = FLUR - mittl. Durchwurzelungstiefe TWS
   # potentielle Aufstiegshoehe
-  result$potentialCapillaryRise_TAS <- ifelse(
+  result[["potentialCapillaryRise_TAS"]] <- ifelse(
     test = isWaterbody,
     yes = defaultForWaterbodies,
     no = result$depthToWaterTable - getRootingDepth(usage, yield)
@@ -58,7 +58,7 @@ getSoilProperties <- function(
 
   # mittlere pot. kapillare Aufstiegsrate kr (mm/d) des Sommerhalbjahres
   # Kapillarer Aufstieg pro Jahr ID_KR neu, old: KR
-  result$meanPotentialCapillaryRiseRate <- ifelse(
+  result[["meanPotentialCapillaryRiseRate"]] <- ifelse(
     test = isWaterbody,
     yes = defaultForWaterbodies,
     no = getMeanPotentialCapillaryRiseRate(
@@ -66,6 +66,11 @@ getSoilProperties <- function(
       result$usableFieldCapacity,
       daysOfGrowth = estimateDaysOfGrowth(usage, yield)
     )
+  )
+
+  # Add G02 values as they depend only on the usable field capacity
+  result[["g02"]] <- lookupG02(
+    usableFieldCapacity = select_elements(result, "usableFieldCapacity")
   )
 
   result
@@ -259,3 +264,21 @@ estimateDaysOfGrowth_1 <- function(usage, yield, default = 50)
   # Lookup constant estimate. Return default if use is not in list
   default_if_null(days_of_growth[[usage]], default)
 }
+
+# lookupG02 --------------------------------------------------------------------
+lookupG02 <- function(usableFieldCapacity)
+{
+  index <- as.integer(usableFieldCapacity + 0.5) + 1L
+
+  stopifnot(all(index %in% seq_along(LOOKUP_G02)))
+
+  LOOKUP_G02[index]
+}
+
+# LOOKUP_G02 -------------------------------------------------------------------
+LOOKUP_G02 <- c(
+  0.0,   0.0,  0.0,  0.0,  0.3,  0.8,  1.4,  2.4,  3.7,  5.0,
+  6.3,   7.7,  9.3, 11.0, 12.4, 14.7, 17.4, 21.0, 26.0, 32.0,
+  39.4, 44.7, 48.0, 50.7, 52.7, 54.0, 55.0, 55.0, 55.0, 55.0,
+  55.0
+)

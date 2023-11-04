@@ -49,7 +49,7 @@ actualEvaporationWaterbodyOrPervious <- function(
 
   # determine the BAGROV parameter(s) for unsealed surfaces
   bagrovParameter <- getBagrovParameterUnsealed(
-    g02 = lookupG02(soilProperties$usableFieldCapacity[i]),
+    g02 = soilProperties$g02[i],
     usage = usageTuple$usage[i],
     yield = usageTuple$yield[i],
     irrigation = usageTuple$irrigation[i],
@@ -87,30 +87,18 @@ actualEvaporationWaterbodyOrPervious <- function(
   depths <- soilProperties$depthToWaterTable
 
   # indices of entries related to non-water usage and capillary rises < 0
-  i <- which(!isWater & rises < 0)
+  j <- which(!isWater & rises < 0)
 
-  y[i] <- y[i] + (epYear[i] - y[i]) * exp(depths[i] / rises[i])
+  y[j] <- y[j] + (epYear[j] - y[j]) * exp(depths[j] / rises[j])
 
-  y
+  naVector <- rep(NA_real_, length(y))
+
+  structure(y, bagrovUnsealed = data.frame(
+    bagrovEff = `[<-`(naVector, i, bagrovParameter),
+    factorDry = `[<-`(naVector, i, get_attribute(bagrovParameter, "factorDry")),
+    factorWet = `[<-`(naVector, i, get_attribute(bagrovParameter, "factorWet"))
+  ))
 }
-
-# lookupG02 --------------------------------------------------------------------
-lookupG02 <- function(usableFieldCapacity)
-{
-  index <- as.integer(usableFieldCapacity + 0.5) + 1L
-
-  stopifnot(all(index %in% seq_along(LOOKUP_G02)))
-
-  LOOKUP_G02[index]
-}
-
-# LOOKUP_G02 -------------------------------------------------------------------
-LOOKUP_G02 <- c(
-  0.0,   0.0,  0.0,  0.0,  0.3,  0.8,  1.4,  2.4,  3.7,  5.0,
-  6.3,   7.7,  9.3, 11.0, 12.4, 14.7, 17.4, 21.0, 26.0, 32.0,
-  39.4, 44.7, 48.0, 50.7, 52.7, 54.0, 55.0, 55.0, 55.0, 55.0,
-  55.0
-)
 
 # getBagrovParameterUnsealed (C++ name: getEffectivityParameter) ---------------
 getBagrovParameterUnsealed <- function(
@@ -131,7 +119,7 @@ getBagrovParameterUnsealed <- function(
 
   y[isForest] <- lookupBagrovForest(g02[isForest])
 
-  y[noForest] <- lookupBagrovUnsealed(g02[noForest], yield[noForest]) * ifelse(
+  factorDry <- ifelse(
     test = irrigation[noForest] > 0 & isDrySummer(
       precipitationSummer[noForest],
       potentialEvaporationSummer[noForest]
@@ -140,8 +128,11 @@ getBagrovParameterUnsealed <- function(
     no = 1
   )
 
+  y[noForest] <- lookupBagrovUnsealed(g02[noForest], yield[noForest]) *
+    factorDry
+
   # in case of a "wet" summer, correct the BAGROV parameter with a factor
-  y * ifelse(
+  factorWet <- ifelse(
     test = isWetSummer(precipitationSummer, potentialEvaporationSummer),
     yes = wetSummerCorrectionFactor(
       waterAvailability =
@@ -151,6 +142,12 @@ getBagrovParameterUnsealed <- function(
       potentialEvaporationSummer = potentialEvaporationSummer
     ),
     no = 1
+  )
+
+  structure(
+    y * factorWet,
+    factorDry = factorDry,
+    factorWet = factorWet
   )
 }
 

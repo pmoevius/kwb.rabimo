@@ -32,6 +32,10 @@ filter_elements <- function(x, pattern)
   x[grepl(pattern, names(x))]
 }
 
+# get_attribute ----------------------------------------------------------------
+#' @importFrom kwb.utils getAttribute
+get_attribute <- kwb.utils::getAttribute
+
 # helpers_index ----------------------------------------------------------------
 helpers_index <- function(x, values, epsilon = 0.0001)
 {
