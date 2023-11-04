@@ -120,16 +120,16 @@ getBagrovParameterUnsealed <- function(
   y[isForest] <- lookupBagrovForest(g02[isForest])
 
   factorDry <- ifelse(
-    test = irrigation[noForest] > 0 & isDrySummer(
-      precipitationSummer[noForest],
-      potentialEvaporationSummer[noForest]
+    test = irrigation > 0 & isDrySummer(
+      precipitationSummer,
+      potentialEvaporationSummer
     ),
     yes = irrigationInDrySummerCorrectionFactor(irrigation[noForest]),
     no = 1
   )
 
   y[noForest] <- lookupBagrovUnsealed(g02[noForest], yield[noForest]) *
-    factorDry
+    factorDry[noForest]
 
   # in case of a "wet" summer, correct the BAGROV parameter with a factor
   factorWet <- ifelse(
