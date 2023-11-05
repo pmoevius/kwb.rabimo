@@ -50,6 +50,15 @@ helpers_index <- function(x, values, epsilon = 0.0001)
   ifelse(length(indices), min(indices), length(values)) - 1L
 }
 
+# int Calculation::index(float wert, float *feld, int anz)
+# {
+#   int i;
+#   float eps = 0.0001;
+#   for (i = 0; i < anz; i++)
+#     if (wert <= feld[i] + eps) return(i);
+#   return(anz - 1);
+# }
+
 # index_string_to_integers -----------------------------------------------------
 #' Convert String of Integer Ranges to Vector of Integer
 #'
