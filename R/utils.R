@@ -10,9 +10,32 @@ cat_if <- kwb.utils::catIf
 #' @importFrom kwb.utils checkForMissingColumns
 check_for_missing_columns <- kwb.utils::checkForMissingColumns
 
+# create_accessor --------------------------------------------------------------
+#' @importFrom kwb.utils createAccessor
+create_accessor <- kwb.utils::createAccessor
+
 # default_if_null --------------------------------------------------------------
 #' @importFrom kwb.utils defaultIfNULL
 default_if_null <- kwb.utils::defaultIfNULL
+
+# expand_to_matrix -------------------------------------------------------------
+expand_to_matrix <- function(x, nrow = NULL, ncol = NULL)
+{
+  if (is.null(nrow) && is.null(ncol) || !is.null(nrow) && !is.null(ncol)) {
+    stop(
+      "Either nrow or ncol must be given but not both at the same time.",
+      call. = FALSE
+    )
+  }
+
+  if (!is.null(nrow)) {
+    return(matrix(rep(x, nrow), nrow = nrow, byrow = TRUE))
+  }
+
+  if (!is.null(ncol)) {
+    return(matrix(rep(x, ncol), ncol = ncol, byrow = FALSE))
+  }
+}
 
 # expand_to_vector -------------------------------------------------------------
 expand_to_vector <- function(x, indices)
@@ -32,13 +55,38 @@ filter_elements <- function(x, pattern)
   x[grepl(pattern, names(x))]
 }
 
-# helpers_index ----------------------------------------------------------------
-helpers_index <- function(x, values, epsilon = 0.0001)
-{
-  indices <- which(x <= values + epsilon)
+# get_attribute ----------------------------------------------------------------
+#' @importFrom kwb.utils getAttribute
+get_attribute <- kwb.utils::getAttribute
 
-  ifelse(length(indices), min(indices), length(values)) - 1L
+# helpers_index ----------------------------------------------------------------
+helpers_index <- function(x, values, epsilon = 0.0001, dbg = FALSE)
+{
+  if (length(x) > 1L) {
+    return(sapply(x, helpers_index, values, epsilon, dbg))
+  }
+
+  stopifnot(length(x) == 1L)
+
+  indices <- which(x <= values + epsilon)
+  index <- ifelse(length(indices), min(indices), length(values)) - 1L
+
+  print_if(dbg, x)
+  print_if(dbg, values)
+  print_if(dbg, indices)
+  print_if(dbg, index)
+
+  index
 }
+
+# int Calculation::index(float wert, float *feld, int anz)
+# {
+#   int i;
+#   float eps = 0.0001;
+#   for (i = 0; i < anz; i++)
+#     if (wert <= feld[i] + eps) return(i);
+#   return(anz - 1);
+# }
 
 # index_string_to_integers -----------------------------------------------------
 #' Convert String of Integer Ranges to Vector of Integer
@@ -70,6 +118,52 @@ index_string_to_integers <- function(x, splits = c(",", "-"))
 # in_range ---------------------------------------------------------------------
 #' @importFrom kwb.utils inRange
 in_range <- kwb.utils::inRange
+
+# interpolate ------------------------------------------------------------------
+interpolate <- function(x, y, xout)
+{
+  yout <- rep(NA_real_, length(xout))
+
+  nx <- length(x)
+
+  yout[xout <= x[1L]] <- y[1L]
+  yout[xout >= x[nx]] <- y[nx]
+
+  todo <- is.na(yout)
+
+  yout[todo] <- sapply(xout[todo], function(xi) {
+    i <- which(xi <= x[-1L])[1L] + 1L
+    (y[i - 1L] + y[i]) / 2
+  })
+
+  yout
+}
+
+interpolate_cpp <- function(xi, x, y)
+{
+  n <- length(x)
+  stopifnot(n == length(y))
+
+  if (xi <= x[1L]) {
+    return(y[1L])
+  }
+
+  if (xi >= x[n]) {
+    return(y[n])
+  }
+
+  for (i in seq_len(n)) {
+    print(i)
+    if (xi <= x[i + 1L]) {
+      print(y[i])
+      print(y[i+1])
+      print ((y[i] + y[i+1]) / 2.0)
+      return ((y[i] + y[i+1]) / 2.0)
+    }
+  }
+
+  return(0.0)
+}
 
 # list_to_data_frame_with_keys -------------------------------------------------
 
@@ -164,6 +258,10 @@ remove_columns <- kwb.utils::removeColumns
 #' @importFrom kwb.utils removeElements
 remove_elements <- kwb.utils::removeElements
 
+# rename_and_select ------------------------------------------------------------
+#' @importFrom kwb.utils renameAndSelect
+rename_and_select <- kwb.utils::renameAndSelect
+
 # rename_columns ---------------------------------------------------------------
 #' @importFrom kwb.utils renameColumns
 rename_columns <- kwb.utils::renameColumns
@@ -201,3 +299,7 @@ split_into_identical_rows <- function(data)
 # stop_formatted ---------------------------------------------------------------
 #' @importFrom kwb.utils stopFormatted
 stop_formatted <- kwb.utils::stopFormatted
+
+# string_list ------------------------------------------------------------------
+#' @importFrom kwb.utils stringList
+string_list <- kwb.utils::stringList

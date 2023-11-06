@@ -8,7 +8,9 @@ realEvapoTranspiration(
   precipitation,
   potentialEvaporation,
   bagrovParameter,
-  xRatio = NULL
+  xRatio = NULL,
+  FUN_yRatio = yRatio_3,
+  ...
 )
 }
 \arguments{
@@ -16,12 +18,17 @@ realEvapoTranspiration(
 
 \item{potentialEvaporation}{potential evaporation in mm}
 
-\item{bagrovParameter}{so-called Bagrov value}
+\item{bagrovParameter}{Bagrov parameter (n-value)}
 
 \item{xRatio}{optional. Instead of \code{precipitation} and
 \code{potentialEvaporation} the quotient of both may be passed to this
 function. The idea is to calculate the quotient out of the function and to
 reuse the quotient instead of recalculating it.}
+
+\item{FUN_yRatio}{function to be called to calculate the yRatio(s) from the
+given xRatio(s). Default: \code{kwb.rabimo:::yRatio_3}}
+
+\item{\dots}{further arguments passed to \code{FUN_yRatio}}
 }
 \value{
 estimated actual evapotranspiration in mm
