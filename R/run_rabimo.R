@@ -6,6 +6,7 @@
 #' @param config configuration object (list) as returned by
 #'   \code{kwb.abimo:::read_config()}
 #' @return data frame with columns as returned by Abimo
+#' @export
 run_rabimo <- function(input_data, config)
 {
   # Use ABIMO algorithm (or chatty's version) for calculation of BAGROV curves?
