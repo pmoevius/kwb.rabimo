@@ -10,7 +10,8 @@ getSoilProperties(
   depthToWaterTable,
   fieldCapacity_30,
   fieldCapacity_150,
-  defaultForWaterbodies = NA
+  defaultForWaterbodies = NA,
+  dbg = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ getSoilProperties(
 \item{fieldCapacity_150}{field capacity in 150 cm depth}
 
 \item{defaultForWaterbodies}{value to be used for waterbodies. Default: NA}
+
+\item{dbg}{logical indicating whether or not to show debug messages}
 }
 \description{
 Calculate Soil Properties

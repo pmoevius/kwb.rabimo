@@ -9,6 +9,7 @@
 #' @param fieldCapacity_30 field capacity in 30 cm depth
 #' @param fieldCapacity_150 field capacity in 150 cm depth
 #' @param defaultForWaterbodies value to be used for waterbodies. Default: NA
+#' @param dbg logical indicating whether or not to show debug messages
 #' @export
 getSoilProperties <- function(
     usage,
@@ -16,7 +17,8 @@ getSoilProperties <- function(
     depthToWaterTable,
     fieldCapacity_30,
     fieldCapacity_150,
-    defaultForWaterbodies = NA
+    defaultForWaterbodies = NA,
+    dbg = FALSE
 )
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
@@ -58,14 +60,20 @@ getSoilProperties <- function(
 
   # mittlere pot. kapillare Aufstiegsrate kr (mm/d) des Sommerhalbjahres
   # Kapillarer Aufstieg pro Jahr ID_KR neu, old: KR
-  result[["meanPotentialCapillaryRiseRate"]] <- ifelse(
+  result[["meanPotentialCapillaryRiseRateRaw"]] <- ifelse(
     test = isWaterbody,
     yes = defaultForWaterbodies,
     no = getMeanPotentialCapillaryRiseRate(
       result$potentialCapillaryRise_TAS,
       result$usableFieldCapacity,
-      daysOfGrowth = estimateDaysOfGrowth(usage, yield)
+      daysOfGrowth = estimateDaysOfGrowth(usage, yield),
+      dbg = dbg
     )
+  )
+
+  # Make sure that e.g. 14.999999991 becomes 15, not 14
+  result[["meanPotentialCapillaryRiseRate"]] <- as.integer(
+    round(result[["meanPotentialCapillaryRiseRateRaw"]], 12L)
   )
 
   # Add G02 values as they depend only on the usable field capacity
@@ -160,7 +168,8 @@ getRootingDepth_1 <- function(usage, yield)
 getMeanPotentialCapillaryRiseRate <- function(
     potentialCapillaryRise,
     usableFieldCapacity,
-    daysOfGrowth
+    daysOfGrowth,
+    dbg = FALSE
 )
 {
   # potentialCapillaryRise <- 0.39
@@ -172,14 +181,15 @@ getMeanPotentialCapillaryRiseRate <- function(
 
   M <- MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX
 
-  indices <- cbind(
-    helpers_index(usableFieldCapacity, attr(M, "row_values")) + 1L,
-    helpers_index(potentialCapillaryRise, attr(M, "col_values")) + 1L
-  )
+  i <- helpers_index(usableFieldCapacity, attr(M, "row_values"), dbg = dbg)
+  j <- helpers_index(potentialCapillaryRise, attr(M, "col_values"), dbg = dbg)
+
+  indices <- cbind(i, j) + 1L
 
   kr <- ifelse(potentialCapillaryRise <= 0.0, 7.0, M[indices])
 
-  as.integer(round(daysOfGrowth * kr))
+  #as.integer(round(daysOfGrowth * kr))
+  daysOfGrowth * kr
 }
 
 # MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX ----------------------------
