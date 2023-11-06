@@ -10,6 +10,10 @@ cat_if <- kwb.utils::catIf
 #' @importFrom kwb.utils checkForMissingColumns
 check_for_missing_columns <- kwb.utils::checkForMissingColumns
 
+# create_accessor --------------------------------------------------------------
+#' @importFrom kwb.utils createAccessor
+create_accessor <- kwb.utils::createAccessor
+
 # default_if_null --------------------------------------------------------------
 #' @importFrom kwb.utils defaultIfNULL
 default_if_null <- kwb.utils::defaultIfNULL
@@ -37,17 +41,23 @@ filter_elements <- function(x, pattern)
 get_attribute <- kwb.utils::getAttribute
 
 # helpers_index ----------------------------------------------------------------
-helpers_index <- function(x, values, epsilon = 0.0001)
+helpers_index <- function(x, values, epsilon = 0.0001, dbg = FALSE)
 {
   if (length(x) > 1L) {
-    return(sapply(x, helpers_index, values, epsilon))
+    return(sapply(x, helpers_index, values, epsilon, dbg))
   }
 
   stopifnot(length(x) == 1L)
 
   indices <- which(x <= values + epsilon)
+  index <- ifelse(length(indices), min(indices), length(values)) - 1L
 
-  ifelse(length(indices), min(indices), length(values)) - 1L
+  print_if(dbg, x)
+  print_if(dbg, values)
+  print_if(dbg, indices)
+  print_if(dbg, index)
+
+  index
 }
 
 # int Calculation::index(float wert, float *feld, int anz)
@@ -228,6 +238,10 @@ remove_columns <- kwb.utils::removeColumns
 # remove_elements --------------------------------------------------------------
 #' @importFrom kwb.utils removeElements
 remove_elements <- kwb.utils::removeElements
+
+# rename_and_select ------------------------------------------------------------
+#' @importFrom kwb.utils renameAndSelect
+rename_and_select <- kwb.utils::renameAndSelect
 
 # rename_columns ---------------------------------------------------------------
 #' @importFrom kwb.utils renameColumns
