@@ -18,6 +18,25 @@ create_accessor <- kwb.utils::createAccessor
 #' @importFrom kwb.utils defaultIfNULL
 default_if_null <- kwb.utils::defaultIfNULL
 
+# expand_to_matrix -------------------------------------------------------------
+expand_to_matrix <- function(x, nrow = NULL, ncol = NULL)
+{
+  if (is.null(nrow) && is.null(ncol) || !is.null(nrow) && !is.null(ncol)) {
+    stop(
+      "Either nrow or ncol must be given but not both at the same time.",
+      call. = FALSE
+    )
+  }
+
+  if (!is.null(nrow)) {
+    return(matrix(rep(x, nrow), nrow = nrow, byrow = TRUE))
+  }
+
+  if (!is.null(ncol)) {
+    return(matrix(rep(x, ncol), ncol = ncol, byrow = FALSE))
+  }
+}
+
 # expand_to_vector -------------------------------------------------------------
 expand_to_vector <- function(x, indices)
 {

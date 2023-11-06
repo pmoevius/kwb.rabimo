@@ -158,10 +158,9 @@ run_rabimo <- function(input_data, config)
   # (road and non-road) areas (for all surface classes at once)
 
   # [-1L]: exclude factor for roofs
-  runoff_factor_matrix <- matrix(
-    rep(runoff_factors[-1L], nrow(input)),
-    nrow = nrow(input),
-    byrow = TRUE
+  runoff_factor_matrix <- expand_to_matrix(
+    x = runoff_factors[-1L],
+    nrow = nrow(input)
   )
 
   runoff_sealed_actual <- runoff_factor_matrix *
