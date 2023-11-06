@@ -157,7 +157,7 @@ run_rabimo <- function(input_data, config)
   # Runoff from the actual partial areas that are sealed and connected
   # (road and non-road) areas (for all surface classes at once)
 
-  # [-1L]: exclude factor for roofs
+  # [-1L]: exclude the runoff factor for roofs
   runoff_factor_matrix <- expand_to_matrix(
     x = runoff_factors[-1L],
     nrow = nrow(input)
