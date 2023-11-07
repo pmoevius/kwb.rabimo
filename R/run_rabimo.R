@@ -16,7 +16,7 @@ run_rabimo <- function(input_data, config)
   # "usage tuple" columns: "usage", "yield", "irrigation"
   input <- cat_and_run(
     "Preparing input data (e.g. adding usage tuple)",
-    kwb.rabimo::prepareInputData(reset_row_names(input_data))
+    prepareInputData(reset_row_names(input_data))
   )
 
   # Create accessor functions to input columns and config elements
@@ -28,7 +28,7 @@ run_rabimo <- function(input_data, config)
   # Prepare precipitation data for all rows
   precipitation <- cat_and_run(
     "Preparing precipitation data for all block areas",
-    as.data.frame(kwb.rabimo::getPrecipitation(
+    as.data.frame(getPrecipitation(
       fetch_input("precipitationYear"),
       fetch_input("precipitationSummer"),
       fetch_config("precipitationCorrectionFactor")
@@ -38,7 +38,7 @@ run_rabimo <- function(input_data, config)
   # Prepare potential evaporation data for all rows
   pot_evaporation <- cat_and_run(
     "Preparing potential evaporation data for all block areas",
-    kwb.rabimo::getPotentialEvaporation(
+    getPotentialEvaporation(
       isWaterbody = (fetch_input("usage") == "waterbody_G"),
       district = fetch_input("district"),
       lookup = fetch_config("potentialEvaporation")
@@ -55,7 +55,7 @@ run_rabimo <- function(input_data, config)
   # all values are 0.0. (hsonne: really?)
   soil_properties <- cat_and_run(
     "Preparing soil property data for all block areas",
-    expr = as.data.frame(kwb.rabimo::getSoilProperties(
+    expr = as.data.frame(getSoilProperties(
       usage = fetch_input("usage"),
       yield = fetch_input("yield"),
       depthToWaterTable = fetch_input("depthToWaterTable"),
@@ -66,12 +66,12 @@ run_rabimo <- function(input_data, config)
     ))
   )
 
-  # precalculate all results of kwb.rabimo::realEvapoTranspiration()
+  # precalculate all results of realEvapoTranspiration()
   real_evaporation <- cat_and_run(
     "Precalculating real evapotranspirations for all input combinations",
     expr = fetch_config("bagrovValues") %>%
       lapply(function(bagrovParameter) {
-        kwb.rabimo::realEvapoTranspiration(
+        realEvapoTranspiration(
           potentialEvaporation = pot_evaporation_per_year,
           xRatio = pot_evaporation$xRatio,
           bagrovParameter = rep(bagrovParameter, nrow(input)),
@@ -87,7 +87,7 @@ run_rabimo <- function(input_data, config)
       "Precalculating actual evapotranspirations for waterbodies or pervious",
       "areas"
     ),
-    kwb.rabimo::actualEvaporationWaterbodyOrPervious(
+    actualEvaporationWaterbodyOrPervious(
       usageTuple = fetch_input(c("usage", "yield", "irrigation")),
       potentialEvaporation = pot_evaporation,
       soilProperties = soil_properties,
@@ -276,7 +276,7 @@ run_rabimo <- function(input_data, config)
 
   # Helper function to calculate flow, relative to total area
   to_flow <- function(column) {
-    kwb.rabimo::yearlyHeightToVolumeFlow(
+    yearlyHeightToVolumeFlow(
       height = select_columns(result_data, column),
       area = select_columns(input, "totalArea")
     )
