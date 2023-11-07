@@ -25,9 +25,8 @@ getUsageTuple <- function(usage, type, include_inputs = FALSE)
   key_columns <- names(data)
   value_columns <- c("usage", "yield", "irrigation")
 
-  # Provide lookup table (replace -1 with NA)
+  # Provide lookup table
   lookup <- BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION
-  lookup$berlin_type[lookup$berlin_type == -1L] <- NA
 
   result <- value_columns %>%
     lapply(function(value_column) {
