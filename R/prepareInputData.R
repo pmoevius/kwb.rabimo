@@ -9,12 +9,12 @@
 #'   BELAG2, BELAG3, BELAG4, KAN_VGU, STR_BELAG1, STR_BELAG2, STR_BELAG3,
 #'   STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150
 #' @return \code{input_data} with columns renamed and additional columns
-#'  (e.g. ratios calculated from percentages)
+#'  (e.g. ratios calculated from percentages, (main) usage, yield, irrigation)
 #' @export
 prepareInputData <- function(input_data)
 {
-  # Define column renamings from ABIMO 3.2 names to ABIMO 3.3 internal names
-  renamings <- list(
+  # Rename columns from ABIMO 3.2 names to ABIMO 3.3 internal names
+  input <- rename_columns(input_data, list(
     REGENJA = "precipitationYear",
     REGENSO = "precipitationSummer",
     NUTZUNG = "berlin_usage",
@@ -39,30 +39,38 @@ prepareInputData <- function(input_data)
     FLUR = "depthToWaterTable",
     FELD_30 = "fieldCapacity_30",
     FELD_150 = "fieldCapacity_150"
-  )
+  ))
 
-  # Rename columns
-  input <- rename_columns(input_data, renamings)
+  # Helper function to select column and divide by 100
+  by_100 <- function(x) select_columns(input, x) / 100
 
   # Calculate addtional columns (e.g. percentage to fraction)
-  input$totalArea <- input$mainArea + input$roadArea
-  input$areaFractionMain <- input$mainArea/input$totalArea
-  input$areaFractionRoad <- input$roadArea/input$totalArea
-  input$mainFractionBuiltSealed <- input$mainPercentageBuiltSealed / 100
-  input$mainFractionUnbuiltSealed <- input$mainPercentageUnbuiltSealed / 100
-  input$roadFractionSealed <- input$roadPercentageSealed / 100
-  input$builtSealedFractionConnected <- input$builtSealedPercentageConnected / 100
-  input$unbuiltSealedFractionSurface1 <- input$unbuiltSealedPercentageSurface1 / 100
-  input$unbuiltSealedFractionSurface2 <- input$unbuiltSealedPercentageSurface2 / 100
-  input$unbuiltSealedFractionSurface3 <- input$unbuiltSealedPercentageSurface3 / 100
-  input$unbuiltSealedFractionSurface4 <- input$unbuiltSealedPercentageSurface4 / 100
-  input$unbuiltSealedFractionConnected <- input$unbuiltSealedPercentageConnected / 100
-  input$roadSealedFractionSurface1 <- input$roadSealedPercentageSurface1 / 100
-  input$roadSealedFractionSurface2 <- input$roadSealedPercentageSurface2 / 100
-  input$roadSealedFractionSurface3 <- input$roadSealedPercentageSurface3 / 100
-  input$roadSealedFractionSurface4 <- input$roadSealedPercentageSurface4 / 100
-  input$roadSealedFractionConnected <- input$roadSealedPercentageConnected / 100
+  main_area <- select_columns(input, "mainArea")
+  road_area <- select_columns(input, "roadArea")
+  total_area <-  main_area + road_area
 
-  # Return the modified input data
-  input
+  input[["totalArea"]] <- total_area
+  input[["areaFractionMain"]] <- select_columns(input, "mainArea") / total_area
+  input[["areaFractionRoad"]] <- select_columns(input, "roadArea") / total_area
+
+  input[["mainFractionBuiltSealed"]] <- by_100("mainPercentageBuiltSealed")
+  input[["mainFractionUnbuiltSealed"]] <- by_100("mainPercentageUnbuiltSealed")
+  input[["roadFractionSealed"]] <- by_100("roadPercentageSealed")
+  input[["builtSealedFractionConnected"]] <- by_100("builtSealedPercentageConnected")
+  input[["unbuiltSealedFractionSurface1"]] <- by_100("unbuiltSealedPercentageSurface1")
+  input[["unbuiltSealedFractionSurface2"]] <- by_100("unbuiltSealedPercentageSurface2")
+  input[["unbuiltSealedFractionSurface3"]] <- by_100("unbuiltSealedPercentageSurface3")
+  input[["unbuiltSealedFractionSurface4"]] <- by_100("unbuiltSealedPercentageSurface4")
+  input[["unbuiltSealedFractionConnected"]] <- by_100("unbuiltSealedPercentageConnected")
+  input[["roadSealedFractionSurface1"]] <- by_100("roadSealedPercentageSurface1")
+  input[["roadSealedFractionSurface2"]] <- by_100("roadSealedPercentageSurface2")
+  input[["roadSealedFractionSurface3"]] <- by_100("roadSealedPercentageSurface3")
+  input[["roadSealedFractionSurface4"]] <- by_100("roadSealedPercentageSurface4")
+  input[["roadSealedFractionConnected"]] <- by_100("roadSealedPercentageConnected")
+
+  # Add the "usage tuple" as columns
+  cbind(input, getUsageTuple(
+    usage = select_columns(input, "berlin_usage"),
+    type = select_columns(input, "berlin_type")
+  ))
 }

@@ -4,7 +4,7 @@
 \alias{getPotentialEvaporation}
 \title{Provide Data on Potential Evaporation}
 \usage{
-getPotentialEvaporation(isWaterbody, district, config)
+getPotentialEvaporation(isWaterbody, district, lookup)
 }
 \arguments{
 \item{isWaterbody}{(vector of) logical indicating whether a block area is
@@ -13,8 +13,10 @@ of type (from the type/yield/irrigation tuple) "waterbody"}
 \item{district}{(vector of) integer indicating the district number of the
 plot area (from the original input column "BEZIRK")}
 
-\item{config}{list structure as returned by
-\code{\link{abimo_config_to_config}}}
+\item{lookup}{data frame with key columns \code{isWaterbody}, \code{district}
+and value columns \code{etp}, \code{etps}. A data frame of the required
+structure is returned by \code{\link{abimo_config_to_config}} in list
+element \code{"potentialEvaporation"}}
 }
 \description{
 Provide Data on Potential Evaporation
@@ -25,7 +27,7 @@ config <- abimo_config_to_config(kwb.abimo:::read_config())
 getPotentialEvaporation(
   is_waterbody = TRUE,
   district = 1,
-  config = config
+  lookup = config$potentialEvaporation
 )
 }
 

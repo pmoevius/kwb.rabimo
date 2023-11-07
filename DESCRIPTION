@@ -24,6 +24,7 @@ Imports:
     kwb.utils,
     magrittr,
     methods,
+    parallel,
     xml2
 Remotes: 
     github::kwb-r/kwb.abimo,
