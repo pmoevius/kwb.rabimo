@@ -24,7 +24,7 @@ actualEvaporationWaterbodyOrPervious <- function(
     digits = NULL
 )
 {
-  epYear <- potentialEvaporation$perYearFloat
+  epYear <- select_elements(potentialEvaporation, "perYear")
 
   # Initialise result vector
   y <- numeric(length = length(epYear))
@@ -53,8 +53,8 @@ actualEvaporationWaterbodyOrPervious <- function(
     usage = usageTuple$usage[i],
     yield = usageTuple$yield[i],
     irrigation = usageTuple$irrigation[i],
-    precipitationSummer = precipitation$inSummerInteger[i],
-    potentialEvaporationSummer = potentialEvaporation$inSummerInteger[i],
+    precipitationSummer = precipitation$inSummer[i],
+    potentialEvaporationSummer = potentialEvaporation$inSummer[i],
     meanPotentialCapillaryRiseRate =
       soilProperties$meanPotentialCapillaryRiseRate[i]
   )
@@ -75,7 +75,7 @@ actualEvaporationWaterbodyOrPervious <- function(
   y[i] <- realEvapoTranspiration(
     potentialEvaporation = epYear[i],
     xRatio = (
-      precipitation$perYearCorrectedFloat[i] +
+      precipitation$perYear[i] +
         soilProperties$meanPotentialCapillaryRiseRate[i] +
         usageTuple$irrigation[i]
     ) / epYear[i],

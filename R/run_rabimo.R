@@ -45,8 +45,8 @@ run_rabimo <- function(input_data, config)
     )
   )
 
-  precipitation_per_year <- select_columns(precipitation, "perYearCorrectedFloat")
-  pot_evaporation_per_year <- select_columns(pot_evaporation, "perYearFloat")
+  precipitation_per_year <- select_columns(precipitation, "perYear")
+  pot_evaporation_per_year <- select_columns(pot_evaporation, "perYear")
 
   pot_evaporation$xRatio <- precipitation_per_year / pot_evaporation_per_year
 

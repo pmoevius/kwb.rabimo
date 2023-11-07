@@ -30,18 +30,13 @@ getPotentialEvaporation <- function(isWaterbody, district, lookup)
   )
 
   # One after another, lookup values for "etp", "etps" in the lookup table
-  result <- c(
-    perYearInteger = "etp",
-    inSummerInteger = "etps"
-  ) %>%
+  result <- c(perYear = "etp", inSummer = "etps") %>%
     lapply(function(column) {
       multi_column_lookup(
         data = data,
         lookup = select_columns(lookup, c(names(data), column))
       )
     })
-
-  result[["perYearFloat"]] <- as.double(result[["perYearInteger"]])
 
   if (all(lengths(result) == 1L)) {
     return(result)
