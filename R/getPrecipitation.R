@@ -5,7 +5,7 @@
 #' @param precipitationYear precipitation per year in mm
 #' @param precipitationSummer precipitation within summer period in mm
 #' @param correctionFactor correction factor
-#' @return list with elements \code{perYearInteger}, \code{inSummerInteger},
+#' @return list with elements \code{perYearInteger},
 #'   \code{perYearCorrectedFloat}, \code{inSummerFloat}
 #' @export
 #' @examples
@@ -20,7 +20,6 @@ getPrecipitation <- function(
 
     # Set integer fields (originally from input dbf)
     perYearInteger = precipitationYear,
-    inSummerInteger = precipitationSummer,
 
     # Set float fields:
     # - Correct the (non-summer) precipitation (at ground level)

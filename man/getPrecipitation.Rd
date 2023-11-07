@@ -14,7 +14,7 @@ getPrecipitation(precipitationYear, precipitationSummer, correctionFactor)
 \item{correctionFactor}{correction factor}
 }
 \value{
-list with elements \code{perYearInteger}, \code{inSummerInteger},
+list with elements \code{perYearInteger},
 \code{perYearCorrectedFloat}, \code{inSummerFloat}
 }
 \description{
