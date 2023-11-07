@@ -98,16 +98,15 @@ run_rabimo <- function(input_data, config)
     )
   )
 
+  # Provide Bagrov parameters (efficiencies) and runoff coefficients
+  bagrov_values <- fetch_config("bagrovValues")
+  runoff_factors <- fetch_config("runoffFactors")
+
   # Calculate roof related variables
-
-  bagrov_value_roof <- fetch_config("bagrovValues")[["Dachflaechen"]]
-
-  runoff_factor_roof <- fetch_config("runoffFactors")[["Dachflaechen"]]
-
-  evaporation_roof <- real_evaporation[, "Dachflaechen"]
+  key_roof <- "Dachflaechen"
 
   runoff_roof_actual_factor <-
-    runoff_factor_roof *
+    runoff_factors[[key_roof]] *
     fetch_input("builtSealedFractionConnected") *
     fetch_input("mainFractionBuiltSealed") *
     fetch_input("areaFractionMain")
@@ -128,7 +127,7 @@ run_rabimo <- function(input_data, config)
 
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
-  runoff_roof <- precipitation_per_year - evaporation_roof
+  runoff_roof <- precipitation_per_year - real_evaporation[[key_roof]]
 
   # actual runoff from roof surface (area based, with no infiltration)
   runoff_roof_actual <- runoff_roof_actual_factor * runoff_roof
@@ -143,9 +142,6 @@ run_rabimo <- function(input_data, config)
   roadSurfaceFractions <- fetch_input(
     paste0("roadSealedFractionSurface", 1:4)
   )
-
-  bagrov_values <- fetch_config("bagrovValues")
-  runoff_factors <- fetch_config("runoffFactors")
 
   # -1: remove roof column
   evaporation_sealed <- real_evaporation[, -1L]
@@ -327,7 +323,7 @@ run_rabimo <- function(input_data, config)
       real_evaporation = real_evaporation,
       evaporation_unsealed = evaporation_unsealed,
       roof = list(
-        evaporation_roof = evaporation_roof,
+        evaporation_roof = real_evaporation[[key_roof]],
         runoff_roof = runoff_roof,
         runoff_roof_actual = runoff_roof_actual,
         infiltration_roof_actual = infiltration_roof_actual
