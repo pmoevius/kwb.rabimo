@@ -31,5 +31,6 @@ getSoilProperties(
 \item{dbg}{logical indicating whether or not to show debug messages}
 }
 \description{
-Calculate Soil Properties
+Provide variables that are relevant to calculate the actual evaporation for
+unsealed areas
 }

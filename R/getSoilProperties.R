@@ -2,6 +2,9 @@
 
 #' Calculate Soil Properties
 #'
+#' Provide variables that are relevant to calculate the actual evaporation for
+#' unsealed areas
+#'
 #' @param usage usage string, one of "vegetationless_D", "waterbody_G",
 #'   "horticultural_K", "agricultural_L", "forested_W"
 #' @param yield yield class
@@ -21,17 +24,7 @@ getSoilProperties <- function(
     dbg = FALSE
 )
 {
-  #kwb.utils::assignPackageObjects("kwb.rabimo")
-  if (FALSE) {
-    data <- kwb.rabimo::prepareInputData(kwb.abimo::abimo_input_2019[1:10,])
-    usage <- data$usage
-    yield <- data$yield
-    depthToWaterTable <- data$depthToWaterTable
-    fieldCapacity_30 <- data$fieldCapacity_30
-    fieldCapacity_150 <- data$fieldCapacity_150
-  }
-
-  #Initialise variables that are relevant to calculate evaporation
+  # Initialise result list
   result <- list()
 
   result[["depthToWaterTable"]] <- depthToWaterTable
