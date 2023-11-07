@@ -28,7 +28,7 @@ abimo_config_to_config <- function(abimo_config)
     expand_district_ranges() %>%
     all_columns_to_int() %>%
     rename_columns(list(eg = "etp")) %>%
-    cbind(etps = -1L, isWaterbody = TRUE)
+    cbind(etps = 0, isWaterbody = TRUE)
 
   evap_else <- result %>%
     select_elements(element_else) %>%
