@@ -259,5 +259,5 @@ calculate_bagrov_table <- function(n_values) {
     }
   }
 
-  return(results)
+  results
 }
