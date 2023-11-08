@@ -48,7 +48,7 @@ get_soil_properties <- function(
   result[["potential_capillary_rise_TAS"]] <- ifelse(
     test = is_waterbody,
     yes = default_for_waterbodies,
-    no = result$depth_to_water_table - get_rooting_depth(usage, yield)
+    no = depth_to_water_table - get_rooting_depth(usage, yield)
   )
 
   # mittlere pot. kapillare Aufstiegsrate kr (mm/d) des Sommerhalbjahres
@@ -57,8 +57,8 @@ get_soil_properties <- function(
     test = is_waterbody,
     yes = default_for_waterbodies,
     no = get_mean_potential_capillary_rise_rate(
-      result$potential_capillary_rise_TAS,
-      result$usable_field_capacity,
+      select_elements(result, "potential_capillary_rise_TAS"),
+      select_elements(result, "usable_field_capacity"),
       days_of_growth = estimate_days_of_growth(usage, yield),
       dbg = dbg
     )

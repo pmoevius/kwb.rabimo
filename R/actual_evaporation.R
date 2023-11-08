@@ -32,7 +32,8 @@ actual_evaporation_waterbody_or_pervious <- function(
   # for water bodies return the potential evaporation
   # ??? in this test version not implemented ???
   # TODO: Check with Francesco
-  is_water <- (usage_tuple$usage == "waterbody_G")
+  usages <- select_elements(usage_tuple, "usage")
+  is_water <- (usages == "waterbody_G")
 
   y[is_water] <- ep_year[is_water]
 
@@ -49,14 +50,17 @@ actual_evaporation_waterbody_or_pervious <- function(
 
   # determine the BAGROV parameter(s) for unsealed surfaces
   bagrov_parameter <- get_bagrov_parameter_unsealed(
-    g02 = soil_properties$g02[i],
-    usage = usage_tuple$usage[i],
-    yield = usage_tuple$yield[i],
-    irrigation = usage_tuple$irrigation[i],
-    precipitation_summer = precipitation$in_summer[i],
-    potential_evaporation_summer = potential_evaporation$in_summer[i],
-    mean_potential_capillary_rise_rate =
-      soil_properties$mean_potential_capillary_rise_rate[i]
+    g02 = select_elements(soil_properties, "g02")[i],
+    usage = usages[i],
+    yield = select_elements(usage_tuple, "yield")[i],
+    irrigation = select_elements(usage_tuple, "irrigation")[i],
+    precipitation_summer = select_elements(precipitation, "in_summer")[i],
+    potential_evaporation_summer = select_elements(
+      potential_evaporation, "in_summer"
+    )[i],
+    mean_potential_capillary_rise_rate = select_elements(
+      soil_properties, "mean_potential_capillary_rise_rate"
+    )[i]
   )
 
   if (!is.null(digits)) {
@@ -75,16 +79,16 @@ actual_evaporation_waterbody_or_pervious <- function(
   y[i] <- real_evapo_transpiration(
     potential_evaporation = ep_year[i],
     x_ratio = (
-      precipitation$per_year[i] +
-        soil_properties$mean_potential_capillary_rise_rate[i] +
-        usage_tuple$irrigation[i]
+      select_elements(precipitation, "per_year")[i] +
+        select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i] +
+        select_elements(usage_tuple, "irrigation")[i]
     ) / ep_year[i],
     bagrov_parameter = bagrov_parameter,
     ...
   )
 
-  rises <- soil_properties$potentialCapillaryRise_TAS
-  depths <- soil_properties$depthToWaterTable
+  rises <- select_elements(soil_properties, "potential_capillary_rise_TAS")
+  depths <- select_elements(soil_properties, "depth_to_water_table")
 
   # indices of entries related to non-water usage and capillary rises < 0
   j <- which(!is_water & rises < 0)
@@ -275,7 +279,7 @@ wet_summer_correction_factor <- function(
   if (use_abimo_approx) {
     interpolate(x = x, y = y, xout = xout)
   } else {
-    stats::approx(x = x, y = y, xout = xout, rule = 2L)$y
+    select_columns(stats::approx(x = x, y = y, xout = xout, rule = 2L), "y")
   }
 }
 
