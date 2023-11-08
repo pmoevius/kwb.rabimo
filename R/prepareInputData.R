@@ -55,7 +55,7 @@ prepareInputData <- function(input_data)
 
   input[["mainFractionBuiltSealed"]] <- by_100("mainPercentageBuiltSealed")
   input[["mainFractionUnbuiltSealed"]] <- by_100("mainPercentageUnbuiltSealed")
-  input[["roadFractionSealed"]] <- by_100("roadPercentageSealed")
+  input[["roadFractionRoadSealed"]] <- by_100("roadPercentageSealed")
   input[["builtSealedFractionConnected"]] <- by_100("builtSealedPercentageConnected")
   input[["unbuiltSealedFractionSurface1"]] <- by_100("unbuiltSealedPercentageSurface1")
   input[["unbuiltSealedFractionSurface2"]] <- by_100("unbuiltSealedPercentageSurface2")
