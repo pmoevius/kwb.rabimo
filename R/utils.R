@@ -55,6 +55,15 @@ filter_elements <- function(x, pattern)
   x[grepl(pattern, names(x))]
 }
 
+# first_upper ------------------------------------------------------------------
+first_upper <- function(x) {
+  chars <- strsplit(x, "")
+  paste0(
+    toupper(sapply(chars, "[", 1L)),
+    sapply(chars, function(x) paste(x[-1L], collapse = ""))
+  )
+}
+
 # get_attribute ----------------------------------------------------------------
 #' @importFrom kwb.utils getAttribute
 get_attribute <- kwb.utils::getAttribute
@@ -303,3 +312,4 @@ stop_formatted <- kwb.utils::stopFormatted
 # string_list ------------------------------------------------------------------
 #' @importFrom kwb.utils stringList
 string_list <- kwb.utils::stringList
+

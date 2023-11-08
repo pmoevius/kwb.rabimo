@@ -22,6 +22,7 @@ run_rabimo <- function(input_data, config)
   # Create accessor functions to input columns and config elements
   fetch_input <- create_accessor(input)
   fetch_config <- create_accessor(config)
+  get_fraction <- create_fraction_accessor(input)
 
   # Precalculate additional inputs (out of the main loop)
 
@@ -106,24 +107,12 @@ run_rabimo <- function(input_data, config)
   key_roof <- "Dachflaechen"
 
   runoff_roof_actual_factor <-
-    runoff_factors[[key_roof]] *
-    fetch_input("builtSealedFractionConnected") *
-    fetch_input("mainFractionBuiltSealed") *
-    fetch_input("areaFractionMain")
-  # * prod(unlist(fetch_input(c(
-  #   "builtSealedFractionConnected",
-  #   "mainFractionBuiltSealed",
-  #   "areaFractionMain"
-  # ))))
+    get_fraction("main/builtSealed/connected") *
+    runoff_factors[[key_roof]]
 
   infiltration_roof_actual_factor <-
-    (1 - fetch_input("builtSealedFractionConnected")) *
-    fetch_input("mainFractionBuiltSealed") *
-    fetch_input("areaFractionMain")
-  # * prod(unlist(fetch_input(c(
-  #   "mainFractionBuiltSealed",
-  #   "areaFractionMain"
-  # ))))
+    get_fraction("main/builtSealed") *
+    (1 - fetch_input("builtSealedFractionConnected"))
 
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
@@ -159,28 +148,18 @@ run_rabimo <- function(input_data, config)
     nrow = nrow(input)
   )
 
-  runoff_sealed_actual <- runoff_factor_matrix *
-    (
-      unbuiltSurfaceFractions *
-        fetch_input("unbuiltSealedFractionConnected")  *
-        fetch_input("mainFractionUnbuiltSealed")  *
-        fetch_input("areaFractionMain") +
-        roadSurfaceFractions *
-        fetch_input("roadSealedFractionConnected") *
-        fetch_input("roadFractionRoadSealed") *
-        fetch_input("areaFractionRoad")
-    ) * runoff_sealed
+  runoff_sealed_actual <- runoff_factor_matrix * (
+    get_fraction("main/unbuiltSealed/connected") * unbuiltSurfaceFractions +
+      get_fraction("road/roadSealed/connected") * roadSurfaceFractions
+  ) *
+    runoff_sealed
 
   # infiltration of sealed surfaces (for all surface classes at once)
-  infiltration_sealed_actual <-
-    (
-      unbuiltSurfaceFractions *
-        fetch_input("mainFractionUnbuiltSealed")  *
-        fetch_input("areaFractionMain") +
-        roadSurfaceFractions *
-        fetch_input("roadFractionRoadSealed") *
-        fetch_input("areaFractionRoad")
-    ) * runoff_sealed -
+  infiltration_sealed_actual <- (
+    get_fraction("main/unbuiltSealed") * unbuiltSurfaceFractions +
+      get_fraction("road/roadSealed") * roadSurfaceFractions
+  ) *
+    runoff_sealed -
     runoff_sealed_actual
 
   # Initialise result data frame
@@ -191,8 +170,8 @@ run_rabimo <- function(input_data, config)
 
   # Infiltration of road (unsealed areas)
   infiltration_unsealedRoads <-
+    get_fraction("road") *
     (1 - fetch_input("roadFractionRoadSealed")) *
-    fetch_input("areaFractionRoad") *
     # last surface class
     runoff_sealed[, ncol(runoff_sealed)]
 
