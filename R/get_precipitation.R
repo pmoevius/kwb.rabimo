@@ -18,7 +18,7 @@ get_precipitation <- function(
   # - Correct the (non-summer) precipitation (at ground level)
   # - No correction for summer precipitation!
 
-  list(
+  data.frame(
     per_year = precipitation_year * correction_factor,
     in_summer = precipitation_summer
   )

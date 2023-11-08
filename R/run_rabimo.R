@@ -29,11 +29,11 @@ run_rabimo <- function(input_data, config)
   # Prepare precipitation data for all rows
   precipitation <- cat_and_run(
     "Preparing precipitation data for all block areas",
-    as.data.frame(get_precipitation(
+    get_precipitation(
       fetch_input("precipitationYear"),
       fetch_input("precipitationSummer"),
-      fetch_config("precipitationCorrectionFactor")
-    ))
+      fetch_config("precipitation_correction_factor")
+    )
   )
 
   # Prepare potential evaporation data for all rows
@@ -42,7 +42,7 @@ run_rabimo <- function(input_data, config)
     get_potential_evaporation(
       is_waterbody = (fetch_input("usage") == "waterbody_G"),
       district = fetch_input("district"),
-      lookup = fetch_config("potentialEvaporation")
+      lookup = fetch_config("potential_evaporation")
     )
   )
 
@@ -57,7 +57,7 @@ run_rabimo <- function(input_data, config)
   # all values are 0.0. (hsonne: really?)
   soil_properties <- cat_and_run(
     "Preparing soil property data for all block areas",
-    expr = as.data.frame(get_soil_properties(
+    expr = get_soil_properties(
       usage = fetch_input("usage"),
       yield = fetch_input("yield"),
       depth_to_water_table = fetch_input("depthToWaterTable"),
@@ -65,22 +65,21 @@ run_rabimo <- function(input_data, config)
       field_capacity_150 = fetch_input("fieldCapacity_150"),
       default_for_waterbodies = 0,
       dbg = FALSE
-    ))
+    )
   )
 
   # precalculate all results of realEvapoTranspiration()
   real_evaporation <- cat_and_run(
     "Precalculating real evapotranspirations for all input combinations",
     expr = fetch_config("bagrov_values") %>%
-      lapply(function(bagrov_parameter) {
+      do.call(data.frame, lapply(function(bagrov_parameter) {
         real_evapo_transpiration(
           potential_evaporation = pot_evaporation_per_year,
           x_ratio = pot_evaporation[["x_ratio"]],
           bagrov_parameter = rep(bagrov_parameter, nrow(input)),
           use_abimo_algorithm = use_abimo_algorithm
         )
-      }) %>%
-      as.data.frame()
+      }))
   )
 
   # precalculate all results of actualEvaporationWaterbodyOrPervious()

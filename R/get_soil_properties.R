@@ -24,8 +24,8 @@ get_soil_properties <- function(
     dbg = FALSE
 )
 {
-  # Initialise result list
-  result <- list()
+  # Initialise result data frame
+  result <- data.frame()
 
   result[["depth_to_water_table"]] <- depth_to_water_table
 
