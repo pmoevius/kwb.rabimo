@@ -100,7 +100,6 @@ run_rabimo <- function(input_data, config)
   )
 
   # Provide Bagrov parameters (efficiencies) and runoff coefficients
-  bagrov_values <- fetch_config("bagrov_values")
   runoff_factors <- fetch_config("runoff_factors")
 
   # Calculate roof related variables
