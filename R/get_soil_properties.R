@@ -1,4 +1,4 @@
-# getSoilProperties ------------------------------------------------------------
+# get_soil_properties ----------------------------------------------------------
 
 #' Calculate Soil Properties
 #'
@@ -8,82 +8,82 @@
 #' @param usage usage string, one of "vegetationless_D", "waterbody_G",
 #'   "horticultural_K", "agricultural_L", "forested_W"
 #' @param yield yield class
-#' @param depthToWaterTable depth to water table
-#' @param fieldCapacity_30 field capacity in 30 cm depth
-#' @param fieldCapacity_150 field capacity in 150 cm depth
-#' @param defaultForWaterbodies value to be used for waterbodies. Default: NA
+#' @param depth_to_water_table depth to water table
+#' @param field_capacity_30 field capacity in 30 cm depth
+#' @param field_capacity_150 field capacity in 150 cm depth
+#' @param default_for_waterbodies value to be used for waterbodies. Default: NA
 #' @param dbg logical indicating whether or not to show debug messages
 #' @export
-getSoilProperties <- function(
+get_soil_properties <- function(
     usage,
     yield,
-    depthToWaterTable,
-    fieldCapacity_30,
-    fieldCapacity_150,
-    defaultForWaterbodies = NA,
+    depth_to_water_table,
+    field_capacity_30,
+    field_capacity_150,
+    default_for_waterbodies = NA,
     dbg = FALSE
 )
 {
   # Initialise result list
   result <- list()
 
-  result[["depthToWaterTable"]] <- depthToWaterTable
+  result[["depth_to_water_table"]] <- depth_to_water_table
 
   # Nothing to do for waterbodies
-  isWaterbody <- usage == "waterbody_G"
+  is_waterbody <- usage == "waterbody_G"
 
   # Feldkapazitaet
-  result[["usableFieldCapacity"]] <- ifelse(
-    test = isWaterbody,
-    yes = defaultForWaterbodies,
-    no = estimateWaterHoldingCapacity(
-      f30 = fieldCapacity_30,
-      f150 = fieldCapacity_150,
-      isForest = (usage == "forested_W")
+  result[["usable_field_capacity"]] <- ifelse(
+    test = is_waterbody,
+    yes = default_for_waterbodies,
+    no = estimate_water_holding_capacity(
+      f30 = field_capacity_30,
+      f150 = field_capacity_150,
+      is_forest = (usage == "forested_W")
     )
   )
 
   # pot. Aufstiegshoehe TAS = FLUR - mittl. Durchwurzelungstiefe TWS
   # potentielle Aufstiegshoehe
-  result[["potentialCapillaryRise_TAS"]] <- ifelse(
-    test = isWaterbody,
-    yes = defaultForWaterbodies,
-    no = result$depthToWaterTable - getRootingDepth(usage, yield)
+  result[["potential_capillary_rise_TAS"]] <- ifelse(
+    test = is_waterbody,
+    yes = default_for_waterbodies,
+    no = result$depth_to_water_table - get_rooting_depth(usage, yield)
   )
 
   # mittlere pot. kapillare Aufstiegsrate kr (mm/d) des Sommerhalbjahres
   # Kapillarer Aufstieg pro Jahr ID_KR neu, old: KR
-  result[["meanPotentialCapillaryRiseRateRaw"]] <- ifelse(
-    test = isWaterbody,
-    yes = defaultForWaterbodies,
-    no = getMeanPotentialCapillaryRiseRate(
-      result$potentialCapillaryRise_TAS,
-      result$usableFieldCapacity,
-      daysOfGrowth = estimateDaysOfGrowth(usage, yield),
+  result[["mean_potential_capillary_rise_rate_raw"]] <- ifelse(
+    test = is_waterbody,
+    yes = default_for_waterbodies,
+    no = get_mean_potential_capillary_rise_rate(
+      result$potential_capillary_rise_TAS,
+      result$usable_field_capacity,
+      days_of_growth = estimate_days_of_growth(usage, yield),
       dbg = dbg
     )
   )
 
   # Make sure that e.g. 14.999999991 becomes 15, not 14
-  result[["meanPotentialCapillaryRiseRate"]] <- as.integer(
-    round(result[["meanPotentialCapillaryRiseRateRaw"]], 12L)
+  result[["mean_potential_capillary_rise_rate"]] <- as.integer(
+    round(result[["mean_potential_capillary_rise_rate_raw"]], 12L)
   )
 
   # Add G02 values as they depend only on the usable field capacity
-  result[["g02"]] <- lookupG02(
-    usableFieldCapacity = select_elements(result, "usableFieldCapacity")
+  result[["g02"]] <- lookup_g02(
+    usable_field_capacity = select_elements(result, "usable_field_capacity")
   )
 
   result
 }
 
-# estimateWaterHoldingCapacity -------------------------------------------------
-estimateWaterHoldingCapacity <- function(f30, f150, isForest)
+# estimate_water_holding_capacity ----------------------------------------------
+estimate_water_holding_capacity <- function(f30, f150, is_forest)
 {
   n <- length(f30)
 
   stopifnot(length(f150) == n)
-  stopifnot(length(isForest) == n)
+  stopifnot(length(is_forest) == n)
 
   # Initialise result vector with the default result
   y <- numeric(n)
@@ -97,12 +97,12 @@ estimateWaterHoldingCapacity <- function(f30, f150, isForest)
 
   # Special case 2: minor difference
   todo <- !todo & abs(f30 - f150) < min_capacity
-  y[todo] <- as.double(ifelse(isForest[todo], f150[todo], f30[todo]))
+  y[todo] <- as.double(ifelse(is_forest[todo], f150[todo], f30[todo]))
 
   # Default result for the non-special cases
   todo <- is.na(y)
 
-  y[todo] <- ifelse(isForest[todo],
+  y[todo] <- ifelse(is_forest[todo],
     0.25 * f30[todo] + 0.75 * f150[todo],
     0.75 * f30[todo] + 0.25 * f150[todo]
   )
@@ -110,8 +110,8 @@ estimateWaterHoldingCapacity <- function(f30, f150, isForest)
   y
 }
 
-# getRootingDepth --------------------------------------------------------------
-getRootingDepth <- function(usage, yield)
+# get_rooting_depth ------------------------------------------------------------
+get_rooting_depth <- function(usage, yield)
 {
   n <- length(usage)
   stopifnot(length(yield) == n)
@@ -131,7 +131,7 @@ getRootingDepth <- function(usage, yield)
   y
 }
 
-# getRootingDepth_1 --------------------------------------------------------------
+# getRootingDepth_1 ------------------------------------------------------------
 getRootingDepth_1 <- function(usage, yield)
 {
   stopifnot(length(usage) == 1L)
@@ -157,32 +157,32 @@ getRootingDepth_1 <- function(usage, yield)
   0.2
 }
 
-# getMeanPotentialCapillaryRiseRate --------------------------------------------
-getMeanPotentialCapillaryRiseRate <- function(
-    potentialCapillaryRise,
-    usableFieldCapacity,
-    daysOfGrowth,
+# get_mean_potential_capillary_rise_rate ---------------------------------------
+get_mean_potential_capillary_rise_rate <- function(
+    potential_capillary_rise,
+    usable_field_capacity,
+    days_of_growth,
     dbg = FALSE
 )
 {
-  # potentialCapillaryRise <- 0.39
-  # usableFieldCapacity <- 8.2
+  # potential_capillary_rise <- 0.39
+  # usable_field_capacity <- 8.2
 
-  n <- length(potentialCapillaryRise)
-  stopifnot(length(usableFieldCapacity) == n)
-  stopifnot(length(daysOfGrowth) == n)
+  n <- length(potential_capillary_rise)
+  stopifnot(length(usable_field_capacity) == n)
+  stopifnot(length(days_of_growth) == n)
 
   M <- MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX
 
-  i <- helpers_index(usableFieldCapacity, attr(M, "row_values"), dbg = dbg)
-  j <- helpers_index(potentialCapillaryRise, attr(M, "col_values"), dbg = dbg)
+  i <- helpers_index(usable_field_capacity, attr(M, "row_values"), dbg = dbg)
+  j <- helpers_index(potential_capillary_rise, attr(M, "col_values"), dbg = dbg)
 
   indices <- cbind(i, j) + 1L
 
-  kr <- ifelse(potentialCapillaryRise <= 0.0, 7.0, M[indices])
+  kr <- ifelse(potential_capillary_rise <= 0.0, 7.0, M[indices])
 
-  #as.integer(round(daysOfGrowth * kr))
-  daysOfGrowth * kr
+  #as.integer(round(days_of_growth * kr))
+  days_of_growth * kr
 }
 
 # MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX ----------------------------
@@ -221,8 +221,8 @@ MEAN_POTENTIAL_CAPILLARY_RISE_RATES_SUMMER_MATRIX <- local({
   )
 })
 
-# estimateDaysOfGrowth ---------------------------------------------------------
-estimateDaysOfGrowth <- function(usage, yield, default = 50L)
+# estimate_days_of_growth ------------------------------------------------------
+estimate_days_of_growth <- function(usage, yield, default = 50L)
 {
   n <- length(usage)
 
@@ -232,8 +232,8 @@ estimateDaysOfGrowth <- function(usage, yield, default = 50L)
   y <- rep(NA_integer_, n)
 
   # Special case for agricultural use
-  isAgricultural <- usage == "agricultural_L"
-  y[isAgricultural] <- ifelse(yield[isAgricultural] <= 50, 60L, 75L)
+  is_agricultural <- usage == "agricultural_L"
+  y[is_agricultural] <- ifelse(yield[is_agricultural] <= 50, 60L, 75L)
 
   # Constant estimates for other uses
   y[usage == "vegetationless_D"] <- 50L
@@ -246,8 +246,8 @@ estimateDaysOfGrowth <- function(usage, yield, default = 50L)
   y
 }
 
-# estimateDaysOfGrowth_1 -------------------------------------------------------
-estimateDaysOfGrowth_1 <- function(usage, yield, default = 50)
+# estimate_days_of_growth_1 ----------------------------------------------------
+estimate_days_of_growth_1 <- function(usage, yield, default = 50)
 {
   stopifnot(length(usage) == 1L)
   stopifnot(length(yield) == 1L)
@@ -268,10 +268,10 @@ estimateDaysOfGrowth_1 <- function(usage, yield, default = 50)
   default_if_null(days_of_growth[[usage]], default)
 }
 
-# lookupG02 --------------------------------------------------------------------
-lookupG02 <- function(usableFieldCapacity)
+# lookup_g02 -------------------------------------------------------------------
+lookup_g02 <- function(usable_field_capacity)
 {
-  index <- as.integer(usableFieldCapacity + 0.5) + 1L
+  index <- as.integer(usable_field_capacity + 0.5) + 1L
 
   stopifnot(all(index %in% seq_along(LOOKUP_G02)))
 

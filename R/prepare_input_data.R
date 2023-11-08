@@ -1,4 +1,4 @@
-# prepareInputData -------------------------------------------------------------
+# prepare_input_data -----------------------------------------------------------
 
 #' Prepare Input Data: Rename, Add Columns
 #'
@@ -11,7 +11,7 @@
 #' @return \code{input_data} with columns renamed and additional columns
 #'  (e.g. ratios calculated from percentages, (main) usage, yield, irrigation)
 #' @export
-prepareInputData <- function(input_data)
+prepare_input_data <- function(input_data)
 {
   # Rename columns from ABIMO 3.2 names to ABIMO 3.3 internal names
   input <- rename_columns(input_data, list(
@@ -69,7 +69,7 @@ prepareInputData <- function(input_data)
   input[["roadSealedFractionConnected"]] <- by_100("roadSealedPercentageConnected")
 
   # Add the "usage tuple" as columns
-  cbind(input, getUsageTuple(
+  cbind(input, get_usage_tuple(
     usage = select_columns(input, "berlin_usage"),
     type = select_columns(input, "berlin_type")
   ))

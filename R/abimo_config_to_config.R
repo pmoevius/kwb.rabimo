@@ -1,9 +1,9 @@
 #' Convert Abimo Configuration to List
 #'
 #' @param abimo_config as returned by \code{kwb.abimo:::read_config}
-#' @return list with elements \code{"potentialEvaporation"},
-#'   \code{"runoffFactors"}, \code{"bagrovValues"}, \code{"diverse"},
-#'   \code{"resultDigits"}
+#' @return list with elements \code{"potential_evaporation"},
+#'   \code{"runoff_factors"}, \code{"bagrov_values"}, \code{"diverse"},
+#'   \code{"result_digits"}
 #' @export
 abimo_config_to_config <- function(abimo_config)
 {
@@ -28,16 +28,16 @@ abimo_config_to_config <- function(abimo_config)
     expand_district_ranges() %>%
     all_columns_to_int() %>%
     rename_columns(list(eg = "etp")) %>%
-    cbind(etps = 0, isWaterbody = TRUE)
+    cbind(etps = 0, is_waterbody = TRUE)
 
   evap_else <- result %>%
     select_elements(element_else) %>%
     expand_district_ranges() %>%
     all_columns_to_int() %>%
-    cbind(isWaterbody = FALSE)
+    cbind(is_waterbody = FALSE)
 
-  result[["potentialEvaporation"]] <- rbind(evap_water, evap_else) %>%
-    move_columns_to_front("isWaterbody")
+  result[["potential_evaporation"]] <- rbind(evap_water, evap_else) %>%
+    move_columns_to_front("is_waterbody")
 
   convert_element <- function(config, from, to, convert = identity) {
     x <- select_elements(config, from)
@@ -55,12 +55,12 @@ abimo_config_to_config <- function(abimo_config)
     )) %>%
     convert_element(
       from = "Infiltrationsfaktoren",
-      to = "runoffFactors",
+      to = "runoff_factors",
       convert = function(x) 1 - as.numeric(x)
     ) %>%
     convert_element(
       from = "Bagrovwerte",
-      to = "bagrovValues",
+      to = "bagrov_values",
       convert = as.numeric
     ) %>%
     convert_element(
@@ -69,7 +69,7 @@ abimo_config_to_config <- function(abimo_config)
     ) %>%
     convert_element(
       from = "ErgebnisNachkommaStellen",
-      to = "resultDigits",
+      to = "result_digits",
       convert = as.numeric
     )
 }
