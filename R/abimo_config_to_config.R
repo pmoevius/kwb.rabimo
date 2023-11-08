@@ -48,7 +48,7 @@ abimo_config_to_config <- function(abimo_config)
     remove_elements(config, from)
   }
 
-  result %>%
+  result <- result %>%
     remove_elements(c(
       element_water,
       element_else
@@ -72,6 +72,12 @@ abimo_config_to_config <- function(abimo_config)
       to = "result_digits",
       convert = as.numeric
     )
+
+  result[["precipitation_correction_factor"]] <- as.numeric(
+    select_elements(result, "diverse")[["NIEDKORRF"]]
+  )
+
+  result
 }
 
 # get_all_item_data ------------------------------------------------------------
