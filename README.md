@@ -44,7 +44,7 @@ abimo_config <- kwb.abimo:::read_config()
 abimo_result <- kwb.abimo::run_abimo(input_data = data, config = abimo_config)
 
 # Prepare a configuration for R-Abimo, based on the default Abimo configuration
-config <- kwb.rabimo::abimo_config_to_config(kwb.abimo:::read_config())
+config <- kwb.rabimo::abimo_config_to_config(abimo_config)
 
 # Run R-Abimo, the R-implementation of Abimo in this package
 rabimo_result <- kwb.rabimo::run_rabimo(data, config)
