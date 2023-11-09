@@ -1,4 +1,4 @@
-# getUsageTuple ----------------------------------------------------------------
+# get_usage_tuple --------------------------------------------------------------
 
 #' Get Usage Tuple (Usage, Yield, Irrigation) from NUTZUNG and TYP
 #'
@@ -9,9 +9,9 @@
 #' @return list with elements \code{usage}, \code{yield}, \code{irrigation}
 #' @export
 #' @examples
-#' getUsageTuple(10, 10)
-#' getUsageTuple(10, 1:3)
-getUsageTuple <- function(usage, type, include_inputs = FALSE)
+#' get_usage_tuple(10, 10)
+#' get_usage_tuple(10, 1:3)
+get_usage_tuple <- function(usage, type, include_inputs = FALSE)
 {
   #usage = 10L; type = 10L
   #usage = 10L; type = 333L
@@ -25,9 +25,8 @@ getUsageTuple <- function(usage, type, include_inputs = FALSE)
   key_columns <- names(data)
   value_columns <- c("usage", "yield", "irrigation")
 
-  # Provide lookup table (replace -1 with NA)
+  # Provide lookup table
   lookup <- BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION
-  lookup$berlin_type[lookup$berlin_type == -1L] <- NA
 
   result <- value_columns %>%
     lapply(function(value_column) {

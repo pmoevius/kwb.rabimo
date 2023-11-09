@@ -10,9 +10,9 @@ abimo_config_to_config(abimo_config)
 \item{abimo_config}{as returned by \code{kwb.abimo:::read_config}}
 }
 \value{
-list with elements \code{"potentialEvaporation"},
-\code{"runoffFactors"}, \code{"bagrovValues"}, \code{"diverse"},
-\code{"resultDigits"}
+list with elements \code{"potential_evaporation"},
+\code{"runoff_factors"}, \code{"bagrov_values"}, \code{"diverse"},
+\code{"result_digits"}
 }
 \description{
 Convert Abimo Configuration to List
