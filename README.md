@@ -31,6 +31,33 @@ if (! require("remotes")) {
 remotes::install_github("KWB-R/kwb.rabimo")
 ```
 
+## Basic usage
+
+```r
+# Load Berlin data from the R-wrapper package kwb.abimo
+data <- kwb.abimo::abimo_input_2019
+
+# Use the R-wrapper to run Abimo.exe
+abimo_result <- kwb.abimo::run_abimo(input_data = data)
+
+# Prepare a configuration for R-Abimo, based on the default Abimo configuration
+config <- kwb.rabimo::abimo_config_to_config(kwb.abimo:::read_config())
+
+# Run R-Abimo, the R-implementation of Abimo in this package
+rabimo_result <- kwb.rabimo::run_rabimo(data, config)
+
+# Have a look at the first lines of the result data frames
+head(abimo_result)
+head(rabimo_result)
+
+for (name in names(abimo_result)[-1L]) {
+  x <- abimo_result[[name]]
+  y <- rabimo_result[[name]]
+  plot(x, y, xlab = "Abimo", ylab = "Rabimo", main = name, asp = 1)
+}
+
+```
+
 ## Documentation
 
 Release: [https://kwb-r.github.io/kwb.rabimo](https://kwb-r.github.io/kwb.rabimo)
