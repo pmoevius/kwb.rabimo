@@ -68,21 +68,22 @@ run_rabimo <- function(input_data, config)
     )
   )
 
-  # precalculate all results of realEvapoTranspiration()
+  # Precalculate all results of realEvapoTranspiration()
   real_evaporation <- cat_and_run(
     "Precalculating real evapotranspirations for all input combinations",
     expr = fetch_config("bagrov_values") %>%
-      do.call(data.frame, lapply(function(bagrov_parameter) {
+      lapply(function(x) {
         real_evapo_transpiration(
           potential_evaporation = pot_evaporation_per_year,
           x_ratio = pot_evaporation[["x_ratio"]],
-          bagrov_parameter = rep(bagrov_parameter, nrow(input)),
-          use_abimo_algorithm = use_abimo_algorithm
+          bagrov_parameter = rep(x, nrow(input)),
+          use_abimo_algorithm = simulate_abimo
         )
-      }))
+      }) %>%
+      do.call(what = data.frame)
   )
 
-  # precalculate all results of actualEvaporationWaterbodyOrPervious()
+  # Precalculate all results of actualEvaporationWaterbodyOrPervious()
   evaporation_unsealed <- cat_and_run(
     paste(
       "Precalculating actual evapotranspirations for waterbodies or pervious",
