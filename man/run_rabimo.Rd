@@ -4,13 +4,17 @@
 \alias{run_rabimo}
 \title{Run R-Abimo, the R-implementation of Water Balance Model Abimo}
 \usage{
-run_rabimo(input_data, config)
+run_rabimo(input_data, config, simulate_abimo = TRUE)
 }
 \arguments{
 \item{input_data}{data frame with columns as required by Abimo}
 
 \item{config}{configuration object (list) as returned by
 \code{kwb.abimo:::read_config()}}
+
+\item{simulate_abimo}{logical of length one indicating whether or not to
+simulate exactly what Abimo does (including obvious errors!).
+Default: \code{TRUE}!}
 }
 \value{
 data frame with columns as returned by Abimo

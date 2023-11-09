@@ -5,13 +5,13 @@
 #' @param input_data data frame with columns as required by Abimo
 #' @param config configuration object (list) as returned by
 #'   \code{kwb.abimo:::read_config()}
+#' @param simulate_abimo logical of length one indicating whether or not to
+#'   simulate exactly what Abimo does (including obvious errors!).
+#'   Default: \code{TRUE}!
 #' @return data frame with columns as returned by Abimo
 #' @export
-run_rabimo <- function(input_data, config)
+run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
 {
-  # Use ABIMO algorithm (or chatty's version) for calculation of BAGROV curves?
-  use_abimo_algorithm <- TRUE
-
   # Prepare input data frame: rename columns, add fraction columns and
   # "usage tuple" columns: "usage", "yield", "irrigation"
   input <- cat_and_run(
@@ -23,8 +23,6 @@ run_rabimo <- function(input_data, config)
   fetch_input <- create_accessor(input)
   fetch_config <- create_accessor(config)
   get_fraction <- create_fraction_accessor(input)
-
-  # Precalculate additional inputs (out of the main loop)
 
   # Prepare precipitation data for all rows
   precipitation <- cat_and_run(
@@ -96,7 +94,7 @@ run_rabimo <- function(input_data, config)
       precipitation = precipitation,
       min_size_for_parallel = 100L,
       #digits = 3L,
-      use_abimo_algorithm = use_abimo_algorithm
+      use_abimo_algorithm = simulate_abimo
     )
   )
 
@@ -175,42 +173,21 @@ run_rabimo <- function(input_data, config)
 
   # Infiltration from unsealed non-road surfaces (old: riuv)
 
-  # Code in C++:
-  # ------------
-  # vgd = (dbReader.getRecord(k, "PROBAU")).toFloat() / 100.0F; /* Dachflächen */
-  # vgb = (dbReader.getRecord(k, "PROVGU")).toFloat() / 100.0F; /* Hofflächen */
-  # ptrDA.VER = (int)round((vgd * 100) + (vgb * 100));
-  #
-  # here, add a small value to round .5 "up" not "down"
-  # round(98.5) -> 98
-  # round(98.5 + 1e-12) -> 99
-
-  # 1 - (
-  #   fetch("mainFractionBuiltSealed") +
-  #     fetch("mainFractionUnbuiltSealed")
-  # )
-
-  fraction_unsealed <-
+  fraction_unsealed <- if (simulate_abimo) {
     #fetch("areaFractionMain") * # ??? TODO: VERIFY THIS ????
-    (
-      1 - 0.01 * as.integer(round(
-        fetch_input("mainPercentageBuiltSealed") +
-          fetch_input("mainPercentageUnbuiltSealed") +
-          1e-12
-      ))
-    )
+    (1 - fetch_input("mainFractionSealed"))
+  } else {
+    get_fraction("main/!sealed")
+  }
 
-  infiltration_unsealed_surfaces <- fraction_unsealed * runoff_unsealed
-
-  # original: (check if correct)
+  # original C++ code (check if correct):
   # infiltration.unsealedSurfaces = (
   #   100.0F - current_area.mainPercentageSealed()
   # ) / 100.0F * runoff.unsealedSurface_RUV;
 
-  # Set infiltration-related fields in output record
-  # ================================================#
+  infiltration_unsealed_surfaces <- fraction_unsealed * runoff_unsealed
 
-  # calculate infiltration rate 'ri' for entire block partial area (mm/a)
+  # Calculate infiltration rate 'RI' for entire block partial area (mm/a)
 
   total_infiltration <-
     infiltration_roof_actual +
@@ -220,10 +197,7 @@ run_rabimo <- function(input_data, config)
 
   result_data[["total_infiltration"]] <- total_infiltration
 
-  # Set runoff-related fields in output record
-  # ==========================================#
-
-  # calculate runoff 'ROW' for entire block area (FLGES + STR_FLGES) (mm/a)
+  # Calculate runoff 'ROW' for entire block area (FLGES + STR_FLGES) (mm/a)
 
   total_surface_runoff <- runoff_roof_actual +
     #orig.: runoff_unsealed_roads <- was set to zero in the master branch
@@ -231,16 +205,13 @@ run_rabimo <- function(input_data, config)
 
   result_data[["total_surface_runoff"]] <- total_surface_runoff
 
-  # calculate total system losses 'r' due to runoff and infiltration
+  # Calculate "total system losses" 'R' due to runoff and infiltration
   # for entire block partial area
   total_runoff <- total_surface_runoff + total_infiltration
 
   result_data[["total_runoff"]] <- total_runoff
 
-  # Set evaporation in output record
-  # ================================#
-
-  # calculate evaporation 'VERDUNST' by subtracting 'R', the sum of
+  # Calculate evaporation 'VERDUNST' by subtracting 'R', the sum of
   # runoff and infiltration from precipitation of entire year,
   # multiplied by precipitation correction factor
   total_evaporation <- precipitation_per_year - total_runoff
