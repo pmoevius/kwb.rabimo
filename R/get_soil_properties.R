@@ -24,16 +24,11 @@ get_soil_properties <- function(
     dbg = FALSE
 )
 {
-  # Initialise result data frame
-  result <- data.frame()
-
-  result[["depth_to_water_table"]] <- depth_to_water_table
-
   # Nothing to do for waterbodies
   is_waterbody <- usage == "waterbody_G"
 
   # Feldkapazitaet
-  result[["usable_field_capacity"]] <- ifelse(
+  usable_field_capacity <- ifelse(
     test = is_waterbody,
     yes = default_for_waterbodies,
     no = estimate_water_holding_capacity(
@@ -45,7 +40,7 @@ get_soil_properties <- function(
 
   # pot. Aufstiegshoehe TAS = FLUR - mittl. Durchwurzelungstiefe TWS
   # potentielle Aufstiegshoehe
-  result[["potential_capillary_rise_TAS"]] <- ifelse(
+  potential_capillary_rise <- ifelse(
     test = is_waterbody,
     yes = default_for_waterbodies,
     no = depth_to_water_table - get_rooting_depth(usage, yield)
@@ -53,28 +48,35 @@ get_soil_properties <- function(
 
   # mittlere pot. kapillare Aufstiegsrate kr (mm/d) des Sommerhalbjahres
   # Kapillarer Aufstieg pro Jahr ID_KR neu, old: KR
-  result[["mean_potential_capillary_rise_rate_raw"]] <- ifelse(
+  mean_potential_capillary_rise_rate_raw <- ifelse(
     test = is_waterbody,
     yes = default_for_waterbodies,
     no = get_mean_potential_capillary_rise_rate(
-      select_elements(result, "potential_capillary_rise_TAS"),
-      select_elements(result, "usable_field_capacity"),
+      potential_capillary_rise,
+      usable_field_capacity,
       days_of_growth = estimate_days_of_growth(usage, yield),
       dbg = dbg
     )
   )
 
   # Make sure that e.g. 14.999999991 becomes 15, not 14
-  result[["mean_potential_capillary_rise_rate"]] <- as.integer(
-    round(result[["mean_potential_capillary_rise_rate_raw"]], 12L)
-  )
+  mean_potential_capillary_rise_rate <- as.integer(round(
+    mean_potential_capillary_rise_rate_raw,
+    digits = 12L
+  ))
 
   # Add G02 values as they depend only on the usable field capacity
-  result[["g02"]] <- lookup_g02(
-    usable_field_capacity = select_elements(result, "usable_field_capacity")
-  )
+  g02 <- lookup_g02(usable_field_capacity)
 
-  result
+  # Return all result vectors in a data frame
+  data.frame(
+    depth_to_water_table = depth_to_water_table,
+    usable_field_capacity = usable_field_capacity,
+    potential_capillary_rise_TAS = potential_capillary_rise,
+    mean_potential_capillary_rise_rate_raw = mean_potential_capillary_rise_rate_raw,
+    mean_potential_capillary_rise_rate = mean_potential_capillary_rise_rate,
+    g02 = g02
+  )
 }
 
 # estimate_water_holding_capacity ----------------------------------------------
