@@ -1,4 +1,4 @@
-# prepareInputData -------------------------------------------------------------
+# prepare_input_data -----------------------------------------------------------
 
 #' Prepare Input Data: Rename, Add Columns
 #'
@@ -11,7 +11,7 @@
 #' @return \code{input_data} with columns renamed and additional columns
 #'  (e.g. ratios calculated from percentages, (main) usage, yield, irrigation)
 #' @export
-prepareInputData <- function(input_data)
+prepare_input_data <- function(input_data)
 {
   # Rename columns from ABIMO 3.2 names to ABIMO 3.3 internal names
   input <- rename_columns(input_data, list(
@@ -41,10 +41,26 @@ prepareInputData <- function(input_data)
     FELD_150 = "fieldCapacity_150"
   ))
 
+  # Calculate the percentage of built and unbuild sealed areas. Add a small
+  # value to round .5 "up" not "down":
+  # round(98.5) -> 98
+  # round(98.5 + 1e-12) -> 99
+
+  # === Code in C++:
+  # vgd = (dbReader.getRecord(k, "PROBAU")).toFloat() / 100.0F; // Dachflaechen
+  # vgb = (dbReader.getRecord(k, "PROVGU")).toFloat() / 100.0F; // Hofflaechen
+  # ptrDA.VER = (int)round((vgd * 100) + (vgb * 100));
+
+  input[["mainPercentageSealed"]] <- as.integer(round(
+    select_columns(input, "mainPercentageBuiltSealed") +
+      select_columns(input, "mainPercentageUnbuiltSealed") +
+      1e-12
+  ))
+
   # Helper function to select column and divide by 100
   by_100 <- function(x) select_columns(input, x) / 100
 
-  # Calculate addtional columns (e.g. percentage to fraction)
+  # Calculate additional columns (e.g. percentage to fraction)
   main_area <- select_columns(input, "mainArea")
   road_area <- select_columns(input, "roadArea")
   total_area <-  main_area + road_area
@@ -55,7 +71,8 @@ prepareInputData <- function(input_data)
 
   input[["mainFractionBuiltSealed"]] <- by_100("mainPercentageBuiltSealed")
   input[["mainFractionUnbuiltSealed"]] <- by_100("mainPercentageUnbuiltSealed")
-  input[["roadFractionSealed"]] <- by_100("roadPercentageSealed")
+  input[["mainFractionSealed"]] <- by_100("mainPercentageSealed")
+  input[["roadFractionRoadSealed"]] <- by_100("roadPercentageSealed")
   input[["builtSealedFractionConnected"]] <- by_100("builtSealedPercentageConnected")
   input[["unbuiltSealedFractionSurface1"]] <- by_100("unbuiltSealedPercentageSurface1")
   input[["unbuiltSealedFractionSurface2"]] <- by_100("unbuiltSealedPercentageSurface2")
@@ -69,7 +86,7 @@ prepareInputData <- function(input_data)
   input[["roadSealedFractionConnected"]] <- by_100("roadSealedPercentageConnected")
 
   # Add the "usage tuple" as columns
-  cbind(input, getUsageTuple(
+  cbind(input, get_usage_tuple(
     usage = select_columns(input, "berlin_usage"),
     type = select_columns(input, "berlin_type")
   ))

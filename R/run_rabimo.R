@@ -5,130 +5,115 @@
 #' @param input_data data frame with columns as required by Abimo
 #' @param config configuration object (list) as returned by
 #'   \code{kwb.abimo:::read_config()}
+#' @param simulate_abimo logical of length one indicating whether or not to
+#'   simulate exactly what Abimo does (including obvious errors!).
+#'   Default: \code{TRUE}!
 #' @return data frame with columns as returned by Abimo
 #' @export
-run_rabimo <- function(input_data, config)
+run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
 {
-  # Use ABIMO algorithm (or chatty's version) for calculation of BAGROV curves?
-  useAbimoAlgorithm <- TRUE
-
   # Prepare input data frame: rename columns, add fraction columns and
   # "usage tuple" columns: "usage", "yield", "irrigation"
   input <- cat_and_run(
     "Preparing input data (e.g. adding usage tuple)",
-    prepareInputData(reset_row_names(input_data))
+    prepare_input_data(reset_row_names(input_data))
   )
 
   # Create accessor functions to input columns and config elements
   fetch_input <- create_accessor(input)
   fetch_config <- create_accessor(config)
-
-  # Precalculate additional inputs (out of the main loop)
+  get_fraction <- create_fraction_accessor(input)
 
   # Prepare precipitation data for all rows
   precipitation <- cat_and_run(
     "Preparing precipitation data for all block areas",
-    as.data.frame(getPrecipitation(
+    get_precipitation(
       fetch_input("precipitationYear"),
       fetch_input("precipitationSummer"),
-      fetch_config("precipitationCorrectionFactor")
-    ))
+      fetch_config("precipitation_correction_factor")
+    )
   )
 
   # Prepare potential evaporation data for all rows
   pot_evaporation <- cat_and_run(
     "Preparing potential evaporation data for all block areas",
-    getPotentialEvaporation(
-      isWaterbody = (fetch_input("usage") == "waterbody_G"),
+    get_potential_evaporation(
+      is_waterbody = (fetch_input("usage") == "waterbody_G"),
       district = fetch_input("district"),
-      lookup = fetch_config("potentialEvaporation")
+      lookup = fetch_config("potential_evaporation")
     )
   )
 
-  precipitation_per_year <- select_columns(precipitation, "perYear")
-  pot_evaporation_per_year <- select_columns(pot_evaporation, "perYear")
+  precipitation_per_year <- select_columns(precipitation, "per_year")
+  pot_evaporation_per_year <- select_columns(pot_evaporation, "per_year")
 
-  pot_evaporation$xRatio <- precipitation_per_year / pot_evaporation_per_year
+  pot_evaporation[["x_ratio"]] <-
+    precipitation_per_year / pot_evaporation_per_year
 
   # Prepare soil properties for all rows. They are required to calculate the
   # actual evapotranspiration of unsealed areas. In the case of water bodies,
   # all values are 0.0. (hsonne: really?)
   soil_properties <- cat_and_run(
     "Preparing soil property data for all block areas",
-    expr = as.data.frame(getSoilProperties(
+    expr = get_soil_properties(
       usage = fetch_input("usage"),
       yield = fetch_input("yield"),
-      depthToWaterTable = fetch_input("depthToWaterTable"),
-      fieldCapacity_30 = fetch_input("fieldCapacity_30"),
-      fieldCapacity_150 = fetch_input("fieldCapacity_150"),
-      defaultForWaterbodies = 0,
+      depth_to_water_table = fetch_input("depthToWaterTable"),
+      field_capacity_30 = fetch_input("fieldCapacity_30"),
+      field_capacity_150 = fetch_input("fieldCapacity_150"),
+      default_for_waterbodies = 0,
       dbg = FALSE
-    ))
+    )
   )
 
-  # precalculate all results of realEvapoTranspiration()
+  # Precalculate all results of realEvapoTranspiration()
   real_evaporation <- cat_and_run(
     "Precalculating real evapotranspirations for all input combinations",
-    expr = fetch_config("bagrovValues") %>%
-      lapply(function(bagrovParameter) {
-        realEvapoTranspiration(
-          potentialEvaporation = pot_evaporation_per_year,
-          xRatio = pot_evaporation$xRatio,
-          bagrovParameter = rep(bagrovParameter, nrow(input)),
-          useAbimoAlgorithm = useAbimoAlgorithm
+    expr = fetch_config("bagrov_values") %>%
+      lapply(function(x) {
+        real_evapo_transpiration(
+          potential_evaporation = pot_evaporation_per_year,
+          x_ratio = pot_evaporation[["x_ratio"]],
+          bagrov_parameter = rep(x, nrow(input)),
+          use_abimo_algorithm = simulate_abimo
         )
       }) %>%
-      as.data.frame()
+      do.call(what = data.frame)
   )
 
-  # precalculate all results of actualEvaporationWaterbodyOrPervious()
+  # Precalculate all results of actualEvaporationWaterbodyOrPervious()
   evaporation_unsealed <- cat_and_run(
     paste(
       "Precalculating actual evapotranspirations for waterbodies or pervious",
       "areas"
     ),
-    actualEvaporationWaterbodyOrPervious(
-      usageTuple = fetch_input(c("usage", "yield", "irrigation")),
-      potentialEvaporation = pot_evaporation,
-      soilProperties = soil_properties,
+    actual_evaporation_waterbody_or_pervious(
+      usage_tuple = fetch_input(c("usage", "yield", "irrigation")),
+      potential_evaporation = pot_evaporation,
+      soil_properties = soil_properties,
       precipitation = precipitation,
-      minSizeForParallel = 100L,
+      min_size_for_parallel = 100L,
       #digits = 3L,
-      useAbimoAlgorithm = useAbimoAlgorithm
+      use_abimo_algorithm = simulate_abimo
     )
   )
 
+  # Provide Bagrov parameters (efficiencies) and runoff coefficients
+  runoff_factors <- fetch_config("runoff_factors")
+
   # Calculate roof related variables
-
-  bagrov_value_roof <- fetch_config("bagrovValues")[["Dachflaechen"]]
-
-  runoff_factor_roof <- fetch_config("runoffFactors")[["Dachflaechen"]]
-
-  evaporation_roof <- real_evaporation[, "Dachflaechen"]
+  key_roof <- "Dachflaechen"
 
   runoff_roof_actual_factor <-
-    runoff_factor_roof *
-    fetch_input("builtSealedFractionConnected") *
-    fetch_input("mainFractionBuiltSealed") *
-    fetch_input("areaFractionMain")
-  # * prod(unlist(fetch_input(c(
-  #   "builtSealedFractionConnected",
-  #   "mainFractionBuiltSealed",
-  #   "areaFractionMain"
-  # ))))
+    get_fraction("main/builtSealed/connected") *
+    runoff_factors[[key_roof]]
 
   infiltration_roof_actual_factor <-
-    (1 - fetch_input("builtSealedFractionConnected")) *
-    fetch_input("mainFractionBuiltSealed") *
-    fetch_input("areaFractionMain")
-  # * prod(unlist(fetch_input(c(
-  #   "mainFractionBuiltSealed",
-  #   "areaFractionMain"
-  # ))))
+    get_fraction("main/builtSealed/!connected")
 
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
-  runoff_roof <- precipitation_per_year - evaporation_roof
+  runoff_roof <- precipitation_per_year - real_evaporation[[key_roof]]
 
   # actual runoff from roof surface (area based, with no infiltration)
   runoff_roof_actual <- runoff_roof_actual_factor * runoff_roof
@@ -136,16 +121,13 @@ run_rabimo <- function(input_data, config)
   # actual infiltration from roof surface (area based, with no runoff)
   infiltration_roof_actual <- infiltration_roof_actual_factor * runoff_roof
 
-  unbuiltSurfaceFractions <- fetch_input(
+  unbuilt_surface_fractions <- fetch_input(
     paste0("unbuiltSealedFractionSurface", 1:4)
   )
 
-  roadSurfaceFractions <- fetch_input(
+  road_surface_fractions <- fetch_input(
     paste0("roadSealedFractionSurface", 1:4)
   )
-
-  bagrov_values <- fetch_config("bagrovValues")
-  runoff_factors <- fetch_config("runoffFactors")
 
   # -1: remove roof column
   evaporation_sealed <- real_evaporation[, -1L]
@@ -163,28 +145,18 @@ run_rabimo <- function(input_data, config)
     nrow = nrow(input)
   )
 
-  runoff_sealed_actual <- runoff_factor_matrix *
-    (
-      unbuiltSurfaceFractions *
-        fetch_input("unbuiltSealedFractionConnected")  *
-        fetch_input("mainFractionUnbuiltSealed")  *
-        fetch_input("areaFractionMain") +
-        roadSurfaceFractions *
-        fetch_input("roadSealedFractionConnected") *
-        fetch_input("roadFractionSealed") *
-        fetch_input("areaFractionRoad")
-    ) * runoff_sealed
+  runoff_sealed_actual <- runoff_factor_matrix * (
+    get_fraction("main/unbuiltSealed/connected") * unbuilt_surface_fractions +
+      get_fraction("road/roadSealed/connected") * road_surface_fractions
+  ) *
+    runoff_sealed
 
   # infiltration of sealed surfaces (for all surface classes at once)
-  infiltration_sealed_actual <-
-    (
-      unbuiltSurfaceFractions *
-        fetch_input("mainFractionUnbuiltSealed")  *
-        fetch_input("areaFractionMain") +
-        roadSurfaceFractions *
-        fetch_input("roadFractionSealed") *
-        fetch_input("areaFractionRoad")
-    ) * runoff_sealed -
+  infiltration_sealed_actual <- (
+    get_fraction("main/unbuiltSealed") * unbuilt_surface_fractions +
+      get_fraction("road/roadSealed") * road_surface_fractions
+  ) *
+    runoff_sealed -
     runoff_sealed_actual
 
   # Initialise result data frame
@@ -194,63 +166,38 @@ run_rabimo <- function(input_data, config)
   runoff_unsealed <- precipitation_per_year - evaporation_unsealed
 
   # Infiltration of road (unsealed areas)
-  infiltration_unsealedRoads <-
-    (1 - fetch_input("roadFractionSealed")) *
-    fetch_input("areaFractionRoad") *
+  infiltration_unsealed_roads <-
+    get_fraction("road/!roadSealed") *
     # last surface class
     runoff_sealed[, ncol(runoff_sealed)]
 
   # Infiltration from unsealed non-road surfaces (old: riuv)
 
-  # Code in C++:
-  # ------------
-  # vgd = (dbReader.getRecord(k, "PROBAU")).toFloat() / 100.0F; /* Dachflächen */
-  # vgb = (dbReader.getRecord(k, "PROVGU")).toFloat() / 100.0F; /* Hofflächen */
-  # ptrDA.VER = (int)round((vgd * 100) + (vgb * 100));
-  #
-  # here, add a small value to round .5 "up" not "down"
-  # round(98.5) -> 98
-  # round(98.5 + 1e-12) -> 99
-
-  # 1 - (
-  #   fetch("mainFractionBuiltSealed") +
-  #     fetch("mainFractionUnbuiltSealed")
-  # )
-
-  fraction_unsealed <-
+  fraction_unsealed <- if (simulate_abimo) {
     #fetch("areaFractionMain") * # ??? TODO: VERIFY THIS ????
-    (
-      1 - 0.01 * as.integer(round(
-        fetch_input("mainPercentageBuiltSealed") +
-          fetch_input("mainPercentageUnbuiltSealed") +
-          1e-12
-      ))
-    )
+    (1 - fetch_input("mainFractionSealed"))
+  } else {
+    get_fraction("main/!sealed")
+  }
 
-  infiltration_unsealedSurfaces <- fraction_unsealed * runoff_unsealed
-
-  # original: (check if correct)
+  # original C++ code (check if correct):
   # infiltration.unsealedSurfaces = (
   #   100.0F - current_area.mainPercentageSealed()
   # ) / 100.0F * runoff.unsealedSurface_RUV;
 
-  # Set infiltration-related fields in output record
-  # ================================================#
+  infiltration_unsealed_surfaces <- fraction_unsealed * runoff_unsealed
 
-  # calculate infiltration rate 'ri' for entire block partial area (mm/a)
+  # Calculate infiltration rate 'RI' for entire block partial area (mm/a)
 
   total_infiltration <-
     infiltration_roof_actual +
-    infiltration_unsealedSurfaces +
-    infiltration_unsealedRoads +
+    infiltration_unsealed_surfaces +
+    infiltration_unsealed_roads +
     rowSums(infiltration_sealed_actual)
 
   result_data[["total_infiltration"]] <- total_infiltration
 
-  # Set runoff-related fields in output record
-  # ==========================================#
-
-  # calculate runoff 'ROW' for entire block area (FLGES + STR_FLGES) (mm/a)
+  # Calculate runoff 'ROW' for entire block area (FLGES + STR_FLGES) (mm/a)
 
   total_surface_runoff <- runoff_roof_actual +
     #orig.: runoff_unsealed_roads <- was set to zero in the master branch
@@ -258,16 +205,13 @@ run_rabimo <- function(input_data, config)
 
   result_data[["total_surface_runoff"]] <- total_surface_runoff
 
-  # calculate total system losses 'r' due to runoff and infiltration
+  # Calculate "total system losses" 'R' due to runoff and infiltration
   # for entire block partial area
   total_runoff <- total_surface_runoff + total_infiltration
 
   result_data[["total_runoff"]] <- total_runoff
 
-  # Set evaporation in output record
-  # ================================#
-
-  # calculate evaporation 'VERDUNST' by subtracting 'R', the sum of
+  # Calculate evaporation 'VERDUNST' by subtracting 'R', the sum of
   # runoff and infiltration from precipitation of entire year,
   # multiplied by precipitation correction factor
   total_evaporation <- precipitation_per_year - total_runoff
@@ -276,7 +220,7 @@ run_rabimo <- function(input_data, config)
 
   # Helper function to calculate flow, relative to total area
   to_flow <- function(column) {
-    yearlyHeightToVolumeFlow(
+    yearly_height_to_volume_flow(
       height = select_columns(result_data, column),
       area = select_columns(input, "totalArea")
     )
@@ -327,7 +271,7 @@ run_rabimo <- function(input_data, config)
       real_evaporation = real_evaporation,
       evaporation_unsealed = evaporation_unsealed,
       roof = list(
-        evaporation_roof = evaporation_roof,
+        evaporation_roof = real_evaporation[[key_roof]],
         runoff_roof = runoff_roof,
         runoff_roof_actual = runoff_roof_actual,
         infiltration_roof_actual = infiltration_roof_actual
