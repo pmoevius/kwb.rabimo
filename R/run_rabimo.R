@@ -102,28 +102,23 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     )
   )
 
-  # Provide runoff coefficients for impervious surfaces
-  runoff_factors <- fetch_config("runoff_factors")
-
   # Calculate roof related variables
-  key_roof <- "roof"
-
-  runoff_roof_actual_factor <-
-    get_fraction("main/builtSealed/connected") *
-    runoff_factors[[key_roof]]
-
-  infiltration_roof_actual_factor <-
-    get_fraction("main/builtSealed/!connected")
 
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
-  runoff_roof <- prec_year - evaporation_sealed[[key_roof]]
+  runoff_roof <- prec_year - evaporation_sealed[["roof"]]
+
+  # Provide runoff coefficients for impervious surfaces
+  runoff_factors <- fetch_config("runoff_factors")
 
   # actual runoff from roof surface (area based, with no infiltration)
-  runoff_roof_actual <- runoff_roof_actual_factor * runoff_roof
+  runoff_roof_actual <- get_fraction("main/builtSealed/connected") *
+    runoff_factors[["roof"]] *
+    runoff_roof
 
   # actual infiltration from roof surface (area based, with no runoff)
-  infiltration_roof_actual <- infiltration_roof_actual_factor * runoff_roof
+  infiltration_roof_actual <- get_fraction("main/builtSealed/!connected") *
+    runoff_roof
 
   unbuilt_surface_fractions <- fetch_input(
     paste0("unbuiltSealedFractionSurface", 1:4)
@@ -133,12 +128,10 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     paste0("roadSealedFractionSurface", 1:4)
   )
 
-  # -1: remove roof column
-  evaporation_sealed <- evaporation_sealed[, -1L]
-
   # Calculate runoff for all surface classes at once
   # (contains both surface runoff and infiltration components)
-  runoff_sealed <- prec_year - evaporation_sealed
+  # -1: remove roof column
+  runoff_sealed <- prec_year - evaporation_sealed[, -1L]
 
   # Runoff from the actual partial areas that are sealed and connected
   # (road and non-road) areas (for all surface classes at once)
@@ -274,13 +267,13 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
       evaporation_sealed = evaporation_sealed,
       evaporation_unsealed = evaporation_unsealed,
       roof = list(
-        evaporation_roof = evaporation_sealed[[key_roof]],
+        evaporation_roof = evaporation_sealed[["roof"]],
         runoff_roof = runoff_roof,
         runoff_roof_actual = runoff_roof_actual,
         infiltration_roof_actual = infiltration_roof_actual
       ),
       surface = list(
-        evaporation_sealed = evaporation_sealed,
+        evaporation_sealed = evaporation_sealed[, -1L],
         runoff_sealed = runoff_sealed,
         runoff_sealed_actual = runoff_sealed_actual,
         infiltration_sealed_actual = infiltration_sealed_actual
