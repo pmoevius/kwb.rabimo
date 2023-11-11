@@ -102,11 +102,14 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     )
   )
 
+  # Runoff for all sealed areas (including roofs)
+  runoff_all_sealed <- prec_year - evaporation_sealed
+
   # Calculate roof related variables
 
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
-  runoff_roof <- prec_year - evaporation_sealed[["roof"]]
+  runoff_roof <- select_columns(runoff_all_sealed, "roof")
 
   # Provide runoff coefficients for impervious surfaces
   runoff_factors <- fetch_config("runoff_factors")
@@ -120,18 +123,10 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   infiltration_roof_actual <- get_fraction("main/builtSealed/!connected") *
     runoff_roof
 
-  unbuilt_surface_fractions <- fetch_input(
-    paste0("unbuiltSealedFractionSurface", 1:4)
-  )
-
-  road_surface_fractions <- fetch_input(
-    paste0("roadSealedFractionSurface", 1:4)
-  )
-
   # Calculate runoff for all surface classes at once
   # (contains both surface runoff and infiltration components)
   # -1: remove roof column
-  runoff_sealed <- prec_year - evaporation_sealed[, -1L]
+  runoff_sealed <- remove_columns(runoff_all_sealed, "roof")
 
   # Runoff from the actual partial areas that are sealed and connected
   # (road and non-road) areas (for all surface classes at once)
@@ -140,6 +135,14 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   runoff_factor_matrix <- expand_to_matrix(
     x = runoff_factors[-1L],
     nrow = nrow(input)
+  )
+
+  unbuilt_surface_fractions <- fetch_input(
+    paste0("unbuiltSealedFractionSurface", 1:4)
+  )
+
+  road_surface_fractions <- fetch_input(
+    paste0("roadSealedFractionSurface", 1:4)
   )
 
   runoff_sealed_actual <- runoff_factor_matrix * (
