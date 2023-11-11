@@ -156,9 +156,6 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     runoff_sealed -
     runoff_sealed_actual
 
-  # Initialise result data frame
-  result_data <- data.frame(code = fetch_input("CODE"))
-
   # Surface-Runoff of unsealed surfaces (unsealedSurface_RUV)
   runoff_unsealed <- prec_year - evaporation_unsealed
 
@@ -192,66 +189,63 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     infiltration_unsealed_roads +
     rowSums(infiltration_sealed_actual)
 
-  result_data[["total_infiltration"]] <- total_infiltration
-
   # Calculate runoff 'ROW' for entire block area (FLGES + STR_FLGES) (mm/a)
 
   total_surface_runoff <- runoff_roof_actual +
     #orig.: runoff_unsealed_roads <- was set to zero in the master branch
     rowSums(runoff_sealed_actual)
 
-  result_data[["total_surface_runoff"]] <- total_surface_runoff
-
   # Calculate "total system losses" 'R' due to runoff and infiltration
   # for entire block partial area
   total_runoff <- total_surface_runoff + total_infiltration
-
-  result_data[["total_runoff"]] <- total_runoff
 
   # Calculate evaporation 'VERDUNST' by subtracting 'R', the sum of
   # runoff and infiltration from precipitation of entire year,
   # multiplied by precipitation correction factor
   total_evaporation <- prec_year - total_runoff
 
-  result_data[["total_evaporation"]] <- total_evaporation
-
-  # Helper function to calculate flow, relative to total area
-  to_flow <- function(column) {
-    yearly_height_to_volume_flow(
-      height = select_columns(result_data, column),
-      area = select_columns(input, "totalArea")
-    )
-  }
+  # Provide total area for calculation of "flows"
+  total_area <- select_columns(input, "totalArea")
 
   # Calculate volume 'rowvol' from runoff (qcm/s)
-  result_data[["surface_runoff_flow"]] <- to_flow("total_surface_runoff")
+  surface_runoff_flow <- yearly_height_to_volume_flow(
+    total_surface_runoff, total_area
+  )
 
   # Calculate volume 'rivol' from infiltration rate (qcm/s)
-  result_data[["infiltration_flow"]] <- to_flow("total_infiltration")
+  infiltration_flow <- yearly_height_to_volume_flow(
+    total_infiltration, total_area
+  )
 
   # Calculate volume of "system losses" 'rvol' due to surface runoff and
   # infiltration
-  result_data[["total_runoff_flow"]] <-
-    result_data[["surface_runoff_flow"]] +
-    result_data[["infiltration_flow"]]
+  total_runoff_flow <- surface_runoff_flow + infiltration_flow
 
-  result_data[["total_area"]] <- select_columns(input, "totalArea")
+  # Compose result data frame
+  result_data <- data.frame(
+    code = fetch_input("CODE"),
+    total_infiltration = total_infiltration,
+    total_surface_runoff = total_surface_runoff,
+    total_runoff = total_runoff,
+    total_evaporation = total_evaporation,
+    surface_runoff_flow = surface_runoff_flow,
+    infiltration_flow = infiltration_flow,
+    total_runoff_flow = total_runoff_flow,
+    total_area = totalArea
+  )
 
   # Provide the same columns as Abimo does
-  abimo_result <- rename_and_select(
-    result_data,
-    list(
-      code = "CODE",
-      total_runoff = "R",
-      total_surface_runoff = "ROW",
-      total_infiltration = "RI",
-      total_runoff_flow = "RVOL",
-      surface_runoff_flow = "ROWVOL",
-      infiltration_flow = "RIVOL",
-      total_area = "FLAECHE",
-      total_evaporation = "VERDUNSTUN"
-    )
-  )
+  abimo_result <- rename_and_select(result_data, list(
+    code = "CODE",
+    total_runoff = "R",
+    total_surface_runoff = "ROW",
+    total_infiltration = "RI",
+    total_runoff_flow = "RVOL",
+    surface_runoff_flow = "ROWVOL",
+    infiltration_flow = "RIVOL",
+    total_area = "FLAECHE",
+    total_evaporation = "VERDUNSTUN"
+  ))
 
   # Round all columns to three digits (skip first column: "CODE")
   abimo_result[-1L] <- lapply(abimo_result[-1L], round, 3L)
