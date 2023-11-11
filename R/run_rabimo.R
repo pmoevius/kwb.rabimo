@@ -224,21 +224,8 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   # infiltration
   total_runoff_flow <- surface_runoff_flow + infiltration_flow
 
-  # Compose result data frame
-  result_data <- data.frame(
-    code = fetch_input("CODE"),
-    total_infiltration = total_infiltration,
-    total_surface_runoff = total_surface_runoff,
-    total_runoff = total_runoff,
-    total_evaporation = total_evaporation,
-    surface_runoff_flow = surface_runoff_flow,
-    infiltration_flow = infiltration_flow,
-    total_runoff_flow = total_runoff_flow,
-    total_area = total_area
-  )
-
-  # Provide the same columns as Abimo does
-  abimo_result <- rename_and_select(result_data, list(
+  # Provide mapping between local variable names and ABIMO-output columns
+  name_mapping <- list(
     code = "CODE",
     total_runoff = "R",
     total_surface_runoff = "ROW",
@@ -248,7 +235,17 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     infiltration_flow = "RIVOL",
     total_area = "FLAECHE",
     total_evaporation = "VERDUNSTUN"
+  )
+
+  # Compose result data frame. Use mget() to get the result vectors from the
+  # local environment and put them into a data frame
+  result_data <- do.call(data.frame, args = c(
+    list(code = fetch_input("CODE")),
+    mget(names(name_mapping)[-1L])
   ))
+
+  # Provide the same columns as Abimo does
+  abimo_result <- rename_and_select(result_data, name_mapping)
 
   # Round all columns to three digits (skip first column: "CODE")
   abimo_result[-1L] <- lapply(abimo_result[-1L], round, 3L)
