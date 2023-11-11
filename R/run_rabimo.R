@@ -231,7 +231,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     surface_runoff_flow = surface_runoff_flow,
     infiltration_flow = infiltration_flow,
     total_runoff_flow = total_runoff_flow,
-    total_area = totalArea
+    total_area = total_area
   )
 
   # Provide the same columns as Abimo does
