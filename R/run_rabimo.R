@@ -72,8 +72,8 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   )
 
   # Precalculate all results of realEvapoTranspiration()
-  real_evaporation <- cat_and_run(
-    "Precalculating real evapotranspirations for all input combinations",
+  evaporation_sealed <- cat_and_run(
+    "Precalculating actual evapotranspirations for impervious areas",
     expr = fetch_config("bagrov_values") %>%
       lapply(function(x) {
         real_evapo_transpiration(
@@ -117,7 +117,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
 
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
-  runoff_roof <- prec_year - real_evaporation[[key_roof]]
+  runoff_roof <- prec_year - evaporation_sealed[[key_roof]]
 
   # actual runoff from roof surface (area based, with no infiltration)
   runoff_roof_actual <- runoff_roof_actual_factor * runoff_roof
@@ -134,7 +134,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   )
 
   # -1: remove roof column
-  evaporation_sealed <- real_evaporation[, -1L]
+  evaporation_sealed <- evaporation_sealed[, -1L]
 
   # Calculate runoff for all surface classes at once
   # (contains both surface runoff and infiltration components)
@@ -271,10 +271,10 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     intermediates = list(
       climate = climate,
       soil_properties = soil_properties,
-      real_evaporation = real_evaporation,
+      evaporation_sealed = evaporation_sealed,
       evaporation_unsealed = evaporation_unsealed,
       roof = list(
-        evaporation_roof = real_evaporation[[key_roof]],
+        evaporation_roof = evaporation_sealed[[key_roof]],
         runoff_roof = runoff_roof,
         runoff_roof_actual = runoff_roof_actual,
         infiltration_roof_actual = infiltration_roof_actual
