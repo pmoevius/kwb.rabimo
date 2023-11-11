@@ -102,7 +102,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     )
   )
 
-  # Provide Bagrov parameters (efficiencies) and runoff coefficients
+  # Provide runoff coefficients for impervious surfaces
   runoff_factors <- fetch_config("runoff_factors")
 
   # Calculate roof related variables
