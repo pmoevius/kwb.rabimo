@@ -225,10 +225,20 @@ move_columns_to_front <- kwb.utils::moveColumnsToFront
 #' @importFrom kwb.utils multiColumnLookup
 multi_column_lookup <- kwb.utils::multiColumnLookup
 
+# multi_substitute -------------------------------------------------------------
+#' @importFrom kwb.utils multiSubstitute
+multi_substitute <- kwb.utils::multiSubstitute
+
 # n_dims -----------------------------------------------------------------------
 n_dims <- function(x)
 {
   length(dim(x))
+}
+
+# prefix_names -----------------------------------------------------------------
+prefix_names <- function(x, prefix)
+{
+  stats::setNames(x, paste0(prefix, names(x)))
 }
 
 # print_if ---------------------------------------------------------------------

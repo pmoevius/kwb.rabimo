@@ -12,6 +12,8 @@
 #' @export
 run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
 {
+  #kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
+
   # Prepare input data frame: rename columns, add fraction columns and
   # "usage tuple" columns: "usage", "yield", "irrigation"
   input <- cat_and_run(
@@ -44,11 +46,14 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     )
   )
 
-  precipitation_per_year <- select_columns(precipitation, "per_year")
-  pot_evaporation_per_year <- select_columns(pot_evaporation, "per_year")
+  prec_year <- select_columns(precipitation, "year")
+  epot_year <- select_columns(pot_evaporation, "year")
 
-  pot_evaporation[["x_ratio"]] <-
-    precipitation_per_year / pot_evaporation_per_year
+  climate <- cbind(
+    prefix_names(precipitation, "prec."),
+    prefix_names(pot_evaporation, "epot."),
+    x_ratio = prec_year / epot_year
+  )
 
   # Prepare soil properties for all rows. They are required to calculate the
   # actual evapotranspiration of unsealed areas. In the case of water bodies,
@@ -72,8 +77,8 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     expr = fetch_config("bagrov_values") %>%
       lapply(function(x) {
         real_evapo_transpiration(
-          potential_evaporation = pot_evaporation_per_year,
-          x_ratio = pot_evaporation[["x_ratio"]],
+          potential_evaporation = epot_year,
+          x_ratio = select_columns(climate, "x_ratio"),
           bagrov_parameter = rep(x, nrow(input)),
           use_abimo_algorithm = simulate_abimo
         )
@@ -89,9 +94,8 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     ),
     actual_evaporation_waterbody_or_pervious(
       usage_tuple = fetch_input(c("usage", "yield", "irrigation")),
-      potential_evaporation = pot_evaporation,
+      climate = climate,
       soil_properties = soil_properties,
-      precipitation = precipitation,
       min_size_for_parallel = 100L,
       #digits = 3L,
       use_abimo_algorithm = simulate_abimo
@@ -102,7 +106,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   runoff_factors <- fetch_config("runoff_factors")
 
   # Calculate roof related variables
-  key_roof <- "Dachflaechen"
+  key_roof <- "roof"
 
   runoff_roof_actual_factor <-
     get_fraction("main/builtSealed/connected") *
@@ -113,7 +117,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
 
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
-  runoff_roof <- precipitation_per_year - real_evaporation[[key_roof]]
+  runoff_roof <- prec_year - real_evaporation[[key_roof]]
 
   # actual runoff from roof surface (area based, with no infiltration)
   runoff_roof_actual <- runoff_roof_actual_factor * runoff_roof
@@ -134,7 +138,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
 
   # Calculate runoff for all surface classes at once
   # (contains both surface runoff and infiltration components)
-  runoff_sealed <- precipitation_per_year - evaporation_sealed
+  runoff_sealed <- prec_year - evaporation_sealed
 
   # Runoff from the actual partial areas that are sealed and connected
   # (road and non-road) areas (for all surface classes at once)
@@ -163,7 +167,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   result_data <- data.frame(code = fetch_input("CODE"))
 
   # Surface-Runoff of unsealed surfaces (unsealedSurface_RUV)
-  runoff_unsealed <- precipitation_per_year - evaporation_unsealed
+  runoff_unsealed <- prec_year - evaporation_unsealed
 
   # Infiltration of road (unsealed areas)
   infiltration_unsealed_roads <-
@@ -214,7 +218,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   # Calculate evaporation 'VERDUNST' by subtracting 'R', the sum of
   # runoff and infiltration from precipitation of entire year,
   # multiplied by precipitation correction factor
-  total_evaporation <- precipitation_per_year - total_runoff
+  total_evaporation <- prec_year - total_runoff
 
   result_data[["total_evaporation"]] <- total_evaporation
 
@@ -265,8 +269,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
     input = input,
     result_data = result_data,
     intermediates = list(
-      precipitation = precipitation,
-      pot_evaporation = pot_evaporation,
+      climate = climate,
       soil_properties = soil_properties,
       real_evaporation = real_evaporation,
       evaporation_unsealed = evaporation_unsealed,
