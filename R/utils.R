@@ -225,10 +225,20 @@ move_columns_to_front <- kwb.utils::moveColumnsToFront
 #' @importFrom kwb.utils multiColumnLookup
 multi_column_lookup <- kwb.utils::multiColumnLookup
 
+# multi_substitute -------------------------------------------------------------
+#' @importFrom kwb.utils multiSubstitute
+multi_substitute <- kwb.utils::multiSubstitute
+
 # n_dims -----------------------------------------------------------------------
 n_dims <- function(x)
 {
   length(dim(x))
+}
+
+# prefix_names -----------------------------------------------------------------
+prefix_names <- function(x, prefix)
+{
+  stats::setNames(x, paste0(prefix, names(x)))
 }
 
 # print_if ---------------------------------------------------------------------
@@ -278,6 +288,10 @@ rename_columns <- kwb.utils::renameColumns
 # reset_row_names --------------------------------------------------------------
 #' @importFrom kwb.utils resetRowNames
 reset_row_names <- kwb.utils::resetRowNames
+
+# right ------------------------------------------------------------------------
+#' @importFrom kwb.utils right
+right <- kwb.utils::right
 
 # safe_row_bind_all ------------------------------------------------------------
 #' @importFrom kwb.utils safeRowBindAll
