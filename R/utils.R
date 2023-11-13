@@ -289,6 +289,10 @@ rename_columns <- kwb.utils::renameColumns
 #' @importFrom kwb.utils resetRowNames
 reset_row_names <- kwb.utils::resetRowNames
 
+# right ------------------------------------------------------------------------
+#' @importFrom kwb.utils right
+right <- kwb.utils::right
+
 # safe_row_bind_all ------------------------------------------------------------
 #' @importFrom kwb.utils safeRowBindAll
 safe_row_bind_all <- kwb.utils::safeRowBindAll
