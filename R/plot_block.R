@@ -2,46 +2,47 @@
 plot_block <- function(block, cex = 1, delta = 0.1)
 {
   fraction <- create_fraction_accessor(block)
+  fetch <- create_accessor(block)
 
   r <- list(
     main = rectangle(
-      height = block$areaFractionMain,
+      height = fetch("areaFractionMain"),
       name = "areaFractionMain"
     ),
     road = rectangle(
-      height = block$areaFractionRoad,
+      height = fetch("areaFractionRoad"),
       name = "areaFractionRoad"
     ),
     mbs = rectangle(
       height = fraction("main/builtSealed"),
-      value = block$mainFractionBuiltSealed,
+      value = fetch("mainFractionBuiltSealed"),
       name = "mainFractionBuiltSealed"
     ),
     mus = rectangle(
       height = fraction("main/unbuiltSealed"),
-      value = block$mainFractionUnbuiltSealed,
+      value = fetch("mainFractionUnbuiltSealed"),
       name = "mainFractionUnbuiltSealed"
     ),
     rrs = rectangle(
       height = fraction("road/roadSealed"),
-      value = block$roadFractionRoadSealed,
+      value = fetch("roadFractionRoadSealed"),
       name = "roadFractionRoadSealed"
     ),
     bsc = rectangle(
-      width = block$builtSealedFractionConnected,
-      value = block$builtSealedFractionConnected,
+      width = fetch("builtSealedFractionConnected"),
+      value = fetch("builtSealedFractionConnected"),
       height = fraction("main/builtSealed"),
       name = "builtSealedFractionConnected"
     ),
     usc = rectangle(
-      width = block$unbuiltSealedFractionConnected,
-      value = block$unbuiltSealedFractionConnected,
+      width = fetch("unbuiltSealedFractionConnected"),
+      value = fetch("unbuiltSealedFractionConnected"),
       height = fraction("main/unbuiltSealed"),
       name = "unbuiltSealedFractionConnected"
     ),
     rsc = rectangle(
-      width = block$roadSealedFractionConnected,
-      value = block$roadSealedFractionConnected,
+      width = fetch("roadSealedFractionConnected"),
+      value = fetch("roadSealedFractionConnected"),
       height = fraction("road/roadSealed"),
       name = "roadSealedFractionConnected"
     )
