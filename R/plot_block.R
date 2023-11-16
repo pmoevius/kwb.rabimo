@@ -1,329 +1,129 @@
 # plot_block -------------------------------------------------------------------
+#' @importFrom rlang .data
 plot_block <- function(block, cex = 1, delta = 0.1)
 {
-  fraction <- create_fraction_accessor(block)
-  fetch <- create_accessor(block)
+  get_fraction <- create_fraction_accessor(block)
 
-  r <- list(
-    main = rectangle(
-      height = fetch("areaFractionMain"),
-      name = "areaFractionMain"
-    ),
-    road = rectangle(
-      height = fetch("areaFractionRoad"),
-      name = "areaFractionRoad"
-    ),
-    mbs = rectangle(
-      height = fraction("main/builtSealed"),
-      value = fetch("mainFractionBuiltSealed"),
-      name = "mainFractionBuiltSealed"
-    ),
-    mus = rectangle(
-      height = fraction("main/unbuiltSealed"),
-      value = fetch("mainFractionUnbuiltSealed"),
-      name = "mainFractionUnbuiltSealed"
-    ),
-    rrs = rectangle(
-      height = fraction("road/roadSealed"),
-      value = fetch("roadFractionRoadSealed"),
-      name = "roadFractionRoadSealed"
-    ),
-    bsc = rectangle(
-      width = fetch("builtSealedFractionConnected"),
-      value = fetch("builtSealedFractionConnected"),
-      height = fraction("main/builtSealed"),
-      name = "builtSealedFractionConnected"
-    ),
-    usc = rectangle(
-      width = fetch("unbuiltSealedFractionConnected"),
-      value = fetch("unbuiltSealedFractionConnected"),
-      height = fraction("main/unbuiltSealed"),
-      name = "unbuiltSealedFractionConnected"
-    ),
-    rsc = rectangle(
-      width = fetch("roadSealedFractionConnected"),
-      value = fetch("roadSealedFractionConnected"),
-      height = fraction("road/roadSealed"),
-      name = "roadSealedFractionConnected"
-    )
-  )
+  col_rect <- function(col, size = 1, as_width = FALSE, lbl_text = NULL, ...) {
+    value <- select_columns(block, col)
+    lbl_text <- default_if_null(lbl_text, to_label(
+      key = gsub("Fraction", "X", col),
+      value = 100 * value
+    ))
+    if (as_width) {
+      new_rects(w = value, h = size, lbl_text = lbl_text, ...)
+    } else {
+      new_rects(w = size, h = value, lbl_text = lbl_text, ...)
+    }
+  }
 
-  x <- filter_elements(block, "roadSealedFractionSurface")
+  col_rect_w <- function(...) {
+    col_rect(..., as_width = TRUE)
+  }
 
-  r <- c(r, lapply(names(x), function(name) {
-    rectangle(
-      width = x[[name]],
-      height = fraction("road/roadSealed"),
-      label = right(name, 1L)
-    )
-  }))
+  # Create single rectangles
+  area_rects <- c(
+    col_rect("areaFractionRoad"),
+    col_rect("areaFractionMain")
+  ) %>%
+    stack()
 
-  x <- filter_elements(block, "unbuiltSealedFractionSurface")
+  area_rects_dashed <- area_rects %>%
+    separate(dy = 0.4) %>%
+    move(dy = -0.2, dx = 1.2) %>%
+    unlabel_and_dash()
 
-  r <- c(r, lapply(names(x), function(name) {
-    rectangle(
-      width = x[[name]],
-      height = fraction("main/unbuiltSealed"),
-      label = right(name, 1L)
-    )
-  }))
-
-  {
-    graphics::par(mar = c(2, 2, 1, 1))
-
-    limits <- get_bounding_box(r, delta = delta)
-
-    init_plot(xlim = c(0, 4), ylim = c(-1, 2))
-
-    # 1st column
-    plot.rectangles(r[2:1], cex = cex)
-
-    # 2nd column
-    p1 <- plot.rectangles(
-      r[2:1],
-      x = 1.2,
-      delta = delta,
-      label = FALSE,
-      lty = 2 # dashed
+  main_rects <- c(
+    col_rect("mainFractionBuiltSealed"),
+    col_rect("mainFractionUnbuiltSealed")
+  ) %>%
+    dplyr::mutate(h = .data[["h"]] * block$areaFractionMain) %>%
+    stack(reverse = TRUE) %>%
+    move(
+      left = area_rects_dashed$llx[2L],
+      top = area_rects_dashed$lly[2L] + area_rects_dashed$h[2L]
     )
 
-    p2 <- plot.rectangles(
-      r[3:4],
-      x = 1.2,
-      y = p1$ytop[2],
-      reverse = TRUE,
-      cex = cex
+  built_sealed_dashed <- main_rects[1, ] %>%
+    move(dx = 1.2, dy = 0.2) %>%
+    unlabel_and_dash()
+
+  unbuilt_sealed_dashed <- c(
+    main_rects[2, ] %>% move(dx = 1.2),
+    main_rects[2, ] %>% move(dx = 2.4)
+  ) %>%
+    unlabel_and_dash()
+
+  road_rect <- col_rect("roadFractionRoadSealed") %>%
+    dplyr::mutate(h = .data[["h"]] * block$areaFractionRoad) %>%
+    move(
+      left = area_rects_dashed$llx[1L],
+      bottom = area_rects_dashed$lly[1L]
     )
 
-    p3 <- plot.rectangles(
-      r[5],
-      x = 1.2,
-      y = p1$ybottom[1],
-      cex = cex
-    )
+  road_rect_dashed <- c(
+    move(road_rect, dx = 1.2),
+    move(road_rect, dx = 2.4)
+  ) %>%
+    unlabel_and_dash()
 
-    # 3rd column
-    p4a <- plot.rectangles(
-      r[4],
-      x = 2.4,
-      y = p2$ybottom[2],
-      delta = 1,
-      cex = cex,
-      label = FALSE,
-      lty = 2 # dashed
-    )
-
-    p4b <- plot.rectangles(
-      r[3],
-      x = 1.2,
-      y = p2$ytop[1L] + delta,
-      delta = 1,
-      cex = cex,
-      label = FALSE,
-      lty = 2
-    )
-
-    p5 <- plot.rectangles(
-      r[5],
-      x = 2.4,
-      y = p1$ybottom[1],
-      label = FALSE,
-      lty = 2
-    )
-
-    plot.rectangles(
-      r[6],
-      x = 1.2,
-      y = p4b$ybottom[1],
-      cex = cex,
-      label_left = TRUE,
+  conn_rects <- c(
+    col_rect_w(
+      "builtSealedFractionConnected",
+      get_fraction("main/builtSealed")
+    ) %>%
+      move(bottom = built_sealed_dashed$lly[1L]),
+    col_rect_w(
+      "unbuiltSealedFractionConnected",
+      get_fraction("main/unbuiltSealed")
+    ) %>% move(bottom = unbuilt_sealed_dashed$lly[2L]),
+    col_rect_w(
+      "roadSealedFractionConnected",
+      get_fraction("road/roadSealed")
+    ) %>% move(bottom = road_rect_dashed$lly[1L])
+  ) %>%
+    move(left = road_rect_dashed$llx[1L]) %>%
+    dplyr::mutate(
+      lbl_align = "left",
       col = "lightgrey"
     )
 
-    p7 <- plot.rectangles(
-      r[7],
-      x = 2.4,
-      y = p4a$ybottom[1],
-      cex = cex,
-      label_left = TRUE,
-      col = "lightgrey"
+  s1 <- get_fraction("main/unbuiltSealed")
+  surf_rects_main <- c(
+    col_rect_w("unbuiltSealedFractionSurface1", s1, lbl_text = "1"),
+    col_rect_w("unbuiltSealedFractionSurface2", s1, lbl_text = "2"),
+    col_rect_w("unbuiltSealedFractionSurface3", s1, lbl_text = "3"),
+    col_rect_w("unbuiltSealedFractionSurface4", s1, lbl_text = "4")
+  ) %>%
+    stack(horizontal = TRUE) %>%
+    move(
+      left = unbuilt_sealed_dashed$llx[2L],
+      bottom = unbuilt_sealed_dashed$lly[2L]
     )
 
-    plot.rectangles(
-      r[8],
-      x = 2.4,
-      y = p5$ybottom,
-      label_left = TRUE,
-      cex = cex,
-      col = "lightgrey"
+  s2 <- get_fraction("road/roadSealed")
+  surf_rects_road <- c(
+    col_rect_w("roadSealedFractionSurface1", s2, lbl_text = "1"),
+    col_rect_w("roadSealedFractionSurface2", s2, lbl_text = "2"),
+    col_rect_w("roadSealedFractionSurface3", s2, lbl_text = "3"),
+    col_rect_w("roadSealedFractionSurface4", s2, lbl_text = "4")
+  ) %>%
+    stack(horizontal = TRUE) %>%
+    move(
+      left = road_rect_dashed$llx[2L],
+      bottom = road_rect_dashed$lly[2L]
     )
 
-    plot.rectangles(
-      r[9:12],
-      x = 2.4,
-      y = - r[[9]]$height - delta/2,
-      horizontal = TRUE,
-      cex = cex
-    )
-
-    plot.rectangles(
-      r[13:16],
-      x = 2.4,
-      y = p7$ytop + delta/2,
-      horizontal = TRUE,
-      cex = cex
-    )
-
-  }
-
-  r
-}
-
-# plot.rectangles --------------------------------------------------------------
-plot.rectangles <- function(
-    r,
-    x = 0,
-    y = 0,
-    delta = 0,
-    label = TRUE,
-    label_left = FALSE,
-    cex = 1,
-    horizontal = FALSE,
-    reverse = FALSE,
-    ...,
-    add = TRUE
-)
-{
-  if (!add) {
-    init_plot(r, delta)
-  }
-
-  h <- get_heights(r)
-  w <- get_widths(r)
-
-  vertical <- !horizontal
-
-  positions <- stacked_positions(
-    x = if (horizontal) w else h,
-    delta = delta,
-    reverse = reverse
-  )
-
-  lowers <- positions[, "lower"]
-  uppers <- positions[, "upper"]
-
-  xleft   <- x + if (vertical) 0 else lowers
-  ybottom <- y + if (vertical) lowers else 0
-  xright  <- x + if (vertical) w else uppers
-  ytop    <- y + if (vertical) uppers else h
-
-  graphics::rect(
-    xleft = xleft,
-    ybottom = ybottom,
-    xright = xright,
-    ytop = ytop,
-    ...
-  )
-
-  if (label) {
-    midx <- (xleft + xright)/2
-    midy <- (ybottom + ytop)/2
-    graphics::text(
-      if (label_left) xleft else midx,
-      midy,
-      labels = get_labels(r),
-      cex = cex,
-      adj = if (label_left) 0 else NULL
-    )
-  }
-
-  invisible(list(
-    xleft = xleft,
-    ybottom = ybottom,
-    xright = xright,
-    ytop = ytop
+  plot(add = FALSE, cex = cex, c(
+    area_rects,
+    area_rects_dashed,
+    main_rects,
+    built_sealed_dashed,
+    unbuilt_sealed_dashed,
+    road_rect,
+    road_rect_dashed,
+    conn_rects,
+    surf_rects_main,
+    surf_rects_road
   ))
-}
-
-# init_plot --------------------------------------------------------------------
-init_plot <- function(
-    width = 1,
-    height = 1,
-    xlim = c(0, width),
-    ylim = c(0, height),
-    axes = FALSE
-)
-{
-  plot(
-    NA,
-    xlim = xlim,
-    ylim = ylim,
-    xlab = "",
-    ylab = "",
-    asp = 1,
-    axes = axes
-  )
-}
-
-# get_heights ------------------------------------------------------------------
-get_heights <- function(r)
-{
-  sapply(r, select_elements, "height")
-}
-
-# get_widths -------------------------------------------------------------------
-get_widths <- function(r)
-{
-  sapply(r, select_elements, "width")
-}
-
-# get_names --------------------------------------------------------------------
-get_names <- function(r)
-{
-  sapply(r, select_elements, "name")
-}
-
-# get_labels -------------------------------------------------------------------
-get_labels <- function(r)
-{
-  sapply(r, select_elements, "label")
-}
-
-# get_bounding_box -------------------------------------------------------------
-get_bounding_box <- function(r, delta = 0)
-{
-  extra <- delta * (length(r) - 1)
-
-  list(
-    xlim = c(0, sum(get_widths(r)) + extra),
-    ylim = c(0, sum(get_heights(r)) + extra)
-  )
-}
-
-# stacked_positions ------------------------------------------------------------
-stacked_positions <- function(x, delta = 0, reverse = FALSE)
-{
-  upper <- cumsum(x) + (seq_along(x) - 1L) * delta
-  lower <- c(0, upper[-length(upper)] + delta)
-
-  cbind(
-    lower = if (reverse) -upper else lower,
-    upper = if (reverse) -lower else upper
-  )
-}
-
-# rectangle --------------------------------------------------------------------
-rectangle <- function(
-    width = 1, height = 1, name = "Name?", value = height, label = NULL
-)
-{
-  name <- gsub("Fraction", "X", name)
-
-  list(
-    width = width,
-    height = height,
-    name = name,
-    value = value,
-    label = default_if_null(label, sprintf("%s: %0.1f", name, value * 100))
-  )
 }
