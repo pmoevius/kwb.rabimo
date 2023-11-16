@@ -191,20 +191,24 @@ plot.rects <- function(r, add = !is.null(grDevices::dev.list()), cex = 1, ...)
   }
 
   # Left aligned labels
-  text(
-    x = r$llx[is_left],
-    y = mids$y[is_left],
-    labels = labels[is_left],
-    adj = c(0, 0.5)
-  )
+  if (any(is_left)) {
+    text(
+      x = r$llx[is_left],
+      y = mids$y[is_left],
+      labels = labels[is_left],
+      adj = c(0, 0.5)
+    )
+  }
 
   # Centred labels
-  text(
-    x = mids$x[is_centre],
-    y = mids$y[is_centre],
-    labels = labels[is_centre],
-    adj = c(0.5, 0.5)
-  )
+  if (any(is_centre)) {
+    text(
+      x = mids$x[is_centre],
+      y = mids$y[is_centre],
+      labels = labels[is_centre],
+      adj = c(0.5, 0.5)
+    )
+  }
 
   invisible(r)
 }
