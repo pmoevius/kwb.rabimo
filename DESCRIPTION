@@ -25,6 +25,7 @@ Imports:
     magrittr,
     methods,
     parallel,
+    rlang,
     xml2
 Remotes: 
     github::kwb-r/kwb.abimo,
