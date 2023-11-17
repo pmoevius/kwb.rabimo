@@ -138,12 +138,12 @@ interpolate <- function(x, y, xout)
   yout[xout <= x[1L]] <- y[1L]
   yout[xout >= x[nx]] <- y[nx]
 
-  todo <- is.na(yout)
-
-  yout[todo] <- sapply(xout[todo], function(xi) {
-    i <- which(xi <= x[-1L])[1L] + 1L
-    (y[i - 1L] + y[i]) / 2
-  })
+  if (any(is_na <- is.na(yout))) {
+    yout[is_na] <- sapply(xout[is_na], function(xi) {
+      i <- which(xi <= x[-1L])[1L] + 1L
+      (y[i - 1L] + y[i]) / 2
+    })
+  }
 
   yout
 }
