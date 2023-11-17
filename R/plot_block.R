@@ -1,5 +1,13 @@
 # plot_block -------------------------------------------------------------------
+
+#' Plot Area Fractions and their Names for one Block
+#'
+#' @param block data frame with one row and columns as available
+#'   in the data frame that is returned by \code{\link{prepare_input_data}}
+#' @param cex character expansion factor to scale the texts
+#' @param delta controls the space between rectangles
 #' @importFrom rlang .data
+#' @export
 plot_block <- function(block, cex = 1, delta = 0.1)
 {
   get_fraction <- create_fraction_accessor(block)
