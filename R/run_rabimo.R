@@ -2,7 +2,12 @@
 
 #' Run R-Abimo, the R-implementation of Water Balance Model Abimo
 #'
-#' @param input_data data frame with columns as required by Abimo
+#' @details If \code{input_data} contains a column \code{yield} it is expected that
+#'   the data are already prepared as otherwise would do the function
+#'   \code{\link{prepare_input_data}}.
+#'
+#' @param input_data data frame with columns as required by Abimo or
+#'   data frame with columns as returned by \code{\link{prepare_input_data}}
 #' @param config configuration object (list) as returned by
 #'   \code{kwb.abimo:::read_config()}
 #' @param simulate_abimo logical of length one indicating whether or not to
@@ -16,10 +21,17 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
 
   # Prepare input data frame: rename columns, add fraction columns and
   # "usage tuple" columns: "usage", "yield", "irrigation"
-  input <- cat_and_run(
-    "Preparing input data (e.g. adding usage tuple)",
-    prepare_input_data(reset_row_names(input_data))
-  )
+  input <- if ("yield" %in% names(input_data)) {
+    cat_and_run(
+      "Column 'yield' found in input_data -> no further preparation",
+      input_data
+    )
+  } else {
+    cat_and_run(
+      "Preparing input data (e.g. adding usage tuple)",
+      prepare_input_data(reset_row_names(input_data))
+    )
+  }
 
   # Create accessor functions to input columns and config elements
   fetch_input <- create_accessor(input)
