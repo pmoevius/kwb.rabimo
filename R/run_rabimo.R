@@ -228,7 +228,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   total_evaporation <- prec_year - total_runoff
 
   # Provide total area for calculation of "flows"
-  total_area <- select_columns(input, "totalArea")
+  total_area <- fetch_input("totalArea")
 
   # Calculate volume 'rowvol' from runoff (qcm/s)
   surface_runoff_flow <- yearly_height_to_volume_flow(
