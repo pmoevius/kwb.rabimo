@@ -4,8 +4,8 @@
 #'
 #' Rename columns from ABIMO 3.2 original names to ABIMO 3.3 internal names
 #'
-#' @param input_data data frame with columns REGENJA, REGENSO, NUTZUNG, TYP,
-#'   BEZIRK, FLGES, STR_FLGES, PROBAU, PROVGU, VGSTRASSE, KAN_BEB, BELAG1,
+#' @param input_data data frame with columns CODE, REGENJA, REGENSO, NUTZUNG,
+#'   TYP, BEZIRK, FLGES, STR_FLGES, PROBAU, PROVGU, VGSTRASSE, KAN_BEB, BELAG1,
 #'   BELAG2, BELAG3, BELAG4, KAN_VGU, STR_BELAG1, STR_BELAG2, STR_BELAG3,
 #'   STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150
 #' @return \code{input_data} with columns renamed and additional columns
@@ -13,8 +13,9 @@
 #' @export
 prepare_input_data <- function(input_data)
 {
-  # Rename columns from ABIMO 3.2 names to ABIMO 3.3 internal names
-  input <- rename_columns(input_data, INPUT_COLUMN_RENAMINGS)
+  # 1. Rename columns from ABIMO 3.2 names to ABIMO 3.3 internal names
+  # 2. Select only the columns that are required
+  input <- rename_and_select(input_data, INPUT_COLUMN_RENAMINGS)
 
   # Create column accessor function
   fetch <- create_accessor(input)
@@ -42,6 +43,7 @@ prepare_input_data <- function(input_data)
 
 # INPUT_COLUMN_RENAMINGS -------------------------------------------------------
 INPUT_COLUMN_RENAMINGS <- list(
+  CODE = "code",
   REGENJA = "precipitationYear",
   REGENSO = "precipitationSummer",
   NUTZUNG = "berlin_usage",
@@ -66,6 +68,15 @@ INPUT_COLUMN_RENAMINGS <- list(
   FLUR = "depthToWaterTable",
   FELD_30 = "fieldCapacity_30",
   FELD_150 = "fieldCapacity_150"
+)
+
+# INPUT_COLUMNS_REQUIRED -------------------------------------------------------
+INPUT_COLUMNS_REQUIRED <- names(INPUT_COLUMN_RENAMINGS)
+
+# INPUT_COLUMNS_NOT_NEEDED -----------------------------------------------------
+INPUT_COLUMNS_NOT_NEEDED <- setdiff(
+  names(kwb.abimo::abimo_input_2019),
+  INPUT_COLUMNS_REQUIRED
 )
 
 # calculate_fractions ----------------------------------------------------------
