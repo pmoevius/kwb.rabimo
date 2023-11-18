@@ -25,21 +25,10 @@ prepare_input_data <- function(input_data)
   # Convert percentages to fractions
   fractions <- calculate_fractions(input)
 
-  # Calculate the percentage of built and unbuilt sealed areas. Add a small
-  # value to round .5 "up" not "down":
-  # round(98.5) -> 98
-  # round(98.5 + 1e-12) -> 99
-
-  # === Code in C++:
-  # vgd = (dbReader.getRecord(k, "PROBAU")).toFloat() / 100.0F; // Dachflaechen
-  # vgb = (dbReader.getRecord(k, "PROVGU")).toFloat() / 100.0F; // Hofflaechen
-  # ptrDA.VER = (int)round((vgd * 100) + (vgb * 100));
-
-  fractions[["mainFractionSealed"]] <- as.integer(round(
-    1e-12 +
-      fetch("mainPercentageBuiltSealed") +
-      fetch("mainPercentageUnbuiltSealed")
-  )) / 100
+  fractions[["mainFractionSealed"]] <- calculate_main_fraction_sealed(
+    fetch("mainPercentageBuiltSealed"),
+    fetch("mainPercentageUnbuiltSealed")
+  )
 
   # Get (usage, yield, irrigation) tuples based on Berlin-specific codes
   usages <- get_usage_tuple(
@@ -108,4 +97,25 @@ calculate_fractions <- function(input)
     roadSealedFractionSurface3 = by_100("roadSealedPercentageSurface3"),
     roadSealedFractionSurface4 = by_100("roadSealedPercentageSurface4")
   )
+}
+
+# calculate_main_fraction_sealed -----------------------------------------------
+calculate_main_fraction_sealed <- function(
+    mainPercentageBuiltSealed,
+    mainPercentageUnbuiltSealed
+)
+{
+  # Calculate the percentage of built and unbuilt sealed areas. Add a small
+  # value to round .5 "up" not "down":
+  # round(98.5) -> 98
+  # round(98.5 + 1e-12) -> 99
+
+  # === Code in C++:
+  # vgd = (dbReader.getRecord(k, "PROBAU")).toFloat() / 100.0F; // Dachflaechen
+  # vgb = (dbReader.getRecord(k, "PROVGU")).toFloat() / 100.0F; // Hofflaechen
+  # ptrDA.VER = (int)round((vgd * 100) + (vgb * 100));
+
+  as.integer(round(
+    1e-12 + mainPercentageBuiltSealed + mainPercentageUnbuiltSealed
+  )) / 100
 }
