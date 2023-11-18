@@ -70,13 +70,13 @@ INPUT_COLUMN_RENAMINGS <- list(
   FELD_150 = "fieldCapacity_150"
 )
 
-# INPUT_COLUMNS_REQUIRED -------------------------------------------------------
-INPUT_COLUMNS_REQUIRED <- names(INPUT_COLUMN_RENAMINGS)
+# INPUT_COLUMNS_NEEDED ---------------------------------------------------------
+INPUT_COLUMNS_NEEDED <- names(INPUT_COLUMN_RENAMINGS)
 
 # INPUT_COLUMNS_NOT_NEEDED -----------------------------------------------------
 INPUT_COLUMNS_NOT_NEEDED <- setdiff(
   names(kwb.abimo::abimo_input_2019),
-  INPUT_COLUMNS_REQUIRED
+  INPUT_COLUMNS_NEEDED
 )
 
 # calculate_fractions ----------------------------------------------------------
