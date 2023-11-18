@@ -77,7 +77,7 @@ calculate_fractions <- function(input)
   # Helper function to select column and divide by 100
   by_100 <- function(x) fetch(x) / 100
 
-  total_area <- fetch("total_area")
+  total_area <- fetch("totalArea")
 
   data.frame(
     areaFractionMain = fetch("mainArea") / total_area,
