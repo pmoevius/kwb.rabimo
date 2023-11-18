@@ -228,7 +228,7 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   total_evaporation <- prec_year - total_runoff
 
   # Provide total area for calculation of "flows"
-  total_area <- select_columns(input, "totalArea")
+  total_area <- fetch_input("totalArea")
 
   # Calculate volume 'rowvol' from runoff (qcm/s)
   surface_runoff_flow <- yearly_height_to_volume_flow(
@@ -258,11 +258,11 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   )
 
   # Compose result data frame. Use mget() to get the result vectors from the
-  # local environment and put them into a data frame
-  result_data <- do.call(data.frame, args = c(
-    list(code = fetch_input("CODE")),
+  # local environment and put them into the data frame
+  result_data <- cbind(
+    fetch_input("code", drop = FALSE),
     mget(names(name_mapping)[-1L])
-  ))
+  )
 
   # Provide the same columns as Abimo does
   abimo_result <- rename_and_select(result_data, name_mapping)
