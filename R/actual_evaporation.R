@@ -30,21 +30,19 @@ actual_evaporation_waterbody_or_pervious <- function(
   # Initialise result vector
   y <- numeric(length = length(ep_year))
 
-  # for water bodies return the potential evaporation
-  # ??? in this test version not implemented ???
-  # TODO: Check with Francesco
+  # For water bodies, use the potential evaporation
   usages <- select_elements(usage_tuple, "usage")
-  is_water <- (usages == "waterbody_G")
+  is_waterbody <- usage_is_waterbody(usages)
 
-  y[is_water] <- ep_year[is_water]
+  y[is_waterbody] <- ep_year[is_waterbody]
 
   # if all block areas are waterbodies, return
-  if (all(is_water)) {
+  if (all(is_waterbody)) {
     return(y)
   }
 
   # indices of entries related to any other usage
-  i <- which(!is_water)
+  i <- which(!is_waterbody)
 
   # otherwise calculate the real evapotranspiration
   stopifnot(all(ep_year[i] > 0)) # ???
@@ -90,7 +88,7 @@ actual_evaporation_waterbody_or_pervious <- function(
   depths <- select_elements(soil_properties, "depth_to_water_table")
 
   # indices of entries related to non-water usage and capillary rises < 0
-  j <- which(!is_water & rises < 0)
+  j <- which(!is_waterbody & rises < 0)
 
   y[j] <- y[j] + (ep_year[j] - y[j]) * exp(depths[j] / rises[j])
 
@@ -117,7 +115,7 @@ get_bagrov_parameter_unsealed <- function(
   # Initialise result vector
   y <- numeric(length = length(g02))
 
-  is_forest <- (usage == "forested_W")
+  is_forest <- usage_is_forest(usage)
   no_forest <- !is_forest
 
   y[is_forest] <- lookup_bagrov_forest(g02[is_forest])
