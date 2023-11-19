@@ -42,10 +42,9 @@ abimo_config_to_config <- function(abimo_config)
 
   convert_element <- function(config, from, to, convert = identity) {
     x <- select_elements(config, from)
-    config[[to]] <- set_names(
-      convert(select_columns(x, "value")),
-      select_columns(x, "key")
-    )
+    value <- convert(select_columns(x, "value"))
+    key <- select_columns(x, "key")
+    config[[to]] <- set_names(value, key)
     remove_elements(config, from)
   }
 
