@@ -36,7 +36,7 @@ get_usage_tuple <- function(usage, type, include_inputs = FALSE)
         value = value_column
       )
     }) %>%
-    stats::setNames(value_columns) %>%
+    set_names(value_columns) %>%
     do.call(what = data.frame)
 
   is_missing <- is.na(result[[value_columns[1L]]])

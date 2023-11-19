@@ -238,7 +238,7 @@ n_dims <- function(x)
 # prefix_names -----------------------------------------------------------------
 prefix_names <- function(x, prefix)
 {
-  stats::setNames(x, paste0(prefix, names(x)))
+  set_names(x, paste0(prefix, names(x)))
 }
 
 # print_if ---------------------------------------------------------------------
@@ -316,6 +316,10 @@ seq_along_rows <- function(data)
 {
   seq_len(nrow(data))
 }
+
+# set_names --------------------------------------------------------------------
+#' @importFrom stats setNames
+set_names <- stats::setNames
 
 # split_into_identical_rows ----------------------------------------------------
 split_into_identical_rows <- function(data)

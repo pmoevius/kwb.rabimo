@@ -16,7 +16,7 @@ abimo_config_to_config <- function(abimo_config)
 
   result <- abimo_config[startsWith(names(abimo_config), prefix)] %>%
     lapply(get_all_item_data) %>%
-    stats::setNames(remove_left(names(.), nchar(prefix)))
+    set_names(remove_left(names(.), nchar(prefix)))
 
   element_water <- "Gewaesserverdunstung"
   element_else <- "PotentielleVerdunstung"
@@ -41,7 +41,7 @@ abimo_config_to_config <- function(abimo_config)
 
   convert_element <- function(config, from, to, convert = identity) {
     x <- select_elements(config, from)
-    config[[to]] <- stats::setNames(
+    config[[to]] <- set_names(
       convert(select_columns(x, "value")),
       select_columns(x, "key")
     )
@@ -86,7 +86,7 @@ abimo_config_to_config <- function(abimo_config)
   result <- remove_elements(result, "diverse")
 
   clean_names <- function(x) {
-    stats::setNames(x, multi_substitute(names(x), list(
+    set_names(x, multi_substitute(names(x), list(
       Dachflaechen = "roof",
       Belaglsklasse = "surface"
     )))
