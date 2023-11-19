@@ -8,7 +8,7 @@
 
 abimo_config_to_config <- function(abimo_config)
 {
-  # abimo_config <- kwb.abimo:::read_config()
+  #abimo_config <- kwb.abimo:::read_config()
   #`%>%` <- magrittr::`%>%`
   #kwb.utils::assignPackageObjects("kwb.rabimo")
 
@@ -18,25 +18,24 @@ abimo_config_to_config <- function(abimo_config)
     lapply(get_all_item_data) %>%
     set_names(remove_left(names(.), nchar(prefix)))
 
-  element_water <- "Gewaesserverdunstung"
-  element_else <- "PotentielleVerdunstung"
+  epot_water <- "Gewaesserverdunstung"
+  epot_else <- "PotentielleVerdunstung"
 
-  all_columns_to_int <- function(x) as.data.frame(lapply(x, as.integer))
+  evaps <- lapply(c(epot_water, epot_else), function(element) {
+    result %>%
+      select_elements(element) %>%
+      expand_district_ranges() %>%
+      lapply(as.integer) %>%
+      as.data.frame()
+  })
 
-  evap_water <- result %>%
-    select_elements(element_water) %>%
-    expand_district_ranges() %>%
-    all_columns_to_int() %>%
-    rename_columns(list(eg = "etp")) %>%
-    cbind(etps = 0, is_waterbody = TRUE)
-
-  evap_else <- result %>%
-    select_elements(element_else) %>%
-    expand_district_ranges() %>%
-    all_columns_to_int() %>%
-    cbind(is_waterbody = FALSE)
-
-  result[["potential_evaporation"]] <- rbind(evap_water, evap_else) %>%
+  result[["potential_evaporation"]] <- rbind(
+    evaps[[1L]] %>%
+      rename_columns(list(eg = "etp")) %>%
+      cbind(etps = 0, is_waterbody = TRUE),
+    evaps[[2L]] %>%
+      cbind(is_waterbody = FALSE)
+  ) %>%
     move_columns_to_front("is_waterbody")
 
   convert_element <- function(config, from, to, convert = identity) {
@@ -48,53 +47,30 @@ abimo_config_to_config <- function(abimo_config)
     remove_elements(config, from)
   }
 
+  complement <- function(x) 1 - as.numeric(x)
+
   result <- result %>%
-    remove_elements(c(
-      element_water,
-      element_else
-    )) %>%
-    convert_element(
-      from = "Infiltrationsfaktoren",
-      to = "runoff_factors",
-      convert = function(x) 1 - as.numeric(x)
-    ) %>%
-    convert_element(
-      from = "Bagrovwerte",
-      to = "bagrov_values",
-      convert = as.numeric
-    ) %>%
-    convert_element(
-      from = "Diverse",
-      to = "diverse"
-    ) %>%
-    convert_element(
-      from = "ErgebnisNachkommaStellen",
-      to = "result_digits",
-      convert = as.numeric
-    )
+    remove_elements(c(epot_water, epot_else)) %>%
+    convert_element("Infiltrationsfaktoren", "runoff_factors", complement) %>%
+    convert_element("Bagrovwerte", "bagrov_values", as.numeric) %>%
+    convert_element("Diverse", "diverse") %>%
+    convert_element("ErgebnisNachkommaStellen", "result_digits", as.numeric)
 
-  diverse <- select_elements(result, "diverse")
+  # Convert types of "diverse" entries and shift them up to the main level
+  diverse <- "diverse"
+  x <- select_elements(result, diverse)
+  result[["precipitation_correction_factor"]] <- as.numeric(x[["NIEDKORRF"]])
+  result[["irrigation_to_zero"]] <- as.logical(x[["BERtoZero"]])
+  result <- remove_elements(result, diverse)
 
-  result[["precipitation_correction_factor"]] <- as.numeric(
-    diverse[["NIEDKORRF"]]
-  )
-
-  result[["irrigation_to_zero"]] <- as.logical(
-    diverse[["BERtoZero"]]
-  )
-
-  result <- remove_elements(result, "diverse")
-
-  clean_names <- function(x) {
+  # Clean names for two sections
+  keys <- c("runoff_factors", "bagrov_values")
+  result[keys] <- lapply(result[keys], function(x) {
     set_names(x, multi_substitute(names(x), list(
       Dachflaechen = "roof",
       Belaglsklasse = "surface"
     )))
-  }
-
-  elements <- c("runoff_factors", "bagrov_values")
-
-  result[elements] <- lapply(result[elements], clean_names)
+  })
 
   result
 }
