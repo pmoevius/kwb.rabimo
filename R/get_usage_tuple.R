@@ -10,7 +10,9 @@
 #' @export
 #' @examples
 #' get_usage_tuple(10, 10)
+#' get_usage_tuple(10, 10, TRUE)
 #' get_usage_tuple(10, 1:3)
+#' get_usage_tuple(10, 1:3, TRUE)
 get_usage_tuple <- function(usage, type, include_inputs = FALSE)
 {
   #usage = 10L; type = 10L
@@ -25,7 +27,8 @@ get_usage_tuple <- function(usage, type, include_inputs = FALSE)
   result <- as.data.frame(multi_column_lookup(
     data = data,
     lookup = BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION,
-    value = c("usage", "yield", "irrigation")
+    value = c("usage", "yield", "irrigation"),
+    includeKeys = include_inputs
   ))
 
   if (any(is_missing <- is.na(result[["usage"]]))) {
@@ -39,9 +42,5 @@ get_usage_tuple <- function(usage, type, include_inputs = FALSE)
     )
   }
 
-  if (include_inputs) {
-    cbind(data, result)
-  } else {
-    result
-  }
+  result
 }
