@@ -276,7 +276,7 @@ wet_summer_correction_factor <- function(
   if (use_abimo_approx) {
     interpolate(x = x, y = y, xout = xout)
   } else {
-    select_columns(stats::approx(x = x, y = y, xout = xout, rule = 2L), "y")
+    select_columns(approx(x = x, y = y, xout = xout, rule = 2L), "y")
   }
 }
 
