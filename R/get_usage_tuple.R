@@ -28,18 +28,20 @@ get_usage_tuple <- function(usage, type, include_inputs = FALSE)
     value = c("usage", "yield", "irrigation")
   ))
 
-  is_missing <- is.na(result[["usage"]])
-
-  if (!any(is_missing)) {
-    return(if (include_inputs) cbind(data, result) else result)
+  if (any(is_missing <- is.na(result[["usage"]]))) {
+    stop_formatted(
+      "Could not find a (usage, yield, irrigation) tuple for %s",
+      paste(collapse = ", ", sprintf(
+        "(NUTZUNG = %d, TYP = %d)",
+        usage[is_missing],
+        type[is_missing]
+      ))
+    )
   }
 
-  stop_formatted(
-    "Could not find a (usage, yield, irrigation) tuple for %s",
-    paste(collapse = ", ", sprintf(
-      "(NUTZUNG = %d, TYP = %d)",
-      usage[is_missing],
-      type[is_missing]
-    ))
-  )
+  if (include_inputs) {
+    cbind(data, result)
+  } else {
+    result
+  }
 }
