@@ -48,7 +48,7 @@ actual_evaporation_waterbody_or_pervious <- function(
   stopifnot(all(ep_year[i] > 0)) # ???
 
   # determine the BAGROV parameter(s) for unsealed surfaces
-  bagrov_parameter <- get_bagrov_parameter_unsealed(
+  bagrov_values <- get_bagrov_parameter_unsealed(
     g02 = select_elements(soil_properties, "g02")[i],
     usage = usages[i],
     yield = select_elements(usage_tuple, "yield")[i],
@@ -61,16 +61,16 @@ actual_evaporation_waterbody_or_pervious <- function(
   )
 
   if (!is.null(digits)) {
-    bagrov_parameter <- cat_and_run(
+    bagrov_values <- cat_and_run(
       sprintf("Rounding BAGROV parameters to %d digits", digits),
-      round(bagrov_parameter, digits)
+      round(bagrov_values, digits)
     )
   }
 
   cat_if(dbg, sprintf(
     "Range of calculated %sn-value(s): %s\n",
     ifelse(is.null(digits), "", "and rounded "),
-    paste(range(bagrov_parameter), collapse = " - ")
+    paste(range(bagrov_values), collapse = " - ")
   ))
 
   y[i] <- real_evapo_transpiration(
@@ -80,7 +80,7 @@ actual_evaporation_waterbody_or_pervious <- function(
         select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i] +
         select_elements(usage_tuple, "irrigation")[i]
     ) / ep_year[i],
-    bagrov_parameter = bagrov_parameter,
+    bagrov_parameter = bagrov_values,
     ...
   )
 
@@ -95,9 +95,9 @@ actual_evaporation_waterbody_or_pervious <- function(
   nas <- rep(NA_real_, length(y))
 
   structure(y, bagrovUnsealed = data.frame(
-    bagrovEff = `[<-`(nas, i, bagrov_parameter),
-    factor_dry = `[<-`(nas, i, get_attribute(bagrov_parameter, "factor_dry")),
-    factor_wet = `[<-`(nas, i, get_attribute(bagrov_parameter, "factor_wet"))
+    bagrov_eff = `[<-`(nas, i, bagrov_values),
+    factor_dry = `[<-`(nas, i, get_attribute(bagrov_values, "factor_dry")),
+    factor_wet = `[<-`(nas, i, get_attribute(bagrov_values, "factor_wet"))
   ))
 }
 
