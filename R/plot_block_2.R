@@ -10,6 +10,8 @@
 #' @param mar margin vector being passed to \code{\link{par}}
 #' @param density_sealed density of shading lines indicating sealed areas
 #' @param density_connected density of shading lines indicating connected areas
+#' @param col_main colour to be given to main area
+#' @param col_road colour to be given to road area
 #' @export
 #'
 plot_block_2 <- function(

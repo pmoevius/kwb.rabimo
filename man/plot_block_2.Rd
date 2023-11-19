@@ -22,6 +22,10 @@ in the data frame that is returned by \code{\link{prepare_input_data}}}
 \item{density_sealed}{density of shading lines indicating sealed areas}
 
 \item{density_connected}{density of shading lines indicating connected areas}
+
+\item{col_main}{colour to be given to main area}
+
+\item{col_road}{colour to be given to road area}
 }
 \description{
 Plot Area Fractions of one Block as Part of a Square
