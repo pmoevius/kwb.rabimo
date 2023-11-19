@@ -22,32 +22,16 @@ get_usage_tuple <- function(usage, type, include_inputs = FALSE)
     berlin_type = type
   )
 
-  key_columns <- names(data)
-  value_columns <- c("usage", "yield", "irrigation")
+  result <- as.data.frame(multi_column_lookup(
+    data = data,
+    lookup = BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION,
+    value = c("usage", "yield", "irrigation")
+  ))
 
-  # Provide lookup table
-  lookup <- BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION
-
-  result <- value_columns %>%
-    lapply(function(value_column) {
-      multi_column_lookup(
-        data = data,
-        lookup = lookup[, c(key_columns, value_column)],
-        value = value_column
-      )
-    }) %>%
-    set_names(value_columns) %>%
-    do.call(what = data.frame)
-
-  is_missing <- is.na(result[[value_columns[1L]]])
+  is_missing <- is.na(result[["usage"]])
 
   if (!any(is_missing)) {
-
-    if (include_inputs) {
-      result <- cbind(data, result)
-    }
-
-    return(result)
+    return(if (include_inputs) cbind(data, result) else result)
   }
 
   stop_formatted(

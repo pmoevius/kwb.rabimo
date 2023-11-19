@@ -19,6 +19,12 @@
 #'   district = 1,
 #'   lookup = config$potential_evaporation
 #' )
+#'
+#' get_potential_evaporation(
+#'   is_waterbody = c(TRUE, TRUE, FALSE, FALSE),
+#'   district = c(1, 99, 2, 99),
+#'   lookup = config$potential_evaporation
+#' )
 #' }
 #'
 get_potential_evaporation <- function(is_waterbody, district, lookup)
@@ -29,14 +35,10 @@ get_potential_evaporation <- function(is_waterbody, district, lookup)
     district = district
   )
 
-  # One after another, lookup values for "etp", "etps" in the lookup table
-  result <- c(year = "etp", summer = "etps") %>%
-    lapply(function(column) {
-      multi_column_lookup(
-        data = data,
-        lookup = select_columns(lookup, c(names(data), column))
-      )
-    })
+  # Lookup values for "etp", "etps" in the lookup table
+  result <- data %>%
+    multi_column_lookup(lookup, value = c("etp", "etps")) %>%
+    set_names(c("year", "summer"))
 
   if (all(lengths(result) == 1L)) {
     return(result)
