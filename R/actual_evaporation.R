@@ -55,9 +55,8 @@ actual_evaporation_waterbody_or_pervious <- function(
     irrigation = select_elements(usage_tuple, "irrigation")[i],
     prec_summer = select_elements(climate, "prec.summer")[i],
     epot_summer = select_elements(climate, "epot.summer")[i],
-    mean_potential_capillary_rise_rate = select_elements(
-      soil_properties, "mean_potential_capillary_rise_rate"
-    )[i]
+    mean_potential_capillary_rise_rate =
+      select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i]
   )
 
   if (!is.null(digits)) {
@@ -73,13 +72,14 @@ actual_evaporation_waterbody_or_pervious <- function(
     paste(range(bagrov_values), collapse = " - ")
   ))
 
+  available_water <-
+    select_elements(climate, "prec.year")[i] +
+    select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i] +
+    select_elements(usage_tuple, "irrigation")[i]
+
   y[i] <- real_evapo_transpiration(
     potential_evaporation = ep_year[i],
-    x_ratio = (
-      select_elements(climate, "prec.year")[i] +
-        select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i] +
-        select_elements(usage_tuple, "irrigation")[i]
-    ) / ep_year[i],
+    x_ratio = available_water / ep_year[i],
     bagrov_parameter = bagrov_values,
     ...
   )
@@ -121,10 +121,7 @@ get_bagrov_parameter_unsealed <- function(
   y[is_forest] <- lookup_bagrov_forest(g02[is_forest])
 
   factor_dry <- ifelse(
-    test = irrigation > 0 & isDrySummer(
-      prec_summer,
-      epot_summer
-    ),
+    test = irrigation > 0 & isDrySummer(prec_summer, epot_summer),
     yes = irrigation_in_dry_summer_correction_factor(irrigation[no_forest]),
     no = 1
   )
