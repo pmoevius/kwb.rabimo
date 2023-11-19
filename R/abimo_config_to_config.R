@@ -5,19 +5,18 @@
 #'   \code{"runoff_factors"}, \code{"bagrov_values"}, \code{"diverse"},
 #'   \code{"result_digits"}
 #' @export
+
 abimo_config_to_config <- function(abimo_config)
 {
   # abimo_config <- kwb.abimo:::read_config()
   #`%>%` <- magrittr::`%>%`
   #kwb.utils::assignPackageObjects("kwb.rabimo")
 
-  section_pattern <- "^section_"
+  prefix <- "section_"
 
-  result <- abimo_config %>%
-    filter_elements(section_pattern) %>%
-    lapply(get_all_item_data)
-
-  names(result) <- gsub(section_pattern, "", names(result))
+  result <- abimo_config[startsWith(names(abimo_config), prefix)] %>%
+    lapply(get_all_item_data) %>%
+    stats::setNames(remove_left(names(.), nchar(prefix)))
 
   element_water <- "Gewaesserverdunstung"
   element_else <- "PotentielleVerdunstung"

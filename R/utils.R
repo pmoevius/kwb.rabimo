@@ -277,6 +277,12 @@ remove_columns <- kwb.utils::removeColumns
 #' @importFrom kwb.utils removeElements
 remove_elements <- kwb.utils::removeElements
 
+# remove_left ------------------------------------------------------------------
+remove_left <- function(x, n)
+{
+  right(x, nchar(x) - n)
+}
+
 # rename_and_select ------------------------------------------------------------
 #' @importFrom kwb.utils renameAndSelect
 rename_and_select <- kwb.utils::renameAndSelect
