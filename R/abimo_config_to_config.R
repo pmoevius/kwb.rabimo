@@ -5,7 +5,6 @@
 #'   \code{"runoff_factors"}, \code{"bagrov_values"}, \code{"diverse"},
 #'   \code{"result_digits"}
 #' @export
-
 abimo_config_to_config <- function(abimo_config)
 {
   #abimo_config <- kwb.abimo:::read_config()
@@ -13,30 +12,33 @@ abimo_config_to_config <- function(abimo_config)
   #kwb.utils::assignPackageObjects("kwb.rabimo")
 
   prefix <- "section_"
-
   result <- abimo_config[startsWith(names(abimo_config), prefix)] %>%
-    lapply(get_all_item_data) %>%
-    set_names(remove_left(names(.), nchar(prefix)))
+    set_names(remove_left(names(.), nchar(prefix))) %>%
+    lapply(function(x) {
+      filter_elements(x, "^item_") %>%
+        lapply(function(y) {
+          do.call(data.frame, as.list(xml2::xml_attrs(y)))
+        }) %>%
+        list_to_data_frame_with_keys("item", "item_(.*)")
+    })
 
   epot_water <- "Gewaesserverdunstung"
   epot_else <- "PotentielleVerdunstung"
 
-  evaps <- lapply(c(epot_water, epot_else), function(element) {
+  extract_epot <- function(element, is_waterbody, renamings = NULL, ...) {
     result %>%
       select_elements(element) %>%
       expand_district_ranges() %>%
       lapply(as.integer) %>%
-      as.data.frame()
-  })
+      as.data.frame() %>%
+      rename_columns(renamings) %>%
+      {cbind.data.frame(is_waterbody = is_waterbody, ., ...)}
+  }
 
   result[["potential_evaporation"]] <- rbind(
-    evaps[[1L]] %>%
-      rename_columns(list(eg = "etp")) %>%
-      cbind(etps = 0, is_waterbody = TRUE),
-    evaps[[2L]] %>%
-      cbind(is_waterbody = FALSE)
-  ) %>%
-    move_columns_to_front("is_waterbody")
+    extract_epot(epot_water, TRUE, list(eg = "etp"), etps = 0),
+    extract_epot(epot_else, FALSE)
+  )
 
   convert_element <- function(config, from, to, convert = identity) {
     x <- select_elements(config, from)
@@ -75,23 +77,6 @@ abimo_config_to_config <- function(abimo_config)
   result
 }
 
-# get_all_item_data ------------------------------------------------------------
-get_all_item_data <- function(x)
-{
-  get_attribute_data <- function(x) {
-    values <- xml2::xml_attrs(x)
-    do.call(data.frame, as.list(values))
-  }
-
-  get_item_data <- function(x) {
-    list_to_data_frame_with_keys(x, "item", "item_(.*)")
-  }
-
-  filter_elements(x, "^item_") %>%
-    lapply(get_attribute_data) %>%
-    get_item_data()
-}
-
 # expand_district_ranges -------------------------------------------------------
 expand_district_ranges <- function(
     x,
@@ -105,9 +90,7 @@ expand_district_ranges <- function(
     remove_columns(c("item", range_column)) %>%
     move_columns_to_front(district_column)
 
-  stopifnot(
-    !anyDuplicated(select_columns(x, district_column))
-  )
+  stopifnot(!anyDuplicated(select_columns(x, district_column)))
 
   x
 }
