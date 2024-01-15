@@ -8,8 +8,8 @@
 #'
 #' @param input data frame with columns as required by Abimo or
 #'   data frame with columns as returned by \code{\link{prepare_input_data}}
-#' @param config configuration object (list) as returned by
-#'   \code{kwb.abimo:::read_config()}
+#' @param config configuration object (list) as returned by the function
+#'   \code{abimo_config_to_config()} used on \code{kwb.abimo:::read_config()}
 #' @param simulate_abimo logical of length one indicating whether or not to
 #'   simulate exactly what Abimo does (including obvious errors!).
 #'   Default: \code{TRUE}!
@@ -25,7 +25,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
       "input data has not the expected format.",
       "I was looking for column 'code'",
       "You might want to use the function prepare_berlin_data().", call. = FALSE
-    )
+    ) # currently called prepare_input_data
   }
 
   # Create accessor functions to input columns and config elements

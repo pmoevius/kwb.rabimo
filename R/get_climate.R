@@ -6,7 +6,7 @@ get_climate <- function(input){
     "prec_yr",
     "prec_s",
     "epot_yr",
-    "epot_s",
+    "epot_s"
   ))
   climate[["x_ratio"]] <- climate[["prec_yr"]] / climate[["epot_yr"]]
   climate

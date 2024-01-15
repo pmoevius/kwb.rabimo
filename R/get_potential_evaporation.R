@@ -33,7 +33,7 @@ get_potential_evaporation <- function(is_waterbody, district, lookup)
   # value combinations in vectors "is_waterbody", "district"
   result <- data.frame(is_waterbody = is_waterbody, district = district) %>%
     multi_column_lookup(lookup, value = c("etp", "etps")) %>%
-    set_names(c("year", "summer"))
+    set_names(c("epot_yr", "epot_s"))
 
   if (all(lengths(result) == 1L)) {
     result

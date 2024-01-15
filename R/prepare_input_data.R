@@ -8,17 +8,24 @@
 #'   TYP, BEZIRK, FLGES, STR_FLGES, PROBAU, PROVGU, VGSTRASSE, KAN_BEB, BELAG1,
 #'   BELAG2, BELAG3, BELAG4, KAN_VGU, STR_BELAG1, STR_BELAG2, STR_BELAG3,
 #'   STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150
+#' @param config configuration object (list) as returned by the function
+#'   \code{abimo_config_to_config()} used on \code{kwb.abimo:::read_config()}
 #' @return \code{input_data} with columns renamed and additional columns
 #'  (e.g. ratios calculated from percentages, (main) usage, yield, irrigation)
 #' @export
-prepare_input_data <- function(input_data)
+prepare_input_data <- function(input_data, config)
 {
+  # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
+  # input_data <- kwb.abimo::abimo_input_2019
+  # config <- abimo_config_to_config(kwb.abimo:::read_config())
+
   # 1. Rename columns from ABIMO 3.2 names to ABIMO 3.3 internal names
   # 2. Select only the columns that are required
   input <- rename_and_select(input_data, INPUT_COLUMN_RENAMINGS)
 
   # Create column accessor function
   fetch <- create_accessor(input)
+  fetch_config <- create_accessor(config)
 
   # Calculate total area
   input[["totalArea"]] <- fetch("mainArea") + fetch("roadArea")
@@ -37,8 +44,15 @@ prepare_input_data <- function(input_data)
     type = fetch("berlin_type")
   )
 
+  # Calculate potential evaporation for all areas
+  pot_evaporation <- get_potential_evaporation(
+      is_waterbody = usage_is_waterbody(usages[["usage"]]),
+      district = fetch("district"),
+      lookup = fetch_config("potential_evaporation")
+    )
+
   # Column-bind everything together
-  cbind(input, fractions, usages)
+  input <- cbind(input, fractions, usages, pot_evaporation)
 }
 
 # INPUT_COLUMN_RENAMINGS -------------------------------------------------------
