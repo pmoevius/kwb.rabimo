@@ -6,7 +6,7 @@
 #'   the data are already prepared as otherwise would do the function
 #'   \code{\link{prepare_input_data}}.
 #'
-#' @param input_data data frame with columns as required by Abimo or
+#' @param input data frame with columns as required by Abimo or
 #'   data frame with columns as returned by \code{\link{prepare_input_data}}
 #' @param config configuration object (list) as returned by
 #'   \code{kwb.abimo:::read_config()}
@@ -15,21 +15,16 @@
 #'   Default: \code{TRUE}!
 #' @return data frame with columns as returned by Abimo
 #' @export
-run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
+run_rabimo <- function(input, config, simulate_abimo = TRUE)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
 
-  # Prepare input data frame: rename columns, add fraction columns and
-  # "usage tuple" columns: "usage", "yield", "irrigation"
-  input <- if ("yield" %in% names(input_data)) {
-    cat_and_run(
-      "Column 'yield' found in input_data -> no further preparation",
-      input_data
-    )
-  } else {
-    cat_and_run(
-      "Preparing input data (e.g. adding usage tuple)",
-      prepare_input_data(reset_row_names(input_data))
+  # check whether the input data have the expected structure
+  if (!"code" %in% names(input_data)) {
+    stop(
+      "input data has not the expected format.",
+      "I was looking for column 'code'",
+      "You might want to use the function prepare_berlin_data().", call. = FALSE
     )
   }
 
@@ -38,33 +33,10 @@ run_rabimo <- function(input_data, config, simulate_abimo = TRUE)
   fetch_config <- create_accessor(config)
   get_fraction <- create_fraction_accessor(input)
 
-  # Prepare precipitation data for all rows
-  precipitation <- cat_and_run(
-    "Preparing precipitation data for all block areas",
-    get_precipitation(
-      fetch_input("precipitationYear"),
-      fetch_input("precipitationSummer"),
-      fetch_config("precipitation_correction_factor")
-    )
-  )
-
-  # Prepare potential evaporation data for all rows
-  pot_evaporation <- cat_and_run(
-    "Preparing potential evaporation data for all block areas",
-    get_potential_evaporation(
-      is_waterbody = usage_is_waterbody(fetch_input("usage")),
-      district = fetch_input("district"),
-      lookup = fetch_config("potential_evaporation")
-    )
-  )
-
-  prec_year <- select_columns(precipitation, "year")
-  epot_year <- select_columns(pot_evaporation, "year")
-
-  climate <- cbind(
-    prefix_names(precipitation, "prec."),
-    prefix_names(pot_evaporation, "epot."),
-    x_ratio = prec_year / epot_year
+  # Get climate data
+  climate <- cat_and_run(
+    "Collecting climate related data from input",
+    get_climate(input)
   )
 
   # Prepare soil properties for all rows. They are required to calculate the
