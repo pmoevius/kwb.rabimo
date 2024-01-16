@@ -11,7 +11,6 @@
 #' @param depth_to_water_table depth to water table
 #' @param field_capacity_30 field capacity in 30 cm depth
 #' @param field_capacity_150 field capacity in 150 cm depth
-#' @param default_for_waterbodies value to be used for waterbodies. Default: NA
 #' @param dbg logical indicating whether or not to show debug messages
 #' @export
 get_soil_properties <- function(
@@ -20,7 +19,6 @@ get_soil_properties <- function(
     depth_to_water_table,
     field_capacity_30,
     field_capacity_150,
-    default_for_waterbodies = NA,
     dbg = FALSE
 )
 {
@@ -30,7 +28,7 @@ get_soil_properties <- function(
   # Feldkapazitaet
   usable_field_capacity <- ifelse(
     test = is_waterbody,
-    yes = default_for_waterbodies,
+    yes = 0,
     no = estimate_water_holding_capacity(
       f30 = field_capacity_30,
       f150 = field_capacity_150,
@@ -42,7 +40,7 @@ get_soil_properties <- function(
   # potentielle Aufstiegshoehe
   potential_capillary_rise <- ifelse(
     test = is_waterbody,
-    yes = default_for_waterbodies,
+    yes = 0,
     no = depth_to_water_table - get_rooting_depth(usage, yield)
   )
 
@@ -50,7 +48,7 @@ get_soil_properties <- function(
   # Kapillarer Aufstieg pro Jahr ID_KR neu, old: KR
   mean_potential_capillary_rise_rate_raw <- ifelse(
     test = is_waterbody,
-    yes = default_for_waterbodies,
+    yes = 0,
     no = get_mean_potential_capillary_rise_rate(
       potential_capillary_rise,
       usable_field_capacity,

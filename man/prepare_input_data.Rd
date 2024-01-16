@@ -4,13 +4,16 @@
 \alias{prepare_input_data}
 \title{Prepare Input Data: Rename, Add Columns}
 \usage{
-prepare_input_data(input_data)
+prepare_input_data(input_data, config)
 }
 \arguments{
 \item{input_data}{data frame with columns CODE, REGENJA, REGENSO, NUTZUNG,
 TYP, BEZIRK, FLGES, STR_FLGES, PROBAU, PROVGU, VGSTRASSE, KAN_BEB, BELAG1,
 BELAG2, BELAG3, BELAG4, KAN_VGU, STR_BELAG1, STR_BELAG2, STR_BELAG3,
 STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150}
+
+\item{config}{configuration object (list) as returned by the function
+\code{abimo_config_to_config()} used on \code{kwb.abimo:::read_config()}}
 }
 \value{
 \code{input_data} with columns renamed and additional columns

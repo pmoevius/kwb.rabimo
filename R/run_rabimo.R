@@ -50,7 +50,6 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
       depth_to_water_table = fetch_input("depthToWaterTable"),
       field_capacity_30 = fetch_input("fieldCapacity_30"),
       field_capacity_150 = fetch_input("fieldCapacity_150"),
-      default_for_waterbodies = 0,
       dbg = FALSE
     )
   )
