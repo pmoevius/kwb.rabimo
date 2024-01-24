@@ -15,11 +15,25 @@
 #' @export
 prepare_input_data <- function(input_data, config)
 {
-  # PARAMETERS FOR TESTING
-  # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
-  # input_data <- kwb.abimo::abimo_input_2019
-  # input_data <- berlin_2020_data
-  # config <- abimo_config_to_config(kwb.abimo:::read_config())
+  # PARAMETERS FOR TESTING (to delete later)
+  if(FALSE){
+    kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
+
+    #paths
+    path_amarex_ap4 <- "Y:/SUW_Department/Projects/AMAREX/Work-packages/AP_4/"
+    path_data_2020 <- paste0(
+      path_amarex_ap4,
+      "ABIMO_Daten/ISU5_2020_datengrundlage/isu5_2020_berlin/cleaned/"
+    )
+
+    file_berlin_2020 <- paste0(path_data_2020, "isu5_2020_abimo_cleaned.dbf")
+
+    berlin_2020_data <- foreign::read.dbf(file_berlin_2020)
+    berlin_2019_data <- kwb.abimo::abimo_input_2019
+    input_data <- berlin_2020_data
+    config <- abimo_config_to_config(kwb.abimo:::read_config())
+
+    }
 
   # 1. Rename columns from ABIMO 3.2 names to ABIMO new* internal names
   # 2. Select only the columns that are required
@@ -48,19 +62,24 @@ prepare_input_data <- function(input_data, config)
 
   # Calculate potential evaporation for all areas
   pot_evaporation <- get_potential_evaporation(
-    is_waterbody = usage_is_waterbody(usages[["usage"]]),
+    is_waterbody = usage_is_waterbody(usages[["land_type"]]),
     district = fetch("district"),
     lookup = fetch_config("potential_evaporation")
   )
-
-  select_columns(input, INPUT_COLUMNS_NEEDED)
 
   as.data.frame(names(input))
 
   # Column-bind everything together
   input <- cbind(input, usages, pot_evaporation)
-}
 
+  # Set roof area that are NAs to 0 for water bodies
+  selected <- usage_is_waterbody(input$land_type) & is.na(input$roof_area)
+  input$roof_area[selected] <- 0
+
+  # Set order of columns
+  select_columns(input, INPUT_COLUMNS_NEEDED)
+
+}
 
 # INPUT_COLUMN_RENAMINGS -------------------------------------------------------
 INPUT_COLUMN_RENAMINGS_OLD <- list(
@@ -121,13 +140,13 @@ INPUT_COLUMN_RENAMINGS <- list(
 
 # INPUT_COLUMNS_NEEDED ---------------------------------------------------------
 INPUT_COLUMNS_NEEDED <- c("code", "total_area", "prec_yr", "prec_s",
-                             "epot_yr", "epot_s", "district", "main_area",
-                             "rd_area", "roof_area", "paved_area",
-                             "rd_pvd_area", "swg_roof_area", "pvm_1", "pvm_2",
-                             "pvm_3", "pvm_4", "swg_pvd_area", "rd_pvm_1",
-                             "rd_pvm_2", "rd_pvm_3", "rd_pvm_4", "swg_rd_area",
-                             "sealed_area", "gw_dist", "ufc_30", "ufc_150",
-                             "usage", "yield", "irrigation"
+                          "epot_yr", "epot_s", "district", "main_area",
+                          "rd_area", "roof_area", "paved_area",
+                          "rd_pvd_area", "swg_roof_area", "pvm_1", "pvm_2",
+                          "pvm_3", "pvm_4", "swg_pvd_area", "rd_pvm_1",
+                          "rd_pvm_2", "rd_pvm_3", "rd_pvm_4", "swg_rd_area",
+                          "sealed_area", "gw_dist", "ufc_30", "ufc_150",
+                          "land_type", "veg_class", "irrigation"
 )
 
 # INPUT_COLUMNS_NOT_NEEDED -----------------------------------------------------
