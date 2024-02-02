@@ -25,13 +25,22 @@ actual_evaporation_waterbody_or_pervious <- function(
     digits = NULL
 )
 {
-  ep_year <- select_elements(climate, "epot.year")
+  if (FALSE)
+  {
+    usage_tuple = fetch_input(c("land_type", "veg_class", "irrigation"))
+    min_size_for_parallel = 100L
+    use_abimo_algorithm = simulate_abimo
+    digits = NULL
+    dbg = TRUE
+  }
+
+  ep_year <- select_elements(climate, "epot_yr")
 
   # Initialise result vector
   y <- numeric(length = length(ep_year))
 
   # For water bodies, use the potential evaporation
-  usages <- select_elements(usage_tuple, "usage")
+  usages <- select_elements(usage_tuple, "land_type")
   is_waterbody <- usage_is_waterbody(usages)
 
   y[is_waterbody] <- ep_year[is_waterbody]
@@ -51,10 +60,10 @@ actual_evaporation_waterbody_or_pervious <- function(
   bagrov_values <- get_bagrov_parameter_unsealed(
     g02 = select_elements(soil_properties, "g02")[i],
     usage = usages[i],
-    yield = select_elements(usage_tuple, "yield")[i],
+    yield = select_elements(usage_tuple, "veg_class")[i],
     irrigation = select_elements(usage_tuple, "irrigation")[i],
-    prec_summer = select_elements(climate, "prec.summer")[i],
-    epot_summer = select_elements(climate, "epot.summer")[i],
+    prec_summer = select_elements(climate, "prec_s")[i],
+    epot_summer = select_elements(climate, "epot_s")[i],
     mean_potential_capillary_rise_rate =
       select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i]
   )
@@ -73,15 +82,16 @@ actual_evaporation_waterbody_or_pervious <- function(
   ))
 
   available_water <-
-    select_elements(climate, "prec.year")[i] +
+    select_elements(climate, "prec_yr")[i] +
     select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i] +
     select_elements(usage_tuple, "irrigation")[i]
 
   y[i] <- real_evapo_transpiration(
     potential_evaporation = ep_year[i],
     x_ratio = available_water / ep_year[i],
-    bagrov_parameter = bagrov_values,
-    ...
+    bagrov_parameter = bagrov_values
+    #, use_abimo_algorithm = TRUE
+    , ...
   )
 
   rises <- select_elements(soil_properties, "potential_capillary_rise_TAS")
@@ -194,7 +204,7 @@ lookup_bagrov_unsealed <- function(g02, yield, do_correction = TRUE)
   # Apply correction where needed
   i <- which(
     (y >= 2.0 & yield < 60) |
-    (g02 >= 20.0 & yield >= 60)
+      (g02 >= 20.0 & yield >= 60)
   )
 
   y[i] <-

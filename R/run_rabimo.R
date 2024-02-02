@@ -17,10 +17,44 @@
 #' @export
 run_rabimo <- function(input, config, simulate_abimo = TRUE)
 {
-  #kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
+
+  # parameter for testing, to delete later
+  if(FALSE)
+  {
+    kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
+
+    #paths
+    path_amarex_ap4 <- "Y:/SUW_Department/Projects/AMAREX/Work-packages/AP_4"
+    path_data_2020 <- file.path(
+      path_amarex_ap4,
+      "ABIMO_Daten/ISU5_2020_datengrundlage/isu5_2020_berlin/cleaned"
+    )
+
+    file_berlin_2020 <- file.path(path_data_2020, "isu5_2020_abimo_cleaned.dbf")
+
+    berlin_2020_data <- foreign::read.dbf(file_berlin_2020) #PROBLEM: HANDLE NAs!!
+    #berlin_2019_data <- kwb.abimo::abimo_input_2019
+    config <- abimo_config_to_config(kwb.abimo:::read_config())
+    input_backup <- prepare_input_data(berlin_2020_data, config)
+
+    ndvi_matrix <- foreign::read.dbf("Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf")
+    input_ndvi <- dplyr::left_join(input_backup,
+                                   kwb.utils::selectColumns(ndvi_matrix,
+                                                            c("code", "ndvi_value")
+                                   ),
+                                   by = "code"
+    )
+    old_veg_class <- input_ndvi$veg_class
+    input_ndvi[["veg_class"]] <- input_ndvi[["ndvi_value"]]
+    input_ndvi[["ndvi_value"]] <- NULL
+
+    # Remove rows where groundwater distance is NA
+    input <- input_ndvi[kwb.utils::matchesCriteria(input_ndvi, "!is.na(gw_dist)"), ]
+  }
+
 
   # check whether the input data have the expected structure
-  if (!"code" %in% names(input_data)) {
+  if (!"code" %in% names(input)) {
     stop(
       "input data has not the expected format.",
       "I was looking for column 'code'",
@@ -31,7 +65,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   # Create accessor functions to input columns and config elements
   fetch_input <- create_accessor(input)
   fetch_config <- create_accessor(config)
-  get_fraction <- create_fraction_accessor(input)
+  #get_fraction <- create_fraction_accessor(input)
 
   # Get climate data
   climate <- cat_and_run(
@@ -45,14 +79,16 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   soil_properties <- cat_and_run(
     "Preparing soil property data for all block areas",
     expr = get_soil_properties(
-      usage = fetch_input("usage"),
-      yield = fetch_input("yield"),
-      depth_to_water_table = fetch_input("depthToWaterTable"),
-      field_capacity_30 = fetch_input("fieldCapacity_30"),
-      field_capacity_150 = fetch_input("fieldCapacity_150"),
+      land_type = fetch_input("land_type"),
+      veg_class = fetch_input("veg_class"),
+      depth_to_water_table = fetch_input("gw_dist"),
+      field_capacity_30 = fetch_input("ufc30"),
+      field_capacity_150 = fetch_input("ufc150"),
       dbg = FALSE
     )
   )
+
+  stopifnot(!anyNA(soil_properties$mean_potential_capillary_rise_rate))
 
   # Precalculate all results of realEvapoTranspiration()
   evaporation_sealed <- cat_and_run(
@@ -60,7 +96,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
     expr = fetch_config("bagrov_values") %>%
       lapply(function(x) {
         real_evapo_transpiration(
-          potential_evaporation = epot_year,
+          potential_evaporation = select_columns(climate, "epot_yr"),
           x_ratio = select_columns(climate, "x_ratio"),
           bagrov_parameter = rep(x, nrow(input)),
           use_abimo_algorithm = simulate_abimo
@@ -76,7 +112,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
       "areas"
     ),
     actual_evaporation_waterbody_or_pervious(
-      usage_tuple = fetch_input(c("usage", "yield", "irrigation")),
+      usage_tuple = fetch_input(c("land_type", "veg_class", "irrigation")),
       climate = climate,
       soil_properties = soil_properties,
       min_size_for_parallel = 100L,
@@ -85,59 +121,58 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
     )
   )
 
-  runoff_all <- prec_year - cbind(
+  runoff_all <- climate[["prec_yr"]] - cbind(
     evaporation_sealed,
     unsealed = evaporation_unsealed
   )
 
   # Runoff for all sealed areas (including roofs)
-  #runoff_all_sealed <- prec_year - evaporation_sealed
 
   # Calculate roof related variables
 
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
-  #runoff_roof <- select_columns(runoff_all_sealed, "roof")
   runoff_roof <- select_columns(runoff_all, "roof")
 
   # Provide runoff coefficients for impervious surfaces
   runoff_factors <- fetch_config("runoff_factors")
 
   # actual runoff from roof surface (area based, with no infiltration)
-  runoff_roof_actual <- get_fraction("main/builtSealed/connected") *
-    runoff_factors[["roof"]] *
-    runoff_roof
+  runoff_roof_actual <- with(input, swg_roof) *
+    runoff_factors[["roof"]] * runoff_roof
 
   # actual infiltration from roof surface (area based, with no runoff)
-  infiltration_roof_actual <- get_fraction("main/builtSealed/!connected") *
+  infiltration_roof_actual <- with(input, roof * (1-swg_roof)) *
     runoff_roof
 
   # Calculate runoff for all surface classes at once
   # (contains both surface runoff and infiltration components)
-  # -1: remove roof column
-  #runoff_sealed <- remove_columns(runoff_all_sealed, "roof")
+
+  # choose columns related to surface classes
   runoff_sealed <- filter_elements(runoff_all, "surface")
-  #head(runoff_sealed)
+  # head(runoff_sealed)
 
   # Runoff from the actual partial areas that are sealed and connected
   # (road and non-road) areas (for all surface classes at once)
 
-  # [-1L]: exclude the runoff factor for roofs
   runoff_factor_matrix <- expand_to_matrix(
-    x = runoff_factors[-1L],
+    x = filter_elements(runoff_factors, "surface"),
     nrow = nrow(input)
   )
 
-  unbuilt_surface_fractions <- fetch_input(
-    paste0("unbuiltSealedFractionSurface", 1:4)
-  )
+  unbuilt_surface_fractions <- fetch_input(paste0("srf", 1:4,"_pvd"))
+  road_surface_fractions <- fetch_input(paste0("srf", 1:4,"_pvd_rd"))
 
-  road_surface_fractions <- fetch_input(
-    paste0("roadSealedFractionSurface", 1:4)
-  )
 
+  #ab hier weiter aktualisieren
   runoff_sealed_actual <- runoff_factor_matrix * (
     get_fraction("main/unbuiltSealed/connected") * unbuilt_surface_fractions +
+      get_fraction("road/roadSealed/connected") * road_surface_fractions
+  ) *
+    runoff_sealed
+
+  runoff_sealed_actual <- runoff_factor_matrix * (
+    get_fraction() * unbuilt_surface_fractions +
       get_fraction("road/roadSealed/connected") * road_surface_fractions
   ) *
     runoff_sealed
