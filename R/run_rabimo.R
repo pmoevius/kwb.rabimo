@@ -33,6 +33,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
     file_berlin_2020 <- file.path(path_data_2020, "isu5_2020_abimo_cleaned.dbf")
 
     berlin_2020_data <- foreign::read.dbf(file_berlin_2020) #PROBLEM: HANDLE NAs!!
+    berlin_2020_data$STR_FLGES <- 0
     #berlin_2019_data <- kwb.abimo::abimo_input_2019
     config <- abimo_config_to_config(kwb.abimo:::read_config())
     input_backup <- prepare_input_data(berlin_2020_data, config)
@@ -50,6 +51,8 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
 
     # Remove rows where groundwater distance is NA
     input <- input_ndvi[kwb.utils::matchesCriteria(input_ndvi, "!is.na(gw_dist)"), ]
+    input <- input_backup[kwb.utils::matchesCriteria(input_backup, "!is.na(gw_dist)"), ]
+    input <- head(input)
   }
 
 
@@ -138,11 +141,11 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   runoff_factors <- fetch_config("runoff_factors")
 
   # actual runoff from roof surface (area based, with no infiltration)
-  runoff_roof_actual <- with(input, swg_roof) *
+  runoff_roof_actual <- with(input, main_fraction * roof * swg_roof) *
     runoff_factors[["roof"]] * runoff_roof
 
   # actual infiltration from roof surface (area based, with no runoff)
-  infiltration_roof_actual <- with(input, roof * (1-swg_roof)) *
+  infiltration_roof_actual <- with(input, main_fraction * roof * (1-swg_roof)) *
     runoff_roof
 
   # Calculate runoff for all surface classes at once
@@ -163,50 +166,45 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   unbuilt_surface_fractions <- fetch_input(paste0("srf", 1:4,"_pvd"))
   road_surface_fractions <- fetch_input(paste0("srf", 1:4,"_pvd_rd"))
 
-
-  #ab hier weiter aktualisieren
-  runoff_sealed_actual <- runoff_factor_matrix * (
-    get_fraction("main/unbuiltSealed/connected") * unbuilt_surface_fractions +
-      get_fraction("road/roadSealed/connected") * road_surface_fractions
+  runoff_sealed_actual <-  runoff_sealed * (
+    with(input, main_fraction * pvd * swg_pvd) * unbuilt_surface_fractions +
+      with(input, road_fraction * pvd_rd * swg_pvd_rd) * road_surface_fractions
   ) *
-    runoff_sealed
+    runoff_factor_matrix
 
-  runoff_sealed_actual <- runoff_factor_matrix * (
-    get_fraction() * unbuilt_surface_fractions +
-      get_fraction("road/roadSealed/connected") * road_surface_fractions
-  ) *
-    runoff_sealed
-
-  # infiltration of sealed surfaces (for all surface classes at once)
-  infiltration_sealed_actual <- (
-    get_fraction("main/unbuiltSealed") * unbuilt_surface_fractions +
-      get_fraction("road/roadSealed") * road_surface_fractions
-  ) *
-    runoff_sealed -
+  # infiltration of sealed surfaces
+  # (road and non-road) areas (for all surface classes at once)
+  infiltration_sealed_actual <- runoff_sealed * (
+    with(input, main_fraction * pvd) * unbuilt_surface_fractions +
+      with(input, road_fraction * pvd_rd) * road_surface_fractions) -
     runoff_sealed_actual
 
-  # Surface-Runoff of unsealed surfaces (unsealedSurface_RUV)
-  runoff_unsealed <- prec_year - evaporation_unsealed
+  #Total Runoff of unsealed surfaces (unsealedSurface_RUV)
+  runoff_unsealed <- climate[["prec_yr"]] - as.numeric(evaporation_unsealed)
 
   # Infiltration of road (unsealed areas)
   infiltration_unsealed_roads <-
-    get_fraction("road/!roadSealed") *
-    # last surface class
-    runoff_sealed[, ncol(runoff_sealed)]
+    with(input, road_fraction * (1-pvd_rd)) *
+  runoff_sealed[, ncol(runoff_sealed)] # last (less sealed) surface class
 
   # Infiltration from unsealed non-road surfaces (old: riuv)
-
-  fraction_unsealed <- if (simulate_abimo) {
-    #fetch("areaFractionMain") * # ??? TODO: VERIFY THIS ????
-    (1 - fetch_input("mainFractionSealed"))
-  } else {
-    get_fraction("main/!sealed")
-  }
-
   # original C++ code (check if correct):
   # infiltration.unsealedSurfaces = (
   #   100.0F - current_area.mainPercentageSealed()
   # ) / 100.0F * runoff.unsealedSurface_RUV;
+
+  # fraction_unsealed <- if (simulate_abimo) {
+  #   #fetch("areaFractionMain") * # ??? TODO: VERIFY THIS ????
+  #   (1 - fetch_input("mainFractionSealed"))
+  # } else {
+  #   get_fraction("main/!sealed")
+  # }
+
+  fraction_unsealed <- if(simulate_abimo) {
+    with(input, 1 - sealed)
+  } else {
+    with(input, main_fraction * (1 - sealed))
+  }
 
   infiltration_unsealed_surfaces <- fraction_unsealed * runoff_unsealed
 
@@ -231,10 +229,10 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   # Calculate evaporation 'VERDUNST' by subtracting 'R', the sum of
   # runoff and infiltration from precipitation of entire year,
   # multiplied by precipitation correction factor
-  total_evaporation <- prec_year - total_runoff
+  total_evaporation <- climate[["prec_yr"]] - total_runoff
 
   # Provide total area for calculation of "flows"
-  total_area <- fetch_input("totalArea")
+  total_area <- fetch_input("total_area")
 
   # Calculate volume 'rowvol' from runoff (qcm/s)
   surface_runoff_flow <- yearly_height_to_volume_flow(
@@ -307,3 +305,14 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
     )
   )
 }
+
+# test comparison with abimo results
+input_abimo <- head(berlin_2020_data)
+input_abimo$CODE <- as.character(input_abimo$CODE)
+input_abimo$STR_BELAG1 <- 0
+input_abimo$STR_BELAG2 <- 0
+input_abimo$STR_BELAG3 <- 0
+input_abimo$STR_BELAG4 <- 0
+
+kwb.abimo::run_abimo(input_data = head(input_abimo),config = kwb.abimo:::read_config())
+

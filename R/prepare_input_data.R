@@ -29,9 +29,11 @@ prepare_input_data <- function(input_data, config)
     file_berlin_2020 <- paste0(path_data_2020, "isu5_2020_abimo_cleaned.dbf")
 
     berlin_2020_data <- foreign::read.dbf(file_berlin_2020)
-    berlin_2019_data <- kwb.abimo::abimo_input_2019
+    berlin_2020_data$STR_FLGES <- 0
+    #berlin_2019_data <- kwb.abimo::abimo_input_2019
     input_data <- berlin_2020_data
     config <- abimo_config_to_config(kwb.abimo:::read_config())
+
 
     }
 
@@ -43,16 +45,22 @@ prepare_input_data <- function(input_data, config)
   fetch <- create_accessor(input)
   fetch_config <- create_accessor(config)
 
+  # If area fractions are missing (NAs) set them to 0
+  area_fraction_cols <- names(input)[grepl("roof|pvd|srf",x = names(input))]
+  input <- dplyr::mutate_at(input, area_fraction_cols, ~ifelse(is.na(.), 0, .))
+
   # Calculate total area
   input[["total_area"]] <- fetch("area_main") + fetch("area_rd")
 
   # Convert percentages to fractions
   input <- calculate_fractions(input)
 
-  input[["sealed_area"]] <- calculate_main_fraction_sealed(
-    fetch("roof"),
-    fetch("pvd")
-  )
+  # input[["main_sealed_area"]] <- calculate_main_fraction_sealed(
+  #   fetch("roof"),
+  #   fetch("pvd")
+  # )
+
+  input[["sealed"]] <- round(with(input, roof + pvd + 1e-14))
 
   # Get (usage, yield, irrigation) tuples based on Berlin-specific codes
   usages <- get_usage_tuple(
@@ -82,33 +90,33 @@ prepare_input_data <- function(input_data, config)
 }
 
 # INPUT_COLUMN_RENAMINGS -------------------------------------------------------
-INPUT_COLUMN_RENAMINGS_OLD <- list(
-  CODE = "code",
-  REGENJA = "precipitationYear",
-  REGENSO = "precipitationSummer",
-  NUTZUNG = "berlin_usage",
-  TYP = "berlin_type",
-  BEZIRK = "district",
-  FLGES = "mainArea",
-  STR_FLGES = "roadArea",
-  PROBAU = "mainPercentageBuiltSealed",
-  PROVGU = "mainPercentageUnbuiltSealed",
-  VGSTRASSE = "roadPercentageSealed",
-  KAN_BEB = "builtSealedPercentageConnected",
-  BELAG1 = "unbuiltSealedPercentageSurface1",
-  BELAG2 = "unbuiltSealedPercentageSurface2",
-  BELAG3 = "unbuiltSealedPercentageSurface3",
-  BELAG4 = "unbuiltSealedPercentageSurface4",
-  KAN_VGU = "unbuiltSealedPercentageConnected",
-  STR_BELAG1 = "roadSealedPercentageSurface1",
-  STR_BELAG2 = "roadSealedPercentageSurface2",
-  STR_BELAG3 = "roadSealedPercentageSurface3",
-  STR_BELAG4 = "roadSealedPercentageSurface4",
-  KAN_STR = "roadSealedPercentageConnected",
-  FLUR = "depthToWaterTable",
-  FELD_30 = "fieldCapacity_30",
-  FELD_150 = "fieldCapacity_150"
-)
+# INPUT_COLUMN_RENAMINGS_OLD <- list(
+#   CODE = "code",
+#   REGENJA = "precipitationYear",
+#   REGENSO = "precipitationSummer",
+#   NUTZUNG = "berlin_usage",
+#   TYP = "berlin_type",
+#   BEZIRK = "district",
+#   FLGES = "mainArea",
+#   STR_FLGES = "roadArea",
+#   PROBAU = "mainPercentageBuiltSealed",
+#   PROVGU = "mainPercentageUnbuiltSealed",
+#   VGSTRASSE = "roadPercentageSealed",
+#   KAN_BEB = "builtSealedPercentageConnected",
+#   BELAG1 = "unbuiltSealedPercentageSurface1",
+#   BELAG2 = "unbuiltSealedPercentageSurface2",
+#   BELAG3 = "unbuiltSealedPercentageSurface3",
+#   BELAG4 = "unbuiltSealedPercentageSurface4",
+#   KAN_VGU = "unbuiltSealedPercentageConnected",
+#   STR_BELAG1 = "roadSealedPercentageSurface1",
+#   STR_BELAG2 = "roadSealedPercentageSurface2",
+#   STR_BELAG3 = "roadSealedPercentageSurface3",
+#   STR_BELAG4 = "roadSealedPercentageSurface4",
+#   KAN_STR = "roadSealedPercentageConnected",
+#   FLUR = "depthToWaterTable",
+#   FELD_30 = "fieldCapacity_30",
+#   FELD_150 = "fieldCapacity_150"
+# )
 
 INPUT_COLUMN_RENAMINGS <- list(
   CODE = "code",
@@ -117,8 +125,8 @@ INPUT_COLUMN_RENAMINGS <- list(
   NUTZUNG = "berlin_usage",
   TYP = "berlin_type",
   BEZIRK = "district",
-  FLGES = "area_main", #m2
-  STR_FLGES = "area_rd", #m2
+  FLGES = "area_main", # m²
+  STR_FLGES = "area_rd", # m²
   PROBAU = "roof",
   PROVGU = "pvd",
   VGSTRASSE = "pvd_rd",
@@ -139,13 +147,13 @@ INPUT_COLUMN_RENAMINGS <- list(
 )
 
 # INPUT_COLUMNS_NEEDED ---------------------------------------------------------
-INPUT_COLUMNS_NEEDED <- c("code", "total_area", "prec_yr", "prec_s",
-                          "epot_yr", "epot_s", "district", "area_main",
-                          "area_rd", "roof", "pvd",
-                          "pvd_rd", "swg_roof", "srf1_pvd", "srf2_pvd",
-                          "srf3_pvd", "srf4_pvd", "swg_pvd", "srf1_pvd_rd",
-                          "srf2_pvd_rd", "srf3_pvd_rd", "srf4_pvd_rd", "swg_pvd_rd",
-                          "sealed_area", "gw_dist", "ufc30", "ufc150",
+INPUT_COLUMNS_NEEDED <- c("code",  "prec_yr", "prec_s",
+                          "epot_yr", "epot_s", "district","total_area", "area_main",
+                          "area_rd", "main_fraction", "roof", "swg_roof","pvd", "swg_pvd",
+                          "srf1_pvd", "srf2_pvd", "srf3_pvd", "srf4_pvd",
+                          "road_fraction", "pvd_rd", "swg_pvd_rd", "srf1_pvd_rd",
+                          "srf2_pvd_rd", "srf3_pvd_rd", "srf4_pvd_rd",
+                          "sealed", "gw_dist", "ufc30", "ufc150",
                           "land_type", "veg_class", "irrigation"
 )
 
@@ -167,8 +175,8 @@ calculate_fractions <- function(input)
   total_area <- fetch("total_area")
 
   # Transform percentage to fractions
-  input[["area_main"]] <- fetch("area_main") / total_area
-  input[["area_rd"]] <- fetch("area_rd") / total_area
+  input[["main_fraction"]] <- fetch("area_main") / total_area
+  input[["road_fraction"]] <- fetch("area_rd") / total_area
   input[["roof"]] = by_100("roof")
   input[["pvd"]] = by_100("pvd")
   input[["pvd_rd"]] = by_100("pvd_rd")
@@ -186,6 +194,9 @@ calculate_fractions <- function(input)
 
   input
 }
+
+
+
 
 # calculate_main_fraction_sealed -----------------------------------------------
 calculate_main_fraction_sealed <- function(
