@@ -45,6 +45,9 @@ prepare_input_data <- function(input_data, config)
   fetch <- create_accessor(input)
   fetch_config <- create_accessor(config)
 
+  # correct precipitation with correction factor from the config file
+  input[["prec_yr"]] <- input[["prec_yr"]]*config$precipitation_correction_factor
+
   # If area fractions are missing (NAs) set them to 0
   area_fraction_cols <- names(input)[grepl("roof|pvd|srf",x = names(input))]
   input <- dplyr::mutate_at(input, area_fraction_cols, ~ifelse(is.na(.), 0, .))
@@ -55,12 +58,7 @@ prepare_input_data <- function(input_data, config)
   # Convert percentages to fractions
   input <- calculate_fractions(input)
 
-  # input[["main_sealed_area"]] <- calculate_main_fraction_sealed(
-  #   fetch("roof"),
-  #   fetch("pvd")
-  # )
-
-  input[["sealed"]] <- round(with(input, roof + pvd + 1e-14))
+  input[["sealed"]] <- with(input, roof + pvd + 1e-14) # do we still need this?
 
   # Get (usage, yield, irrigation) tuples based on Berlin-specific codes
   usages <- get_usage_tuple(
