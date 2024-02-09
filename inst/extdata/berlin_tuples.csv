@@ -1,4 +1,4 @@
-tuple_id,usage,yield,irrigation
+tuple_id,land_type,veg_class,irrigation
 1,vegetationless_D,1,0
 2,waterbody_G,0,0
 3,horticultural_K,40,75
