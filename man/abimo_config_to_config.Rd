@@ -7,7 +7,7 @@
 abimo_config_to_config(abimo_config)
 }
 \arguments{
-\item{abimo_config}{as returned by \code{kwb.abimo:::read_config}}
+\item{abimo_config}{as returned by \code{kwb.abimo::read_config}}
 }
 \value{
 list with elements \code{"potential_evaporation"},

@@ -9,7 +9,7 @@
 #' @param input data frame with columns as required by Abimo or
 #'   data frame with columns as returned by \code{\link{prepare_input_data}}
 #' @param config configuration object (list) as returned by the function
-#'   \code{abimo_config_to_config()} used on \code{kwb.abimo:::read_config()}
+#'   \code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}
 #' @param simulate_abimo logical of length one indicating whether or not to
 #'   simulate exactly what Abimo does (including obvious errors!).
 #'   Default: \code{TRUE}!
@@ -35,7 +35,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
     berlin_2020_data <- foreign::read.dbf(file_berlin_2020) #PROBLEM: HANDLE NAs!!
     berlin_2020_data$STR_FLGES <- 0
     #berlin_2019_data <- kwb.abimo::abimo_input_2019
-    config <- abimo_config_to_config(kwb.abimo:::read_config())
+    config <- abimo_config_to_config(kwb.abimo::read_config())
     input_backup <- prepare_input_data(berlin_2020_data, config)
 
     ndvi_matrix <- foreign::read.dbf("Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf")
@@ -321,9 +321,9 @@ if(FALSE)
   input_abimo$STR_BELAG4 <- 0
 
   kwb.abimo::run_abimo(input_data = head(input_abimo),
-                       config = kwb.abimo:::read_config())
+                       config = kwb.abimo::read_config())
 
-  config_rabimo <-  kwb.rabimo:::abimo_config_to_config(kwb.abimo:::read_config())
+  config_rabimo <-  kwb.rabimo:::abimo_config_to_config(kwb.abimo::read_config())
   input_rabimo <- kwb.rabimo::prepare_input_data(input_abimo, config_rabimo)
   kwb.rabimo::run_rabimo(input = input_rabimo, config = config_rabimo)
 
@@ -335,7 +335,7 @@ if(FALSE)
   data <- head(kwb.abimo::abimo_input_2019)
 
   # Provide Abimo's default configuration
-  abimo_config <-kwb.abimo:::read_config()
+  abimo_config <-kwb.abimo::read_config()
 
   # Use the R-wrapper to run Abimo.exe
   abimo_result <- kwb.abimo::run_abimo(input_data = data, config = abimo_config)
@@ -448,7 +448,7 @@ if(FALSE)
   data$NUTZUNG <- 10L
 
   # Provide Abimo's default configuration
-  abimo_config <-kwb.abimo:::read_config()
+  abimo_config <-kwb.abimo::read_config()
 
   # Use the R-wrapper to run Abimo.exe
   abimo_result <- kwb.abimo::run_abimo(input_data = data, config = abimo_config)

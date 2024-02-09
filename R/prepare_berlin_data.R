@@ -14,11 +14,11 @@
 #' @export
 
 prepare_berlin_data <- function(data_file,
-                                config_file = kwb.abimo:::default_config_file())
+                                config_file = kwb.abimo::default_config())
 {
 
   # read XML-config file
-  config <- kwb.abimo:::read_config(file = config_file)
+  config <- kwb.abimo::read_config(file = config_file)
   config <- abimo_config_to_config(config)
 
   # read dbl-file
@@ -28,7 +28,7 @@ prepare_berlin_data <- function(data_file,
   data <- prepare_input_data(data, config)
 
   # prepare config object
-  config <- prepare_config(config) # to be written...
+  #config <- prepare_config(config) # to be written...
 
   # create list object with prepared RABIMO-input-data and config-object
   berlin_inputs <- list(data, config)

@@ -11,7 +11,7 @@ run_rabimo(input, config, simulate_abimo = TRUE)
 data frame with columns as returned by \code{\link{prepare_input_data}}}
 
 \item{config}{configuration object (list) as returned by the function
-\code{abimo_config_to_config()} used on \code{kwb.abimo:::read_config()}}
+\code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}}
 
 \item{simulate_abimo}{logical of length one indicating whether or not to
 simulate exactly what Abimo does (including obvious errors!).

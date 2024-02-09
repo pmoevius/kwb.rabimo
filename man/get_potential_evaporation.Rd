@@ -23,7 +23,7 @@ Provide Data on Potential Evaporation
 }
 \examples{
 \dontrun{
-config <- abimo_config_to_config(kwb.abimo:::read_config())
+config <- abimo_config_to_config(kwb.abimo::read_config())
 get_potential_evaporation(
   is_waterbody = TRUE,
   district = 1,

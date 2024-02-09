@@ -17,6 +17,7 @@ get_usage_tuple <- function(usage, type, include_inputs = FALSE)
 {
   #usage = 10L; type = 10L
   #usage = 10L; type = 333L
+  #kwb.utils::assignPackageObjects("kwb.rabimo")
 
   # Prepare data for which to lookup value combinations in the lookup table
   data <- data.frame(

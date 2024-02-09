@@ -1,13 +1,13 @@
 #' Convert Abimo Configuration to List
 #'
-#' @param abimo_config as returned by \code{kwb.abimo:::read_config}
+#' @param abimo_config as returned by \code{kwb.abimo::read_config}
 #' @return list with elements \code{"potential_evaporation"},
 #'   \code{"runoff_factors"}, \code{"bagrov_values"}, \code{"diverse"},
 #'   \code{"result_digits"}
 #' @export
 abimo_config_to_config <- function(abimo_config)
 {
-  #abimo_config <- kwb.abimo:::read_config()
+  #abimo_config <- kwb.abimo::read_config()
   #`%>%` <- magrittr::`%>%`
   #kwb.utils::assignPackageObjects("kwb.rabimo")
 

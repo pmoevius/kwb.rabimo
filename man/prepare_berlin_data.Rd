@@ -4,7 +4,7 @@
 \alias{prepare_berlin_data}
 \title{Function to be called when using ABIMO with the 'old' Berlin-data structure}
 \usage{
-prepare_berlin_data(data_file, config_file = kwb.abimo:::default_config_file())
+prepare_berlin_data(data_file, config_file = kwb.abimo::default_config())
 }
 \arguments{
 \item{data_file}{a path for the .dbl file containing the input data}
@@ -12,7 +12,7 @@ prepare_berlin_data(data_file, config_file = kwb.abimo:::default_config_file())
 \item{config_file}{a path for the .XML config file}
 }
 \value{
-input a list object containing elements \code{data},
+a list object containing elements \code{data},
 the prepared input data and \code{config}, the prepared config object,
 both in a form readable by \code{\link{run_rabimo}}
 }

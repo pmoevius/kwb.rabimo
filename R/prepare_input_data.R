@@ -9,7 +9,7 @@
 #'   BELAG2, BELAG3, BELAG4, KAN_VGU, STR_BELAG1, STR_BELAG2, STR_BELAG3,
 #'   STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150
 #' @param config configuration object (list) as returned by the function
-#'   \code{abimo_config_to_config()} used on \code{kwb.abimo:::read_config()}
+#'   \code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}
 #' @return \code{input_data} with columns renamed and additional columns
 #'  (e.g. ratios calculated from percentages, (main) usage, yield, irrigation)
 #' @export
@@ -32,7 +32,7 @@ prepare_input_data <- function(input_data, config)
     berlin_2020_data$STR_FLGES <- 0
     #berlin_2019_data <- kwb.abimo::abimo_input_2019
     input_data <- berlin_2020_data
-    config <- abimo_config_to_config(kwb.abimo:::read_config())
+    config <- abimo_config_to_config(kwb.abimo::read_config())
 
 
     }

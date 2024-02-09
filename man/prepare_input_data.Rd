@@ -13,7 +13,7 @@ BELAG2, BELAG3, BELAG4, KAN_VGU, STR_BELAG1, STR_BELAG2, STR_BELAG3,
 STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150}
 
 \item{config}{configuration object (list) as returned by the function
-\code{abimo_config_to_config()} used on \code{kwb.abimo:::read_config()}}
+\code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}}
 }
 \value{
 \code{input_data} with columns renamed and additional columns
