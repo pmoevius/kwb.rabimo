@@ -80,13 +80,21 @@ if (FALSE)
     input_abimo[[column]] <- 0
   }
 
+  # Provide configuration for kwb.abimo
+  config_abimo <- kwb.abimo::read_config()
+
+  # Run C++ Abimo using the wrapper package kwb.abimo
   kwb.abimo::run_abimo(input_data = head(input_abimo),
-                       config = kwb.abimo::read_config())
+                       config = config_abimo)
 
-  config_rabimo <-  kwb.rabimo:::abimo_config_to_config(kwb.abimo::read_config())
+  # Provide configuration for kwb.rabimo
+  config_rabimo <-  kwb.rabimo:::abimo_config_to_config(config_abimo)
+
+  # Provide input data for kwb.rabimo
   input_rabimo <- kwb.rabimo::prepare_input_data(input_abimo, config_rabimo)
-  kwb.rabimo::run_rabimo(input = input_rabimo, config = config_rabimo)
 
+  # Run R-Abimo
+  kwb.rabimo::run_rabimo(input = input_rabimo, config = config_rabimo)
 
   # test with 2019 data
   # //////////////////
