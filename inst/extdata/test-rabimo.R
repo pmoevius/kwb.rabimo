@@ -88,7 +88,7 @@ if (FALSE)
 
   # Call Abimo and R-Abimo
   results_2020 <- call_abimo_and_rabimo(
-    data = input_abimo,
+    data_abimo = input_abimo,
     config_abimo = config_abimo,
     config_rabimo = config_rabimo
   )
@@ -101,7 +101,7 @@ if (FALSE)
 
   # Call Abimo and R-Abimo
   results_2019 <- call_abimo_and_rabimo(
-    data = head(kwb.abimo::abimo_input_2019),
+    data_abimo = head(kwb.abimo::abimo_input_2019),
     config_abimo = config_abimo,
     config_rabimo = config_rabimo
   )
@@ -114,7 +114,7 @@ if (FALSE)
 
   # Call Abimo and R-Abimo
   results_fictive <- call_abimo_and_rabimo(
-    data = provide_fictive_data(),
+    data_abimo = provide_fictive_data(),
     config_abimo = config_abimo,
     config_rabimo = config_rabimo
   )
@@ -136,14 +136,14 @@ has_gw_dist <- function(data)
 }
 
 # Define function: call_abimo_and_rabimo ---------------------------------------
-call_abimo_and_rabimo <- function(data, config_abimo, config_rabimo)
+call_abimo_and_rabimo <- function(data_abimo, config_abimo, config_rabimo)
 {
   # Prepare input data in "new" format, as expected by kwb.rabimo
-  rabimo_data <- kwb.rabimo::prepare_input_data(data, config_rabimo)
+  rabimo_data <- kwb.rabimo::prepare_input_data(data_abimo, config_rabimo)
 
   # Use the R-wrapper package kwb.abimo to run Abimo.exe (written in C++)
   abimo_result <- kwb.abimo::run_abimo(
-    input_data = data,
+    input_data = data_abimo,
     config = config_abimo
   )
 
