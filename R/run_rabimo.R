@@ -17,6 +17,13 @@
 #' @export
 run_rabimo <- function(input, config, simulate_abimo = TRUE)
 {
+  # Provide functions and variables for debugging
+  # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
+
+  #
+  # Go to inst/extdata/test-rabimo.R to provide input and config for debugging
+  #
+
   # check whether the input data have the expected structure
   if (!"code" %in% names(input)) {
     stop(

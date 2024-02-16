@@ -6,8 +6,6 @@
 
 if (FALSE)
 {
-  #kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
-
   # Define a path "dictionary"
   get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
     amarex_ap4 = "//medusaY:/SUW_Department/Projects/AMAREX/Work-packages/AP_4",
@@ -27,11 +25,11 @@ if (FALSE)
 
   #berlin_2019_data <- kwb.abimo::abimo_input_2019
 
+  # Provide Abimo default configuration
+  config <- kwb.rabimo::abimo_config_to_config(kwb.abimo::read_config())
+
   # Convert input data to the new format
-  input_backup <- kwb.rabimo::prepare_input_data(
-    input_data = berlin_2020_data,
-    config = kwb.rabimo::abimo_config_to_config(kwb.abimo::read_config())
-  )
+  input_backup <- kwb.rabimo::prepare_input_data(berlin_2020_data, config)
 
   # Read NDVI data
   ndvi_matrix <- foreign::read.dbf(get_path("ndvi"))
