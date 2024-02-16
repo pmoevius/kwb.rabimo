@@ -8,7 +8,7 @@ if (FALSE)
 {
   # Define a path "dictionary"
   get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
-    amarex_ap4 = "//medusaY:/SUW_Department/Projects/AMAREX/Work-packages/AP_4",
+    amarex_ap4 = "Y:/SUW_Department/Projects/AMAREX/Work-packages/AP_4",
     isu5_2020 = "<amarex_ap4>/ABIMO_Daten/ISU5_2020_datengrundlage",
     data_2020 = "<isu5_2020>/isu5_2020_berlin/cleaned",
     berlin_2020 = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
