@@ -123,7 +123,19 @@ if (FALSE)
   lapply(results_fictive, head)
 }
 
-# call_abimo_and_rabimo --------------------------------------------------------
+# Define function: table_with_na() ---------------------------------------------
+table_with_na <- function(x)
+{
+  table(x, useNA = "always")
+}
+
+# Define function: has_gw_dist() -----------------------------------------------
+has_gw_dist <- function(data)
+{
+  kwb.utils::matchesCriteria(data, "!is.na(gw_dist)")
+}
+
+# Define function: call_abimo_and_rabimo ---------------------------------------
 call_abimo_and_rabimo <- function(data, config_abimo, config_rabimo)
 {
   # Prepare input data in "new" format, as expected by kwb.rabimo
@@ -242,16 +254,4 @@ provide_fictive_data <- function()
   data$NUTZUNG <- 10L
 
   data
-}
-
-# Define function: table_with_na() ---------------------------------------------
-table_with_na <- function(x)
-{
-  table(x, useNA = "always")
-}
-
-# Define function: has_gw_dist() -----------------------------------------------
-has_gw_dist <- function(data)
-{
-  kwb.utils::matchesCriteria(data, "!is.na(gw_dist)")
 }
