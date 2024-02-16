@@ -17,7 +17,8 @@ if (FALSE)
     ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf"
   )))
 
-  berlin_2020_data <- foreign::read.dbf(get_path("berlin_2020"))
+  # Read dbf file. Do not convert character to factor (as.is = TRUE)
+  berlin_2020_data <- foreign::read.dbf(get_path("berlin_2020"), as.is = TRUE)
 
   # PROBLEM: HANDLE NAs!!
 
@@ -73,11 +74,11 @@ if (FALSE)
   # test with 2020 data
   # //////////////////
   input_abimo <- head(berlin_2020_data)
-  input_abimo$CODE <- as.character(input_abimo$CODE)
-  input_abimo$STR_BELAG1 <- 0
-  input_abimo$STR_BELAG2 <- 0
-  input_abimo$STR_BELAG3 <- 0
-  input_abimo$STR_BELAG4 <- 0
+
+  # Set STR_BELAG[1-4] to 0
+  for (column in c("STR_BELAG1", "STR_BELAG2", "STR_BELAG3", "STR_BELAG4")) {
+    input_abimo[[column]] <- 0
+  }
 
   kwb.abimo::run_abimo(input_data = head(input_abimo),
                        config = kwb.abimo::read_config())
