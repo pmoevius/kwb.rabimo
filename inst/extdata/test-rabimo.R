@@ -1,9 +1,11 @@
 #
 # Test kwb.rabimo
 #
-# - Source the whole script first to load the functions defined below!
+# - Source the whole script first to load the functions defined below
+# - Manually go through the MAIN sections within "if (FALSE) {...}"
 #
 
+# MAIN: Provide function arguments for run_rabimo() ----------------------------
 if (FALSE)
 {
   # Define a path "dictionary"
@@ -63,6 +65,166 @@ if (FALSE)
   # use for old vegetation classes
   input <- input_backup[has_gw_dist(input_backup), ]
   input <- head(input)
+}
+
+# MAIN: Test comparison with abimo results -------------------------------------
+if (FALSE)
+{
+  # test with 2020 data
+  # //////////////////
+  input_abimo <- head(berlin_2020_data)
+  input_abimo$CODE <- as.character(input_abimo$CODE)
+  input_abimo$STR_BELAG1 <- 0
+  input_abimo$STR_BELAG2 <- 0
+  input_abimo$STR_BELAG3 <- 0
+  input_abimo$STR_BELAG4 <- 0
+
+  kwb.abimo::run_abimo(input_data = head(input_abimo),
+                       config = kwb.abimo::read_config())
+
+  config_rabimo <-  kwb.rabimo:::abimo_config_to_config(kwb.abimo::read_config())
+  input_rabimo <- kwb.rabimo::prepare_input_data(input_abimo, config_rabimo)
+  kwb.rabimo::run_rabimo(input = input_rabimo, config = config_rabimo)
+
+
+  # test with 2019 data
+  # //////////////////
+
+  # Load Berlin data from the R-wrapper package kwb.abimo
+  data <- head(kwb.abimo::abimo_input_2019)
+
+  # Provide Abimo's default configuration
+  abimo_config <-kwb.abimo::read_config()
+
+  # Use the R-wrapper to run Abimo.exe
+  abimo_result <- kwb.abimo::run_abimo(input_data = data, config = abimo_config)
+
+  # Prepare a configuration for R-Abimo, based on the default Abimo configuration
+  rabimo_config <- kwb.rabimo::abimo_config_to_config(abimo_config)
+  #config_test <- config
+
+  # prepare data for rabimo format
+  rabimo_data <- kwb.rabimo::prepare_input_data(data, rabimo_config)
+
+  # Run R-Abimo, the R-implementation of Abimo in this package
+  rabimo_result <- kwb.rabimo::run_rabimo(rabimo_data, rabimo_config)
+
+  # Have a look at the first lines of the result data frames
+  abimo_result
+  rabimo_result
+
+
+  # fictive areas for testing
+  # /////////////////////////
+
+  data <- head(kwb.abimo::abimo_input_2019)
+  btf1 <- data[3,]
+  btf1$CODE <- "mixed-surfaces"
+  btf1$FLGES <- 100
+  btf1$PROBAU <- 40
+  btf1$PROVGU <- 20
+  btf1$STR_FLGES <- 0
+  btf1$VGSTRASSE <- 0
+  btf1$VG <- btf1$PROBAU + btf1$PROVGU
+  btf1[, c("STR_BELAG1", "STR_BELAG2", "STR_BELAG3", "STR_BELAG4")] <- 0
+  btf1[, c("BELAG2", "BELAG3", "BELAG4")] <- 0L
+  btf1$BELAG1 <- 100L
+  btf1$KAN_VGU <- 60L
+  btf1$KAN_STR <- 100L
+
+  btf2 <- btf1
+  btf2$CODE <- "no-green"
+  btf2$FLGES <- 100
+  btf2$PROBAU <- 40
+  btf2$PROVGU <- 60
+  btf2$STR_FLGES <- 0
+  btf2$VGSTRASSE <- 0
+  btf2$VG <- btf2$PROBAU + btf2$PROVGU
+  btf2[, c("STR_BELAG1", "STR_BELAG2", "STR_BELAG3", "STR_BELAG4")] <- 0
+  btf2[, c("BELAG2", "BELAG3", "BELAG4")] <- 0L
+  btf2$BELAG1 <- 100L
+  btf2$KAN_VGU <- 60L
+  btf2$KAN_STR <- 100L
+
+  btf3 <- btf2
+  btf3$CODE <- "only-roof"
+  btf3$FLGES <- 100
+  btf3$PROBAU <- 100
+  btf3$PROVGU <- 0
+  btf3$STR_FLGES <- 0
+  btf3$VGSTRASSE <- 0
+  btf3$VG <- btf3$PROBAU + btf3$PROVGU
+  btf3[, c("STR_BELAG1", "STR_BELAG2", "STR_BELAG3", "STR_BELAG4")] <- 0
+  btf3[, c("BELAG2", "BELAG3", "BELAG4")] <- 0L
+  btf3$BELAG1 <- 100L
+  btf3$KAN_VGU <- 60L
+  btf3$KAN_STR <- 100L
+
+  btf4 <- btf2
+  btf4$CODE <- "only-paved"
+  btf4$FLGES <- 100
+  btf4$PROBAU <- 0
+  btf4$PROVGU <- 100
+  btf4$STR_FLGES <- 0
+  btf4$VGSTRASSE <- 0
+  btf4$VG <- btf4$PROBAU + btf4$PROVGU
+  btf4[, c("STR_BELAG1", "STR_BELAG2", "STR_BELAG3", "STR_BELAG4")] <- 0
+  btf4[, c("BELAG2", "BELAG3", "BELAG4")] <- 0L
+  btf4$BELAG1 <- 100L
+  btf4$KAN_VGU <- 60L
+  btf4$KAN_STR <- 100L
+
+  btf5 <- btf2
+  btf5$CODE <- "only-green"
+  btf5$FLGES <- 100
+  btf5$PROBAU <- 0
+  btf5$PROVGU <- 0
+  btf5$STR_FLGES <- 0
+  btf5$VGSTRASSE <- 0
+  btf5$VG <- btf5$PROBAU + btf5$PROVGU
+  btf5[, c("STR_BELAG1", "STR_BELAG2", "STR_BELAG3", "STR_BELAG4")] <- 0
+  btf5[, c("BELAG2", "BELAG3", "BELAG4")] <- 0L
+  btf5$BELAG1 <- 100L
+  btf5$KAN_VGU <- 60L
+  btf5$KAN_STR <- 100L
+
+  btf6 <- btf1
+  btf6$CODE <- "mixed-w-roads"
+  btf6$FLGES <- 100
+  btf6$PROBAU <- 40
+  btf6$PROVGU <- 20
+  btf6$STR_FLGES <- 10
+  btf6$VGSTRASSE <- 0
+  btf6$VG <- btf6$PROBAU + btf6$PROVGU
+  btf6[, c("STR_BELAG1", "STR_BELAG2", "STR_BELAG3", "STR_BELAG4")] <- 0
+  btf6[, c("BELAG2", "BELAG3", "BELAG4")] <- 0L
+  btf6$BELAG1 <- 100L
+  btf6$KAN_VGU <- 60L
+  btf6$KAN_STR <- 100L
+
+  data <- rbind(btf1,btf2,btf3,btf4,btf5,btf6)
+  data$TYP <- 10L
+  data$NUTZUNG <- 10L
+
+  # Provide Abimo's default configuration
+  abimo_config <-kwb.abimo::read_config()
+
+  # Use the R-wrapper to run Abimo.exe
+  abimo_result <- kwb.abimo::run_abimo(input_data = data, config = abimo_config)
+
+  # Prepare a configuration for R-Abimo, based on the default Abimo configuration
+  config <- kwb.rabimo::abimo_config_to_config(abimo_config)
+
+  # prepare data for rabimo format
+  data <- kwb.rabimo::prepare_input_data(data, config)
+
+  # Run R-Abimo, the R-implementation of Abimo in this package
+  rabimo_result <- kwb.rabimo::run_rabimo(data, config)
+
+  # Have a look at the first lines of the result data frames
+  abimo_result
+  rabimo_result
+
 }
 
 # Define function: table_with_na() ---------------------------------------------
