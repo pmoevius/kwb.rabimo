@@ -84,8 +84,7 @@ if (FALSE)
   config_abimo <- kwb.abimo::read_config()
 
   # Run C++ Abimo using the wrapper package kwb.abimo
-  kwb.abimo::run_abimo(input_data = head(input_abimo),
-                       config = config_abimo)
+  kwb.abimo::run_abimo(input_data = head(input_abimo), config = config_abimo)
 
   # Provide configuration for kwb.rabimo
   config_rabimo <-  kwb.rabimo:::abimo_config_to_config(config_abimo)
