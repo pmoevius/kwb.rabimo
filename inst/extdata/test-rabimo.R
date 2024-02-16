@@ -72,10 +72,10 @@ if (FALSE)
 if (FALSE)
 {
   # Provide Abimo's default configuration (for kwb.abimo)
-  config_abimo <- kwb.abimo::read_config()
+  abimo_config <- kwb.abimo::read_config()
 
   # Prepare a configuration for R-Abimo, based on the configuration for Abimo
-  config_rabimo <- kwb.rabimo::abimo_config_to_config(config_abimo)
+  rabimo_config <- kwb.rabimo::abimo_config_to_config(abimo_config)
 
   # test with 2020 data
   # //////////////////
@@ -88,9 +88,9 @@ if (FALSE)
 
   # Call Abimo and R-Abimo
   results_2020 <- call_abimo_and_rabimo(
-    data_abimo = input_abimo,
-    config_abimo = config_abimo,
-    config_rabimo = config_rabimo
+    abimo_data = input_abimo,
+    abimo_config = abimo_config,
+    rabimo_config = rabimo_config
   )
 
   # Have a look at the first lines of the result data frames
@@ -101,9 +101,9 @@ if (FALSE)
 
   # Call Abimo and R-Abimo
   results_2019 <- call_abimo_and_rabimo(
-    data_abimo = head(kwb.abimo::abimo_input_2019),
-    config_abimo = config_abimo,
-    config_rabimo = config_rabimo
+    abimo_data = head(kwb.abimo::abimo_input_2019),
+    abimo_config = abimo_config,
+    rabimo_config = rabimo_config
   )
 
   # Have a look at the first lines of the result data frames
@@ -114,9 +114,9 @@ if (FALSE)
 
   # Call Abimo and R-Abimo
   results_fictive <- call_abimo_and_rabimo(
-    data_abimo = provide_fictive_data(),
-    config_abimo = config_abimo,
-    config_rabimo = config_rabimo
+    abimo_data = provide_fictive_data(),
+    abimo_config = abimo_config,
+    rabimo_config = rabimo_config
   )
 
   # Have a look at the first lines of the result data frames
@@ -136,21 +136,21 @@ has_gw_dist <- function(data)
 }
 
 # Define function: call_abimo_and_rabimo ---------------------------------------
-call_abimo_and_rabimo <- function(data_abimo, config_abimo, config_rabimo)
+call_abimo_and_rabimo <- function(abimo_data, abimo_config, rabimo_config)
 {
   # Prepare input data in "new" format, as expected by kwb.rabimo
-  rabimo_data <- kwb.rabimo::prepare_input_data(data_abimo, config_rabimo)
+  rabimo_data <- kwb.rabimo::prepare_input_data(abimo_data, rabimo_config)
 
   # Use the R-wrapper package kwb.abimo to run Abimo.exe (written in C++)
   abimo_result <- kwb.abimo::run_abimo(
-    input_data = data_abimo,
-    config = config_abimo
+    input_data = abimo_data,
+    config = abimo_config
   )
 
   # Run R-Abimo, the R-implementation of Abimo in this package
   rabimo_result <- kwb.rabimo::run_rabimo(
     input = rabimo_data,
-    config = config_rabimo
+    config = rabimo_config
   )
 
   # Return both result data frames
