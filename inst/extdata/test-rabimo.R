@@ -118,7 +118,31 @@ if (FALSE)
   # fictive areas for testing
   # /////////////////////////
 
+  data <- provide_fictive_data()
+
+  # Use the R-wrapper to run Abimo.exe
+  abimo_result <- kwb.abimo::run_abimo(input_data = data, config = config_abimo)
+
+  # Prepare a configuration for R-Abimo, based on the default Abimo configuration
+  config <- kwb.rabimo::abimo_config_to_config(config_abimo)
+
+  # prepare data for rabimo format
+  data <- kwb.rabimo::prepare_input_data(data, config)
+
+  # Run R-Abimo, the R-implementation of Abimo in this package
+  rabimo_result <- kwb.rabimo::run_rabimo(data, config)
+
+  # Have a look at the first lines of the result data frames
+  abimo_result
+  rabimo_result
+
+}
+
+# Define function: provide_fictive_data() --------------------------------------
+provide_fictive_data <- function()
+{
   data <- head(kwb.abimo::abimo_input_2019)
+
   btf1 <- data[3,]
   btf1$CODE <- "mixed-surfaces"
   btf1$FLGES <- 100
@@ -207,22 +231,7 @@ if (FALSE)
   data$TYP <- 10L
   data$NUTZUNG <- 10L
 
-  # Use the R-wrapper to run Abimo.exe
-  abimo_result <- kwb.abimo::run_abimo(input_data = data, config = config_abimo)
-
-  # Prepare a configuration for R-Abimo, based on the default Abimo configuration
-  config <- kwb.rabimo::abimo_config_to_config(config_abimo)
-
-  # prepare data for rabimo format
-  data <- kwb.rabimo::prepare_input_data(data, config)
-
-  # Run R-Abimo, the R-implementation of Abimo in this package
-  rabimo_result <- kwb.rabimo::run_rabimo(data, config)
-
-  # Have a look at the first lines of the result data frames
-  abimo_result
-  rabimo_result
-
+  data
 }
 
 # Define function: table_with_na() ---------------------------------------------
