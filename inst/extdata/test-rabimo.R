@@ -80,14 +80,14 @@ if (FALSE)
     input_abimo[[column]] <- 0
   }
 
-  # Provide configuration for kwb.abimo
+  # Provide Abimo's default configuration (for kwb.abimo)
   config_abimo <- kwb.abimo::read_config()
 
   # Run C++ Abimo using the wrapper package kwb.abimo
   kwb.abimo::run_abimo(input_data = head(input_abimo), config = config_abimo)
 
-  # Provide configuration for kwb.rabimo
-  config_rabimo <-  kwb.rabimo:::abimo_config_to_config(config_abimo)
+  # Prepare a configuration for R-Abimo, based on the configuration for Abimo
+  config_rabimo <- kwb.rabimo::abimo_config_to_config(config_abimo)
 
   # Provide input data for kwb.rabimo
   input_rabimo <- kwb.rabimo::prepare_input_data(input_abimo, config_rabimo)
@@ -101,21 +101,14 @@ if (FALSE)
   # Load Berlin data from the R-wrapper package kwb.abimo
   data <- head(kwb.abimo::abimo_input_2019)
 
-  # Provide Abimo's default configuration
-  abimo_config <-kwb.abimo::read_config()
-
   # Use the R-wrapper to run Abimo.exe
-  abimo_result <- kwb.abimo::run_abimo(input_data = data, config = abimo_config)
-
-  # Prepare a configuration for R-Abimo, based on the default Abimo configuration
-  rabimo_config <- kwb.rabimo::abimo_config_to_config(abimo_config)
-  #config_test <- config
+  abimo_result <- kwb.abimo::run_abimo(input_data = data, config = config_abimo)
 
   # prepare data for rabimo format
-  rabimo_data <- kwb.rabimo::prepare_input_data(data, rabimo_config)
+  rabimo_data <- kwb.rabimo::prepare_input_data(data, config_rabimo)
 
   # Run R-Abimo, the R-implementation of Abimo in this package
-  rabimo_result <- kwb.rabimo::run_rabimo(rabimo_data, rabimo_config)
+  rabimo_result <- kwb.rabimo::run_rabimo(rabimo_data, config_rabimo)
 
   # Have a look at the first lines of the result data frames
   abimo_result
@@ -210,18 +203,15 @@ if (FALSE)
   btf6$KAN_VGU <- 60L
   btf6$KAN_STR <- 100L
 
-  data <- rbind(btf1,btf2,btf3,btf4,btf5,btf6)
+  data <- rbind(btf1, btf2, btf3, btf4, btf5, btf6)
   data$TYP <- 10L
   data$NUTZUNG <- 10L
 
-  # Provide Abimo's default configuration
-  abimo_config <-kwb.abimo::read_config()
-
   # Use the R-wrapper to run Abimo.exe
-  abimo_result <- kwb.abimo::run_abimo(input_data = data, config = abimo_config)
+  abimo_result <- kwb.abimo::run_abimo(input_data = data, config = config_abimo)
 
   # Prepare a configuration for R-Abimo, based on the default Abimo configuration
-  config <- kwb.rabimo::abimo_config_to_config(abimo_config)
+  config <- kwb.rabimo::abimo_config_to_config(config_abimo)
 
   # prepare data for rabimo format
   data <- kwb.rabimo::prepare_input_data(data, config)
