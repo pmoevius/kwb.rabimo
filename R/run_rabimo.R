@@ -24,14 +24,8 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   # Go to inst/extdata/test-rabimo.R to provide input and config for debugging
   #
 
-  # check whether the input data have the expected structure
-  if (!"code" %in% names(input)) {
-    stop(
-      "input data has not the expected format. ",
-      "I was looking for column 'code'",
-      "You might want to use the function prepare_input_data().", call. = FALSE
-    )
-  }
+  # Check whether the input data have the expected structure
+  stop_on_invalid_input(input)
 
   # Create accessor functions to input columns and config elements
   fetch_input <- create_accessor(input)
@@ -272,6 +266,18 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
       fraction_unsealed = fraction_unsealed
     )
   )
+}
+
+# stop_on_invalid_input --------------------------------------------------------
+stop_on_invalid_input <- function(input)
+{
+  if (!"code" %in% names(input)) {
+    stop(
+      "input data has not the expected format. ",
+      "I was looking for column 'code'",
+      "You might want to use the function prepare_input_data().", call. = FALSE
+    )
+  }
 }
 
 # test comparison with abimo results -------------------------------------------
