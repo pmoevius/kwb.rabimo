@@ -23,6 +23,11 @@ plot_block_2 <- function(
     col_road = "lightgrey"
 )
 {
+  new_rects <- kwb.rect:::new_rects
+  stack <- kwb.rect:::stack
+  init_plot <- kwb.rect:::init_plot
+  move <- kwb.rect::move
+
   get_fraction <- create_fraction_accessor(block)
   fetch <- create_accessor(block)
 
@@ -141,7 +146,7 @@ plot_block_2 <- function(
     rect_legend("Road, sealed", "black", density_sealed, 45),
     rect_legend("Connected", "black", density_connected, -45)
   ) %>%
-    stack.rects(delta = 0.05, reverse = TRUE) %>%
+    stack(delta = 0.05, reverse = TRUE) %>%
     move(left = 1.1, top = 1)
 
   legend %>%
