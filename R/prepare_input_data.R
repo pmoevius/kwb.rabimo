@@ -180,12 +180,6 @@ INPUT_COLUMNS_NEEDED <- c(
   "irrigation"
 )
 
-# INPUT_COLUMNS_NOT_NEEDED -----------------------------------------------------
-INPUT_COLUMNS_NOT_NEEDED <- setdiff(
-  names(kwb.abimo::abimo_input_2019),
-  INPUT_COLUMNS_NEEDED
-)
-
 # calculate_fractions ----------------------------------------------------------
 calculate_fractions <- function(input)
 {
