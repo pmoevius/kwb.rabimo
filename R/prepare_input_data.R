@@ -35,7 +35,7 @@ prepare_input_data <- function(input_data, config)
     config <- abimo_config_to_config(kwb.abimo::read_config())
 
 
-    }
+  }
 
   # 1. Rename columns from ABIMO 3.2 names to ABIMO new* internal names
   # 2. Select only the columns that are required
@@ -145,14 +145,39 @@ INPUT_COLUMN_RENAMINGS <- list(
 )
 
 # INPUT_COLUMNS_NEEDED ---------------------------------------------------------
-INPUT_COLUMNS_NEEDED <- c("code",  "prec_yr", "prec_s",
-                          "epot_yr", "epot_s", "district","total_area", "area_main",
-                          "area_rd", "main_fraction", "roof", "swg_roof","pvd", "swg_pvd",
-                          "srf1_pvd", "srf2_pvd", "srf3_pvd", "srf4_pvd",
-                          "road_fraction", "pvd_rd", "swg_pvd_rd", "srf1_pvd_rd",
-                          "srf2_pvd_rd", "srf3_pvd_rd", "srf4_pvd_rd",
-                          "sealed", "gw_dist", "ufc30", "ufc150",
-                          "land_type", "veg_class", "irrigation"
+INPUT_COLUMNS_NEEDED <- c(
+  "code",
+  "prec_yr",
+  "prec_s",
+  "epot_yr",
+  "epot_s",
+  "district",
+  "total_area",
+  "area_main",
+  "area_rd",
+  "main_fraction",
+  "roof",
+  "swg_roof",
+  "pvd",
+  "swg_pvd",
+  "srf1_pvd",
+  "srf2_pvd",
+  "srf3_pvd",
+  "srf4_pvd",
+  "road_fraction",
+  "pvd_rd",
+  "swg_pvd_rd",
+  "srf1_pvd_rd",
+  "srf2_pvd_rd",
+  "srf3_pvd_rd",
+  "srf4_pvd_rd",
+  "sealed",
+  "gw_dist",
+  "ufc30",
+  "ufc150",
+  "land_type",
+  "veg_class",
+  "irrigation"
 )
 
 # INPUT_COLUMNS_NOT_NEEDED -----------------------------------------------------
