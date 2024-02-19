@@ -1,22 +1,13 @@
 #
 # Test kwb.rabimo
 #
-# - Source the whole script first to load the functions defined below
+# - Source the whole script first to load paths and functions defined below
 # - Manually go through the MAIN sections within "if (FALSE) {...}"
 #
 
-# MAIN: Provide function arguments for run_rabimo() ----------------------------
+# MAIN: Provide function arguments for run_rabimo(), prepare_input_data() ------
 if (FALSE)
 {
-  # Define a path "dictionary"
-  get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
-    amarex_ap4 = "Y:/SUW_Department/Projects/AMAREX/Work-packages/AP_4",
-    isu5_2020 = "<amarex_ap4>/ABIMO_Daten/ISU5_2020_datengrundlage",
-    data_2020 = "<isu5_2020>/isu5_2020_berlin/cleaned",
-    berlin_2020 = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
-    ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf"
-  )))
-
   # Read dbf file. Do not convert character to factor (as.is = TRUE)
   berlin_2020_data <- foreign::read.dbf(get_path("berlin_2020"), as.is = TRUE)
 
@@ -122,6 +113,15 @@ if (FALSE)
   # Have a look at the first lines of the result data frames
   lapply(results_fictive, head)
 }
+
+# Define a path "dictionary" ---------------------------------------------------
+get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
+  amarex_ap4 = "Y:/SUW_Department/Projects/AMAREX/Work-packages/AP_4",
+  isu5_2020 = "<amarex_ap4>/ABIMO_Daten/ISU5_2020_datengrundlage",
+  data_2020 = "<isu5_2020>/isu5_2020_berlin/cleaned",
+  berlin_2020 = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
+  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf"
+)))
 
 # Define function: table_with_na() ---------------------------------------------
 table_with_na <- function(x)

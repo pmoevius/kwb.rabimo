@@ -15,27 +15,9 @@
 #' @export
 prepare_input_data <- function(input_data, config)
 {
-  # PARAMETERS FOR TESTING (to delete later)
-  if(FALSE){
-    kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
-
-    #paths
-    path_amarex_ap4 <- "Y:/SUW_Department/Projects/AMAREX/Work-packages/AP_4/"
-    path_data_2020 <- paste0(
-      path_amarex_ap4,
-      "ABIMO_Daten/ISU5_2020_datengrundlage/isu5_2020_berlin/cleaned/"
-    )
-
-    file_berlin_2020 <- paste0(path_data_2020, "isu5_2020_abimo_cleaned.dbf")
-
-    berlin_2020_data <- foreign::read.dbf(file_berlin_2020)
-    berlin_2020_data$STR_FLGES <- 0
-    #berlin_2019_data <- kwb.abimo::abimo_input_2019
-    input_data <- berlin_2020_data
-    config <- abimo_config_to_config(kwb.abimo::read_config())
-
-
-  }
+  #
+  # See inst/extdata/test-rabimo.R for test data assignments
+  #
 
   # 1. Rename columns from ABIMO 3.2 names to ABIMO new* internal names
   # 2. Select only the columns that are required
