@@ -60,14 +60,11 @@ prepare_input_data <- function(input_data, config)
     lookup = fetch_config("potential_evaporation")
   )
 
-  as.data.frame(names(input))
-
   # Column-bind everything together
   input <- cbind(input, usages, pot_evaporation)
 
   # Set roof area that are NAs to 0 for water bodies
-  selected <- usage_is_waterbody(input$land_type) & is.na(input$roof)
-  input$roof[selected] <- 0
+  input$roof[usage_is_waterbody(input$land_type) & is.na(input$roof)] <- 0
 
   # Set order of columns as defined in "column-names.csv"
   select_columns(input, get_column_selection())
@@ -112,7 +109,6 @@ calculate_fractions <- function(input)
   for (column in by_100_columns) {
     input[[column]] <- by_100(column)
   }
-
 
   input
 }
