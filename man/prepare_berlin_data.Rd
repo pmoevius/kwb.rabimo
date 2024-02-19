@@ -4,12 +4,23 @@
 \alias{prepare_berlin_data}
 \title{Function to be called when using ABIMO with the 'old' Berlin-data structure}
 \usage{
-prepare_berlin_data(data_file, config_file = kwb.abimo::default_config())
+prepare_berlin_data(
+  data_file,
+  config_file = kwb.abimo::default_config(),
+  data = NULL,
+  config = NULL
+)
 }
 \arguments{
-\item{data_file}{a path for the .dbl file containing the input data}
+\item{data_file}{a path for the .dbf file containing the input data}
 
-\item{config_file}{a path for the .XML config file}
+\item{config_file}{a path for the .xml config file}
+
+\item{data}{optional. Data frame containing the input data, as e.g. provided
+in \code{\link[kwb.abimo]{abimo_input_2019}}.}
+
+\item{config}{optional. List representing an Abimo configuration, as e.g.
+provided by \code{\link[kwb.abimo]{read_config}}.}
 }
 \value{
 a list object containing elements \code{data},
@@ -18,6 +29,6 @@ both in a form readable by \code{\link{run_rabimo}}
 }
 \description{
 It calls the functions \code{\link{prepare_input_data}} and
-\code{\link{abimo_config_to_config}} and modifies the config-object to the required
-structure.
+\code{\link{abimo_config_to_config}} and modifies the config-object to the
+required structure.
 }

@@ -303,6 +303,10 @@ reset_row_names <- kwb.utils::resetRowNames
 #' @importFrom kwb.utils right
 right <- kwb.utils::right
 
+# safe_path --------------------------------------------------------------------
+#' @importFrom kwb.utils safePath
+safe_path <- kwb.utils::safePath
+
 # safe_row_bind_all ------------------------------------------------------------
 #' @importFrom kwb.utils safeRowBindAll
 safe_row_bind_all <- kwb.utils::safeRowBindAll
