@@ -1,7 +1,7 @@
 #
 # Test kwb.rabimo
 #
-# - Source the whole script first to load paths and functions defined below
+# - Source the whole script first to load variables and functions defined below
 # - Manually go through the MAIN sections within "if (FALSE) {...}"
 #
 
@@ -9,13 +9,13 @@
 if (FALSE)
 {
   # Read dbf file. Do not convert character to factor (as.is = TRUE)
-  berlin_2020_data <- foreign::read.dbf(get_path("berlin_2020"), as.is = TRUE)
+  berlin_2020_data <- get_path("berlin_2020") %>%
+    foreign::read.dbf(as.is = TRUE) %>%
+    # Clean column "STR_FLGES"
+    kwb.rabimo:::set_columns_to_zero_where_almost_zero(columns = "STR_FLGES")
 
   # PROBLEM: HANDLE NAs!!
-
-  # Clean column "STR_FLGES"
   table_with_na(berlin_2020_data$STR_FLGES)
-  berlin_2020_data$STR_FLGES <- 0
 
   #berlin_2019_data <- kwb.abimo::abimo_input_2019
 
@@ -70,12 +70,14 @@ if (FALSE)
 
   # test with 2020 data
   # //////////////////
-  input_abimo <- head(berlin_2020_data)
-
-  # Set STR_BELAG[1-4] to 0
-  for (column in c("STR_BELAG1", "STR_BELAG2", "STR_BELAG3", "STR_BELAG4")) {
-    input_abimo[[column]] <- 0
-  }
+  input_abimo <- head(berlin_2020_data) %>%
+    # Set STR_BELAG[1-4] to 0
+    kwb.rabimo:::set_columns_to_zero_where_na(columns = c(
+      "STR_BELAG1",
+      "STR_BELAG2",
+      "STR_BELAG3",
+      "STR_BELAG4"
+    ))
 
   # Call Abimo and R-Abimo
   results_2020 <- call_abimo_and_rabimo(
@@ -113,6 +115,9 @@ if (FALSE)
   # Have a look at the first lines of the result data frames
   lapply(results_fictive, head)
 }
+
+# Load the "pipe" operator -----------------------------------------------------
+`%>%` <- magrittr::`%>%`
 
 # Define a path "dictionary" ---------------------------------------------------
 get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
