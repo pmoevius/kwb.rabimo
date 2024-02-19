@@ -28,7 +28,8 @@ prepare_input_data <- function(input_data, config)
   fetch_config <- create_accessor(config)
 
   # correct precipitation with correction factor from the config file
-  input[["prec_yr"]] <- input[["prec_yr"]]*config$precipitation_correction_factor
+  input[["prec_yr"]] <- fetch("prec_yr") *
+    fetch_config("precipitation_correction_factor")
 
   # If area fractions are missing (NAs) set them to 0
   area_fraction_cols <- names(input)[grepl("roof|pvd|srf",x = names(input))]
