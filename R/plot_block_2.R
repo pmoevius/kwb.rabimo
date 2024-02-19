@@ -26,7 +26,7 @@ plot_block_2 <- function(
   new_rects <- kwb.rect:::new_rects
   stack <- kwb.rect:::stack
   init_plot <- kwb.rect:::init_plot
-  move <- kwb.rect:::move
+  move <- kwb.rect::move
 
   get_fraction <- create_fraction_accessor(block)
   fetch <- create_accessor(block)

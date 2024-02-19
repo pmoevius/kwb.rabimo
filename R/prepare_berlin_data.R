@@ -3,36 +3,55 @@
 #' Function to be called when using ABIMO with the 'old' Berlin-data structure
 #'
 #' It calls the functions \code{\link{prepare_input_data}} and
-#' \code{\link{abimo_config_to_config}} and modifies the config-object to the required
-#' structure.
+#' \code{\link{abimo_config_to_config}} and modifies the config-object to the
+#' required structure.
 #'
-#' @param data_file a path for the .dbl file containing the input data
-#' @param config_file a path for the .XML config file
+#' @param data_file a path for the .dbf file containing the input data
+#' @param config_file a path for the .xml config file
+#' @param data optional. Data frame containing the input data, as e.g. provided
+#'   in \code{\link[kwb.abimo]{abimo_input_2019}}.
+#' @param config optional. List representing an Abimo configuration, as e.g.
+#'   provided by \code{\link[kwb.abimo]{read_config}}.
 #' @return a list object containing elements \code{data},
 #'   the prepared input data and \code{config}, the prepared config object,
 #'   both in a form readable by \code{\link{run_rabimo}}
 #' @export
-
-prepare_berlin_data <- function(data_file,
-                                config_file = kwb.abimo::default_config())
+prepare_berlin_data <- function(
+    data_file,
+    config_file = kwb.abimo::default_config(),
+    data = NULL,
+    config = NULL
+)
 {
+  # Read config file if config is NULL
+  if (is.null(config)) {
+    config <- kwb.abimo::read_config(file = safe_path(config_file))
+  }
 
-  # read XML-config file
-  config <- kwb.abimo::read_config(file = config_file)
-  config <- abimo_config_to_config(config)
+  # Read database file if data is NULL
+  if (is.null(data)) {
+    data <- foreign::read.dbf(safe_path(data_file))
+  }
 
-  # read dbl-file
-  data <- foreign::read.dbf(data_file)
+  # Convert configuration object into a more convenient structure
+  config_convenient <- abimo_config_to_config(config)
 
-  # prepare input data
-  data <- prepare_input_data(data, config)
+  # Return a list with input data and configuration as required by Rabimo, e.g.
+  # - input data: with corrected precipitation and evaporation
+  # - configuration: without correction factor or information on evaporation
+  list(
+    data = prepare_input_data(input_data = data, config = config_convenient),
+    config = prepare_config(config_convenient)
+  )
+}
 
-  # prepare config object
-  #config <- prepare_config(config) # to be written...
+# prepare_config ---------------------------------------------------------------
+prepare_config <- function(config)
+{
+  expected <- c("precipitation_correction_factor", "potential_evaporation")
 
-  # create list object with prepared RABIMO-input-data and config-object
-  berlin_inputs <- list(data, config)
+  # Try to get the expected elements (for clear error message, if applicable)
+  select_elements(config, expected)
 
-  return(list(berlin_inputs))
-
+  remove_elements(config, expected)
 }

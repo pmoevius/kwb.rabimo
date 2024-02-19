@@ -303,6 +303,10 @@ reset_row_names <- kwb.utils::resetRowNames
 #' @importFrom kwb.utils right
 right <- kwb.utils::right
 
+# safe_path --------------------------------------------------------------------
+#' @importFrom kwb.utils safePath
+safe_path <- kwb.utils::safePath
+
 # safe_row_bind_all ------------------------------------------------------------
 #' @importFrom kwb.utils safeRowBindAll
 safe_row_bind_all <- kwb.utils::safeRowBindAll
@@ -319,6 +323,65 @@ select_elements <- kwb.utils::selectElements
 seq_along_rows <- function(data)
 {
   seq_len(nrow(data))
+}
+
+# set_columns_to_zero ----------------------------------------------------------
+set_columns_to_zero <- function(data, columns, where_fun, where_text)
+{
+  stopifnot(is.data.frame(data))
+
+  for (column in columns) {
+
+    x <- data[[column]]
+
+    stopifnot(is.numeric(x))
+
+    meets_condition <- where_fun(x)
+
+    if (!any(meets_condition)) {
+      next
+    }
+
+    data[[column]] <- cat_and_run(
+      sprintf(
+        "Setting %d value(s) in \"%s\" to 0 where %s",
+        sum(meets_condition),
+        column,
+        where_text
+      ),
+      expr = {
+        x[meets_condition] <- 0
+        x
+      }
+    )
+  }
+
+  data
+}
+
+# set_columns_to_zero_where_almost_zero ----------------------------------------
+set_columns_to_zero_where_almost_zero <- function(
+    data, columns, threshold = 0.001
+)
+{
+  set_columns_to_zero(
+    data = data,
+    columns = columns,
+    where_fun = function(x) abs(x) < threshold,
+    where_text = paste("value <", threshold)
+  )
+}
+
+
+# set_columns_to_zero_where_na -------------------------------------------------
+set_columns_to_zero_where_na <- function(data, columns)
+{
+  set_columns_to_zero(
+    data = data,
+    columns = columns,
+    where_fun = is.na,
+    where_text = "value is NA"
+  )
 }
 
 # set_names --------------------------------------------------------------------
@@ -341,3 +404,6 @@ stop_formatted <- kwb.utils::stopFormatted
 #' @importFrom kwb.utils stringList
 string_list <- kwb.utils::stringList
 
+# to_lookup_list ---------------------------------------------------------------
+#' @importFrom kwb.utils toLookupList
+to_lookup_list <- kwb.utils::toLookupList
