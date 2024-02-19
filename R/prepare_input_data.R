@@ -88,34 +88,6 @@ prepare_input_data <- function(input_data, config)
 }
 
 # INPUT_COLUMN_RENAMINGS -------------------------------------------------------
-# INPUT_COLUMN_RENAMINGS_OLD <- list(
-#   CODE = "code",
-#   REGENJA = "precipitationYear",
-#   REGENSO = "precipitationSummer",
-#   NUTZUNG = "berlin_usage",
-#   TYP = "berlin_type",
-#   BEZIRK = "district",
-#   FLGES = "mainArea",
-#   STR_FLGES = "roadArea",
-#   PROBAU = "mainPercentageBuiltSealed",
-#   PROVGU = "mainPercentageUnbuiltSealed",
-#   VGSTRASSE = "roadPercentageSealed",
-#   KAN_BEB = "builtSealedPercentageConnected",
-#   BELAG1 = "unbuiltSealedPercentageSurface1",
-#   BELAG2 = "unbuiltSealedPercentageSurface2",
-#   BELAG3 = "unbuiltSealedPercentageSurface3",
-#   BELAG4 = "unbuiltSealedPercentageSurface4",
-#   KAN_VGU = "unbuiltSealedPercentageConnected",
-#   STR_BELAG1 = "roadSealedPercentageSurface1",
-#   STR_BELAG2 = "roadSealedPercentageSurface2",
-#   STR_BELAG3 = "roadSealedPercentageSurface3",
-#   STR_BELAG4 = "roadSealedPercentageSurface4",
-#   KAN_STR = "roadSealedPercentageConnected",
-#   FLUR = "depthToWaterTable",
-#   FELD_30 = "fieldCapacity_30",
-#   FELD_150 = "fieldCapacity_150"
-# )
-
 INPUT_COLUMN_RENAMINGS <- list(
   CODE = "code",
   REGENJA = "prec_yr",
