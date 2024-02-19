@@ -192,26 +192,3 @@ calculate_fractions <- function(input)
 
   input
 }
-
-
-
-
-# calculate_main_fraction_sealed -----------------------------------------------
-calculate_main_fraction_sealed <- function(
-    roof,
-    pvd
-)
-{
-  # Calculate the percentage of built and unbuilt sealed areas. Add a small
-  # value to round .5 "up" not "down":
-  # round(98.5) -> 98
-  # round(98.5 + 1e-12) -> 99
-
-  # === Code in C++:
-  # vgd = (dbReader.getRecord(k, "PROBAU")).toFloat() / 100.0F; // Dachflaechen
-  # vgb = (dbReader.getRecord(k, "PROVGU")).toFloat() / 100.0F; // Hofflaechen
-  # ptrDA.VER = (int)round((vgd * 100) + (vgb * 100));
-
-  roof + pvd + 1e-12
-
-}
