@@ -40,7 +40,7 @@ prepare_berlin_data <- function(
   # - input data: with corrected precipitation and evaporation
   # - configuration: without correction factor or information on evaporation
   list(
-    data = prepare_input_data(data, config_convenient),
+    data = prepare_input_data(input_data = data, config = config_convenient),
     config = prepare_config(config_convenient)
   )
 }

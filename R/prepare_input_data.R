@@ -73,13 +73,15 @@ get_column_renamings <- function()
 {
   read_column_info() %>%
     dplyr::filter(nzchar(.data[["abimo_berlin"]])) %>%
-    to_lookup_list(data = .)
+    to_lookup_list(data = rev(.)) # Revert column order
 }
 
 # read_column_info -------------------------------------------------------------
 read_column_info <- function()
 {
-  read.csv(system.file("extdata/column-names.csv", package = "kwb.rabimo"))
+  "extdata/column-names.csv" %>%
+    system.file(package = "kwb.rabimo") %>%
+    utils::read.csv()
 }
 
 # calculate_fractions ----------------------------------------------------------
