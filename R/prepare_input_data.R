@@ -78,7 +78,7 @@ get_column_renamings <- function()
 {
   read_column_info() %>%
     dplyr::filter(nzchar(.data[["abimo_berlin"]])) %>%
-    to_lookup_list(data = rev(.)) # Revert column order
+    to_lookup_list(data = select_columns(., c("abimo_berlin", "rabimo_berlin")))
 }
 
 # read_column_info -------------------------------------------------------------
@@ -103,20 +103,16 @@ calculate_fractions <- function(input)
   # Transform percentage to fractions
   input[["main_fraction"]] <- fetch("area_main") / total_area
   input[["road_fraction"]] <- fetch("area_rd") / total_area
-  input[["roof"]] = by_100("roof")
-  input[["pvd"]] = by_100("pvd")
-  input[["pvd_rd"]] = by_100("pvd_rd")
-  input[["swg_roof"]] = by_100("swg_roof")
-  input[["swg_pvd"]] = by_100("swg_pvd")
-  input[["srf1_pvd"]] = by_100("srf1_pvd")
-  input[["srf2_pvd"]] = by_100("srf2_pvd")
-  input[["srf3_pvd"]] = by_100("srf3_pvd")
-  input[["srf4_pvd"]] = by_100("srf4_pvd")
-  input[["swg_pvd_rd"]] = by_100("swg_pvd_rd")
-  input[["srf1_pvd_rd"]] = by_100("srf1_pvd_rd")
-  input[["srf2_pvd_rd"]] = by_100("srf2_pvd_rd")
-  input[["srf3_pvd_rd"]] = by_100("srf3_pvd_rd")
-  input[["srf4_pvd_rd"]] = by_100("srf4_pvd_rd")
+
+  # Determine names of columns that need to be divided by 100
+  by_100_columns <- read_column_info() %>%
+    dplyr::filter(.data[["by_100"]] == "x") %>%
+    select_columns("rabimo_berlin")
+
+  for (column in by_100_columns) {
+    input[[column]] <- by_100(column)
+  }
+
 
   input
 }
