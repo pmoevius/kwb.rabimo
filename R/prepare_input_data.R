@@ -15,6 +15,8 @@
 #' @export
 prepare_input_data <- function(input_data, config)
 {
+  #kwb.utils::assignPackageObjects("kwb.rabimo")
+
   #
   # See inst/extdata/test-rabimo.R for test data assignments
   #
@@ -31,9 +33,11 @@ prepare_input_data <- function(input_data, config)
   input[["prec_yr"]] <- fetch("prec_yr") *
     fetch_config("precipitation_correction_factor")
 
-  # If area fractions are missing (NAs) set them to 0
-  area_fraction_cols <- names(input)[grepl("roof|pvd|srf",x = names(input))]
-  input <- dplyr::mutate_at(input, area_fraction_cols, ~ifelse(is.na(.), 0, .))
+  # If area fractions are missing (NA) set them to 0
+  input <- set_columns_to_zero_where_na(
+    data = input,
+    columns = grep("roof|pvd|srf", names(input), value = TRUE)
+  )
 
   # Calculate total area
   input[["total_area"]] <- fetch("area_main") + fetch("area_rd")
