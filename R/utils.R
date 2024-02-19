@@ -334,7 +334,7 @@ set_columns_to_zero <- function(data, columns, where_fun, where_text)
 
     x <- data[[column]]
 
-    stopifnot(is.double(x))
+    stopifnot(is.numeric(x))
 
     meets_condition <- where_fun(x)
 
