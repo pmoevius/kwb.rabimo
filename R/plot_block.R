@@ -14,7 +14,7 @@ plot_block <- function(block, cex = 1, delta = 0.1)
   new_rects <- kwb.rect:::new_rects
   stack <- kwb.rect:::stack
   separate <- kwb.rect:::separate
-  move <- kwb.rect:::move
+  move <- kwb.rect::move
   unlabel_and_dash <- kwb.rect:::unlabel_and_dash
 
   get_fraction <- create_fraction_accessor(block)
