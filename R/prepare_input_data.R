@@ -21,7 +21,7 @@ prepare_input_data <- function(input_data, config)
 
   # 1. Rename columns from ABIMO 3.2 names to ABIMO new* internal names
   # 2. Select only the columns that are required
-  input <- rename_and_select(input_data, INPUT_COLUMN_RENAMINGS)
+  input <- rename_columns(input_data, renamings = get_column_renamings())
 
   # Create column accessor function
   fetch <- create_accessor(input)
@@ -64,75 +64,23 @@ prepare_input_data <- function(input_data, config)
   selected <- usage_is_waterbody(input$land_type) & is.na(input$roof)
   input$roof[selected] <- 0
 
-  # Set order of columns
-  select_columns(input, INPUT_COLUMNS_NEEDED)
-
+  # Set order of columns as defined in "column-names.csv"
+  select_columns(input, get_column_selection())
 }
 
-# INPUT_COLUMN_RENAMINGS -------------------------------------------------------
-INPUT_COLUMN_RENAMINGS <- list(
-  CODE = "code",
-  REGENJA = "prec_yr",
-  REGENSO = "prec_s",
-  NUTZUNG = "berlin_usage",
-  TYP = "berlin_type",
-  BEZIRK = "district",
-  FLGES = "area_main", # m²
-  STR_FLGES = "area_rd", # m²
-  PROBAU = "roof",
-  PROVGU = "pvd",
-  VGSTRASSE = "pvd_rd",
-  KAN_BEB = "swg_roof",
-  BELAG1 = "srf1_pvd",
-  BELAG2 = "srf2_pvd",
-  BELAG3 = "srf3_pvd",
-  BELAG4 = "srf4_pvd",
-  KAN_VGU = "swg_pvd",
-  STR_BELAG1 = "srf1_pvd_rd",
-  STR_BELAG2 = "srf2_pvd_rd",
-  STR_BELAG3 = "srf3_pvd_rd",
-  STR_BELAG4 = "srf4_pvd_rd",
-  KAN_STR = "swg_pvd_rd",
-  FLUR = "gw_dist",
-  FELD_30 = "ufc30",
-  FELD_150 = "ufc150"
-)
+# get_column_renamings ---------------------------------------------------------
+get_column_renamings <- function()
+{
+  read_column_info() %>%
+    dplyr::filter(nzchar(.data[["abimo_berlin"]])) %>%
+    to_lookup_list(data = .)
+}
 
-# INPUT_COLUMNS_NEEDED ---------------------------------------------------------
-INPUT_COLUMNS_NEEDED <- c(
-  "code",
-  "prec_yr",
-  "prec_s",
-  "epot_yr",
-  "epot_s",
-  "district",
-  "total_area",
-  "area_main",
-  "area_rd",
-  "main_fraction",
-  "roof",
-  "swg_roof",
-  "pvd",
-  "swg_pvd",
-  "srf1_pvd",
-  "srf2_pvd",
-  "srf3_pvd",
-  "srf4_pvd",
-  "road_fraction",
-  "pvd_rd",
-  "swg_pvd_rd",
-  "srf1_pvd_rd",
-  "srf2_pvd_rd",
-  "srf3_pvd_rd",
-  "srf4_pvd_rd",
-  "sealed",
-  "gw_dist",
-  "ufc30",
-  "ufc150",
-  "land_type",
-  "veg_class",
-  "irrigation"
-)
+# read_column_info -------------------------------------------------------------
+read_column_info <- function()
+{
+  read.csv(system.file("extdata/column-names.csv", package = "kwb.rabimo"))
+}
 
 # calculate_fractions ----------------------------------------------------------
 calculate_fractions <- function(input)
@@ -164,4 +112,12 @@ calculate_fractions <- function(input)
   input[["srf4_pvd_rd"]] = by_100("srf4_pvd_rd")
 
   input
+}
+
+# get_column_selection ---------------------------------------------------------
+get_column_selection <- function()
+{
+  read_column_info() %>%
+    select_columns("rabimo_berlin") %>%
+    setdiff(c("berlin_usage", "berlin_type"))
 }

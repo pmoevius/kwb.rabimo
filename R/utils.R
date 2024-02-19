@@ -404,3 +404,6 @@ stop_formatted <- kwb.utils::stopFormatted
 #' @importFrom kwb.utils stringList
 string_list <- kwb.utils::stringList
 
+# to_lookup_list ---------------------------------------------------------------
+#' @importFrom kwb.utils toLookupList
+to_lookup_list <- kwb.utils::toLookupList
