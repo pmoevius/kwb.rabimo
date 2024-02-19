@@ -36,15 +36,13 @@ prepare_berlin_data <- function(
   # Convert configuration object into a more convenient structure
   config_convenient <- abimo_config_to_config(config)
 
-  # Prepare input data, i.e. provide corrected precipitation and evaporation
-  data_new <- prepare_input_data(data, config_convenient)
-
-  # Prepare new configuration object (e.g. remove correction factor and
-  # information on evaparoation)
-  config_new <- prepare_config(config_convenient) # to be written...
-
-  # Return a list with input data and config object ready for use by RABIMO
-  list(data = data_new, config = config_new)
+  # Return a list with input data and configuration as required by Rabimo, e.g.
+  # - input data: with corrected precipitation and evaporation
+  # - configuration: without correction factor or information on evaporation
+  list(
+    data = prepare_input_data(data, config_convenient),
+    config = prepare_config(config_convenient)
+  )
 }
 
 # prepare_config ---------------------------------------------------------------
