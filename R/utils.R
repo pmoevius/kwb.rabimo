@@ -10,9 +10,38 @@ cat_and_run <- kwb.utils::catAndRun
 #' @importFrom kwb.utils catIf
 cat_if <- kwb.utils::catIf
 
+# check_columns ----------------------------------------------------------------
+check_columns <- function(
+    data, columns, check, msg = "Column '%s' is invalid (%d-times)."
+)
+{
+  #column <- columns[1L]
+  for (column in columns) {
+    check_column(data, column, check, msg)
+  }
+}
+
+# check_column -----------------------------------------------------------------
+check_column <- function(data, column, check, msg)
+{
+  stopifnot(is.function(check))
+
+  failed <- !check(select_columns(data, column))
+
+  if (any(failed)) {
+    stop_formatted(msg, column, sum(failed))
+  }
+}
+
 # check_for_missing_columns ----------------------------------------------------
 #' @importFrom kwb.utils checkForMissingColumns
 check_for_missing_columns <- kwb.utils::checkForMissingColumns
+
+# clean_stop -------------------------------------------------------------------
+clean_stop <- function(...)
+{
+  stop(..., call. = FALSE)
+}
 
 # create_accessor --------------------------------------------------------------
 #' @importFrom kwb.utils createAccessor
