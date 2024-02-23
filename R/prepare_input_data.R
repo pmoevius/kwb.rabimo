@@ -12,7 +12,6 @@
 #'   \code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}
 #' @return \code{input_data} with columns renamed and additional columns
 #'  (e.g. ratios calculated from percentages, (main) usage, yield, irrigation)
-#' @export
 prepare_input_data <- function(input_data, config)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
