@@ -267,6 +267,10 @@ n_dims <- function(x)
   length(dim(x))
 }
 
+# paste_columns ----------------------------------------------------------------
+#' @importFrom kwb.utils pasteColumns
+paste_columns <- kwb.utils::pasteColumns
+
 # prefix_names -----------------------------------------------------------------
 prefix_names <- function(x, prefix)
 {
@@ -431,6 +435,10 @@ stop_formatted <- kwb.utils::stopFormatted
 # string_list ------------------------------------------------------------------
 #' @importFrom kwb.utils stringList
 string_list <- kwb.utils::stringList
+
+# subst_special_chars ----------------------------------------------------------
+#' @importFrom kwb.utils substSpecialChars
+subst_special_chars <- kwb.utils::substSpecialChars
 
 # to_lookup_list ---------------------------------------------------------------
 #' @importFrom kwb.utils toLookupList

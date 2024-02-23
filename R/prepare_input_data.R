@@ -15,6 +15,8 @@
 prepare_input_data <- function(input_data, config)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
+  #input_data <- kwb.abimo::abimo_input_2019
+  #config <- abimo_config_to_config(kwb.abimo::read_config())
 
   #
   # See inst/extdata/test-rabimo.R for test data assignments
@@ -47,9 +49,11 @@ prepare_input_data <- function(input_data, config)
   input[["sealed"]] <- with(input, roof + pvd + 1e-14) # do we still need this?
 
   # Get (usage, yield, irrigation) tuples based on Berlin-specific codes
+  usage_types <- fetch(c("berlin_usage", "berlin_type"))
+
   usages <- get_usage_tuple(
-    usage = fetch("berlin_usage"),
-    type = fetch("berlin_type")
+    usage = usage_types[[1L]],
+    type = usage_types[[2L]]
   )
 
   # Calculate potential evaporation for all areas
@@ -61,6 +65,19 @@ prepare_input_data <- function(input_data, config)
 
   # Column-bind everything together
   input <- cbind(input, usages, pot_evaporation)
+
+  # Add a text column describing the type of block (usage)
+  input[["block_type"]] <- usage_types %>%
+    dplyr::left_join(
+      y = read_abimo_berlin_metadata("nutzungstypen_berlin.csv"),
+      by = c(berlin_usage = "Typ_Nutzung")
+    ) %>%
+    dplyr::left_join(
+      y = read_abimo_berlin_metadata("strukturtypen_berlin.csv"),
+      by = c(berlin_type = "Typ")
+    ) %>%
+    paste_columns(sep = ": ") %>%
+    subst_special_chars()
 
   # Set roof area that are NAs to 0 for water bodies
   input$roof[usage_is_waterbody(input$land_type) & is.na(input$roof)] <- 0
@@ -117,5 +134,17 @@ get_column_selection <- function()
 {
   read_column_info() %>%
     select_columns("rabimo_berlin") %>%
-    setdiff(c("berlin_usage", "berlin_type"))
+    setdiff(c("berlin_usage", "berlin_type")) %>%
+    c("block_type")
+}
+
+# read_abimo_berlin_metadata ---------------------------------------------------
+read_abimo_berlin_metadata <- function(name)
+{
+  utils::read.table(
+    file = kwb.abimo:::extdata_file(name),
+    sep = ";",
+    header = TRUE,
+    fileEncoding = "WINDOWS-1252"
+  )
 }
