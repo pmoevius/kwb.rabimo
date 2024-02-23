@@ -5,6 +5,32 @@
 # - Manually go through the MAIN sections within "if (FALSE) {...}"
 #
 
+# MAIN: Convert Berlin data to new structure -----------------------------------
+if (FALSE)
+{
+  new_data <- kwb.rabimo::prepare_berlin_data(
+    data = kwb.abimo::abimo_input_2019,
+    config = kwb.abimo::read_config()
+  )
+
+  data <- new_data$data
+  config <- new_data$config
+
+  # Run R-Abimo with the new data structures
+  result <- kwb.rabimo::run_rabimo(input = data, config = config)
+
+  # Fehler: Not all values in column 'sealed' are between 0 and 1 as expected
+  # (36 failures).
+
+  range(data$sealed)
+
+  data$sealed[data$sealed > 1] <- 1
+
+  # Try to run R-Abimo again
+  result <- kwb.rabimo::run_rabimo(input = data, config = config)
+
+}
+
 # MAIN: Provide function arguments for run_rabimo(), prepare_input_data() ------
 if (FALSE)
 {
