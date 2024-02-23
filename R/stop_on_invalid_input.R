@@ -65,9 +65,11 @@ stop_on_invalid_input <- function(input)
     )
   )
 
-  surface_columns <- c("srf1_pvd", "srf2_pvd", "srf3_pvd", "srf4_pvd")
-  check_sum_up_to_1(input, columns = surface_columns)
-  check_sum_up_to_1(input, columns = paste0(surface_columns, "_rd"))
+  surface_columns <- sprintf("srf%d_pvd", 1:4)
+  surface_columns_rd <- paste0(surface_columns, "_rd")
+
+  check_sum_up_to_1_or_0(input, columns = surface_columns)
+  check_sum_up_to_1_or_0(input, columns = surface_columns_rd)
 }
 
 # get_expected_data_type -------------------------------------------------------
@@ -94,21 +96,27 @@ check_data_types <- function(input, types)
   }
 }
 
-# check_sum_up_to_1 ------------------------------------------------------------
-check_sum_up_to_1 <- function(input, columns, tolerance = 1e-4)
+# check_sum_up_to_1_or_0 -------------------------------------------------------
+check_sum_up_to_1_or_0 <- function(input, columns, tolerance = 0.005)
 {
   x <- select_columns(input, columns)
 
-  sums <- rowSums(x)
+  row_sums <- rowSums(x)
 
-  invalid <- abs(sums - 1) > tolerance
+  differs <- function(a, b) abs(a - b) > tolerance
 
-  if (any(invalid)) {
+  is_invalid <- differs(row_sums, 0) & differs(row_sums, 1)
+
+  if (any(is_invalid)) {
     cat("(First) invalid rows:\n")
-    print(utils::head(select_columns(input, c("code", columns))[invalid, ]))
+    print(utils::head(select_columns(input, c("code", columns))[is_invalid, ]))
     stop_formatted(
-      "The sum of columns %s is not 1 in each row as expected (%s).",
-      kwb.utils::stringList(columns), "see above"
+      paste(
+        "The sum of columns %s is not 1 or 0 in each row as expected",
+        "(see above). The tolerance was: %f"
+      ),
+      kwb.utils::stringList(columns),
+      tolerance
     )
   }
 }
