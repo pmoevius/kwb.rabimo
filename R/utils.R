@@ -55,9 +55,8 @@ default_if_null <- kwb.utils::defaultIfNULL
 expand_to_matrix <- function(x, nrow = NULL, ncol = NULL)
 {
   if (is.null(nrow) && is.null(ncol) || !is.null(nrow) && !is.null(ncol)) {
-    stop(
-      "Either nrow or ncol must be given but not both at the same time.",
-      call. = FALSE
+    clean_stop(
+      "Either nrow or ncol must be given but not both at the same time."
     )
   }
 
