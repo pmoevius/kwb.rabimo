@@ -105,24 +105,24 @@ check_data_types <- function(data, types)
 # check_sum_up_to_1_or_0 -------------------------------------------------------
 check_sum_up_to_1_or_0 <- function(data, columns, tolerance = 0.005)
 {
-  x <- select_columns(data, columns)
+  # Helper function to check for equality allowing a tolerance
+  equals <- function(a, b) abs(a - b) <= tolerance
 
-  row_sums <- rowSums(x)
+  sums <- rowSums(select_columns(data, columns))
+  ok <- equals(sums, 0) | equals(sums, 1)
 
-  differs <- function(a, b) abs(a - b) > tolerance
-
-  is_invalid <- differs(row_sums, 0) & differs(row_sums, 1)
-
-  if (any(is_invalid)) {
-    cat("(First) invalid rows:\n")
-    print(utils::head(select_columns(data, c("code", columns))[is_invalid, ]))
-    stop_formatted(
-      paste(
-        "The sum of columns %s is not 1 or 0 in each row as expected",
-        "(see above). The tolerance was: %f"
-      ),
-      string_list(columns),
-      tolerance
-    )
+  if (all(ok)) {
+    return()
   }
+
+  cat("(First) invalid rows:\n")
+
+  select_columns(data, c("code", columns))[!ok, ] %>%
+    utils::head() %>%
+    print()
+
+  stop_formatted(string_list(columns), tolerance, x = paste(
+    "The sum of columns %s is not 1 or 0 in each row as expected",
+    "(see above). The tolerance was: %f"
+  ))
 }
