@@ -1,6 +1,9 @@
 # stop_on_invalid_input --------------------------------------------------------
 stop_on_invalid_input <- function(input)
 {
+  #kwb.utils::assignPackageObjects("kwb.rabimo")
+  #input <- prepare_input_data(kwb.abimo::abimo_input_2019, abimo_config_to_config(kwb.abimo::read_config()))
+
   if (!"code" %in% names(input)) {
     clean_stop(
       "input data has not the expected format. ",
@@ -9,14 +12,20 @@ stop_on_invalid_input <- function(input)
     )
   }
 
-  # Stop if any required column is missing
+  # Read information on column names and types
   column_info <- read_column_info()
-  required <- column_info$rabimo_berlin[column_info$type == "required"]
-  available <- names(input)
-  missing <- setdiff(required, available)
+
+  # Helper function to get column names by criteria
+  columns_with <- function(...) {
+    all_columns <- select_columns(column_info, "rabimo_berlin")
+    all_columns[with(column_info, ...)]
+  }
+
+  # Stop if any required column is missing
+  missing <- setdiff(columns_with(type == "required"), names(input))
 
   if (length(missing)) {
-    column_info[column_info$rabimo_berlin %in% missing, ] %>%
+    columns_with(rabimo_berlin %in% missing) %>%
       rename_and_select(list(rabimo_berlin = "column", "meaning", "unit")) %>%
       reset_row_names() %>%
       print_if(condition = TRUE, caption = "Missing columns")
@@ -27,15 +36,15 @@ stop_on_invalid_input <- function(input)
   }
 
   # Stop if a column does not have the expected data type
-  check_data_types(input, types = get_expected_data_type(names(input)))
+  check_data_types(
+    data = input,
+    types = get_expected_data_type(names(input))
+  )
 
   # Do not accept any NA
   check_columns(
     data = input,
-    columns = intersect(
-      column_info$rabimo_berlin[column_info$data_type == "numeric"],
-      names(input)
-    ),
+    columns = intersect(columns_with(data_type == "numeric"), names(input)),
     check = function(x) !is.na(x),
     msg = paste(
       "Column '%s' must not contain missing values (NA, found %d times).",
@@ -57,7 +66,7 @@ stop_on_invalid_input <- function(input)
   # Check fractions
   check_columns(
     data = input,
-    columns = column_info$rabimo_berlin[column_info$unit == "0..1"],
+    columns = columns_with(unit == "0..1"),
     check = function(x) in_range(x, 0, 1),
     msg = paste(
       "Not all values in column '%s' are between 0 and 1 as expected",
@@ -65,11 +74,8 @@ stop_on_invalid_input <- function(input)
     )
   )
 
-  surface_columns <- sprintf("srf%d_pvd", 1:4)
-  surface_columns_rd <- paste0(surface_columns, "_rd")
-
-  check_sum_up_to_1_or_0(input, columns = surface_columns)
-  check_sum_up_to_1_or_0(input, columns = surface_columns_rd)
+  check_sum_up_to_1_or_0(input, (columns <- sprintf("srf%d_pvd", 1:4)))
+  check_sum_up_to_1_or_0(input, paste0(columns, "_rd"))
 }
 
 # get_expected_data_type -------------------------------------------------------
