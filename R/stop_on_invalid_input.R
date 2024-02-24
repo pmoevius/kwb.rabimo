@@ -58,7 +58,7 @@ stop_on_invalid_input <- function(input)
   check_columns(
     data = input,
     columns = column_info$rabimo_berlin[column_info$unit == "0..1"],
-    check = function(x) kwb.utils::inRange(x, 0, 1),
+    check = function(x) in_range(x, 0, 1),
     msg = paste(
       "Not all values in column '%s' are between 0 and 1 as expected",
       "(%d failures)."
@@ -115,7 +115,7 @@ check_sum_up_to_1_or_0 <- function(data, columns, tolerance = 0.005)
         "The sum of columns %s is not 1 or 0 in each row as expected",
         "(see above). The tolerance was: %f"
       ),
-      kwb.utils::stringList(columns),
+      string_list(columns),
       tolerance
     )
   }
