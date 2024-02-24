@@ -83,10 +83,10 @@ get_expected_data_type <- function(x)
 }
 
 # check_data_types -------------------------------------------------------------
-check_data_types <- function(input, types)
+check_data_types <- function(data, types)
 {
   for (column in names(types)) {
-    data_type <- mode(select_columns(input, column))
+    data_type <- mode(select_columns(data, column))
     if (data_type != types[column]) {
       stop_formatted(
         "Column '%s' (%s) does not have the expected data type (%s).",
@@ -97,9 +97,9 @@ check_data_types <- function(input, types)
 }
 
 # check_sum_up_to_1_or_0 -------------------------------------------------------
-check_sum_up_to_1_or_0 <- function(input, columns, tolerance = 0.005)
+check_sum_up_to_1_or_0 <- function(data, columns, tolerance = 0.005)
 {
-  x <- select_columns(input, columns)
+  x <- select_columns(data, columns)
 
   row_sums <- rowSums(x)
 
@@ -109,7 +109,7 @@ check_sum_up_to_1_or_0 <- function(input, columns, tolerance = 0.005)
 
   if (any(is_invalid)) {
     cat("(First) invalid rows:\n")
-    print(utils::head(select_columns(input, c("code", columns))[is_invalid, ]))
+    print(utils::head(select_columns(data, c("code", columns))[is_invalid, ]))
     stop_formatted(
       paste(
         "The sum of columns %s is not 1 or 0 in each row as expected",
