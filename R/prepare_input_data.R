@@ -67,17 +67,7 @@ prepare_input_data <- function(input_data, config)
   input <- cbind(input, usages, pot_evaporation)
 
   # Add a text column describing the type of block (usage)
-  input[["block_type"]] <- usage_types %>%
-    dplyr::left_join(
-      y = read_abimo_berlin_metadata("nutzungstypen_berlin.csv"),
-      by = c(berlin_usage = "Typ_Nutzung")
-    ) %>%
-    dplyr::left_join(
-      y = read_abimo_berlin_metadata("strukturtypen_berlin.csv"),
-      by = c(berlin_type = "Typ")
-    ) %>%
-    paste_columns(sep = ": ") %>%
-    subst_special_chars()
+  input[["block_type"]] <- get_block_type(usage_types)
 
   # Set roof area that are NAs to 0 for water bodies
   input$roof[usage_is_waterbody(input$land_type) & is.na(input$roof)] <- 0
@@ -108,9 +98,6 @@ calculate_fractions <- function(input)
   # Column accessor
   fetch <- create_accessor(input)
 
-  # Helper function to select column and divide by 100
-  by_100 <- function(x) fetch(x) / 100
-
   total_area <- fetch("total_area")
 
   # Transform percentage to fractions
@@ -118,15 +105,44 @@ calculate_fractions <- function(input)
   input[["road_fraction"]] <- fetch("area_rd") / total_area
 
   # Determine names of columns that need to be divided by 100
-  by_100_columns <- read_column_info() %>%
+  columns <- read_column_info() %>%
     dplyr::filter(.data[["by_100"]] == "x") %>%
     select_columns("rabimo_berlin")
 
-  for (column in by_100_columns) {
-    input[[column]] <- by_100(column)
+  for (column in columns) {
+    input[[column]] <- fetch(column) / 100
   }
 
   input
+}
+
+# get_block_type ---------------------------------------------------------------
+get_block_type <- function(usage_types)
+{
+  merge_metadata <- function(data, name, by) {
+    dplyr::left_join(
+      x = data,
+      y = utils::read.table(
+        file = kwb.abimo:::extdata_file(name),
+        sep = ";",
+        header = TRUE,
+        fileEncoding = "WINDOWS-1252"
+      ),
+      by = by
+    )
+  }
+
+  usage_types %>%
+    merge_metadata(
+      name = "nutzungstypen_berlin.csv",
+      by = c(berlin_usage = "Typ_Nutzung")
+    ) %>%
+    merge_metadata(
+      name = "strukturtypen_berlin.csv",
+      by = c(berlin_type = "Typ")
+    ) %>%
+    paste_columns(sep = ": ") %>%
+    subst_special_chars()
 }
 
 # get_column_selection ---------------------------------------------------------
@@ -136,15 +152,4 @@ get_column_selection <- function()
     select_columns("rabimo_berlin") %>%
     setdiff(c("berlin_usage", "berlin_type")) %>%
     c("block_type")
-}
-
-# read_abimo_berlin_metadata ---------------------------------------------------
-read_abimo_berlin_metadata <- function(name)
-{
-  utils::read.table(
-    file = kwb.abimo:::extdata_file(name),
-    sep = ";",
-    header = TRUE,
-    fileEncoding = "WINDOWS-1252"
-  )
 }
