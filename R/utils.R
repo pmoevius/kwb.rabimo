@@ -10,9 +10,38 @@ cat_and_run <- kwb.utils::catAndRun
 #' @importFrom kwb.utils catIf
 cat_if <- kwb.utils::catIf
 
+# check_columns ----------------------------------------------------------------
+check_columns <- function(
+    data, columns, check, msg = "Column '%s' is invalid (%d-times)."
+)
+{
+  #column <- columns[1L]
+  for (column in columns) {
+    check_column(data, column, check, msg)
+  }
+}
+
+# check_column -----------------------------------------------------------------
+check_column <- function(data, column, check, msg)
+{
+  stopifnot(is.function(check))
+
+  failed <- !check(select_columns(data, column))
+
+  if (any(failed)) {
+    stop_formatted(msg, column, sum(failed))
+  }
+}
+
 # check_for_missing_columns ----------------------------------------------------
 #' @importFrom kwb.utils checkForMissingColumns
 check_for_missing_columns <- kwb.utils::checkForMissingColumns
+
+# clean_stop -------------------------------------------------------------------
+clean_stop <- function(...)
+{
+  stop(..., call. = FALSE)
+}
 
 # create_accessor --------------------------------------------------------------
 #' @importFrom kwb.utils createAccessor
@@ -26,9 +55,8 @@ default_if_null <- kwb.utils::defaultIfNULL
 expand_to_matrix <- function(x, nrow = NULL, ncol = NULL)
 {
   if (is.null(nrow) && is.null(ncol) || !is.null(nrow) && !is.null(ncol)) {
-    stop(
-      "Either nrow or ncol must be given but not both at the same time.",
-      call. = FALSE
+    clean_stop(
+      "Either nrow or ncol must be given but not both at the same time."
     )
   }
 
@@ -239,6 +267,10 @@ n_dims <- function(x)
   length(dim(x))
 }
 
+# paste_columns ----------------------------------------------------------------
+#' @importFrom kwb.utils pasteColumns
+paste_columns <- kwb.utils::pasteColumns
+
 # prefix_names -----------------------------------------------------------------
 prefix_names <- function(x, prefix)
 {
@@ -326,7 +358,7 @@ seq_along_rows <- function(data)
 }
 
 # set_columns_to_zero ----------------------------------------------------------
-set_columns_to_zero <- function(data, columns, where_fun, where_text)
+set_columns_to_zero <- function(data, columns, check, text)
 {
   stopifnot(is.data.frame(data))
 
@@ -336,7 +368,7 @@ set_columns_to_zero <- function(data, columns, where_fun, where_text)
 
     stopifnot(is.numeric(x))
 
-    meets_condition <- where_fun(x)
+    meets_condition <- check(x)
 
     if (!any(meets_condition)) {
       next
@@ -347,7 +379,7 @@ set_columns_to_zero <- function(data, columns, where_fun, where_text)
         "Setting %d value(s) in \"%s\" to 0 where %s",
         sum(meets_condition),
         column,
-        where_text
+        text
       ),
       expr = {
         x[meets_condition] <- 0
@@ -367,8 +399,8 @@ set_columns_to_zero_where_almost_zero <- function(
   set_columns_to_zero(
     data = data,
     columns = columns,
-    where_fun = function(x) abs(x) < threshold,
-    where_text = paste("value <", threshold)
+    check = function(x) abs(x) < threshold,
+    text = paste("value <", threshold)
   )
 }
 
@@ -379,8 +411,8 @@ set_columns_to_zero_where_na <- function(data, columns)
   set_columns_to_zero(
     data = data,
     columns = columns,
-    where_fun = is.na,
-    where_text = "value is NA"
+    check = is.na,
+    text = "value is NA"
   )
 }
 
@@ -403,6 +435,10 @@ stop_formatted <- kwb.utils::stopFormatted
 # string_list ------------------------------------------------------------------
 #' @importFrom kwb.utils stringList
 string_list <- kwb.utils::stringList
+
+# subst_special_chars ----------------------------------------------------------
+#' @importFrom kwb.utils substSpecialChars
+subst_special_chars <- kwb.utils::substSpecialChars
 
 # to_lookup_list ---------------------------------------------------------------
 #' @importFrom kwb.utils toLookupList

@@ -24,8 +24,11 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   # Go to inst/extdata/test-rabimo.R to provide input and config for debugging
   #
 
-  # Check whether the input data have the expected structure
+  # Check whether input has the expected structure
   stop_on_invalid_input(input)
+
+  # Check whether config has the expected structure
+  stop_on_invalid_config(config)
 
   # Create accessor functions to input columns and config elements
   fetch_input <- create_accessor(input)
@@ -267,16 +270,3 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
     )
   )
 }
-
-# stop_on_invalid_input --------------------------------------------------------
-stop_on_invalid_input <- function(input)
-{
-  if (!"code" %in% names(input)) {
-    stop(
-      "input data has not the expected format. ",
-      "I was looking for column 'code'",
-      "You might want to use the function prepare_input_data().", call. = FALSE
-    )
-  }
-}
-

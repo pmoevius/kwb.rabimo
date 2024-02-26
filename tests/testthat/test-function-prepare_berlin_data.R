@@ -21,7 +21,7 @@ test_that("prepare_berlin_data() works", {
     "swg_pvd", "srf1_pvd", "srf2_pvd", "srf3_pvd", "srf4_pvd", "road_fraction",
     "pvd_rd", "swg_pvd_rd", "srf1_pvd_rd", "srf2_pvd_rd", "srf3_pvd_rd",
     "srf4_pvd_rd", "sealed", "gw_dist", "ufc30", "ufc150", "land_type",
-    "veg_class", "irrigation"
+    "veg_class", "irrigation", "block_type"
   ))
 
   expect_identical(names(result$config), c(
