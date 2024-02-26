@@ -123,7 +123,7 @@ get_block_type <- function(usage_types)
     dplyr::left_join(
       x = data,
       y = utils::read.table(
-        file = kwb.abimo:::extdata_file(name),
+        file = kwb.abimo::extdata_file(paste0(name, ".csv")),
         sep = ";",
         header = TRUE,
         fileEncoding = "WINDOWS-1252"
@@ -133,14 +133,8 @@ get_block_type <- function(usage_types)
   }
 
   usage_types %>%
-    merge_metadata(
-      name = "nutzungstypen_berlin.csv",
-      by = c(berlin_usage = "Typ_Nutzung")
-    ) %>%
-    merge_metadata(
-      name = "strukturtypen_berlin.csv",
-      by = c(berlin_type = "Typ")
-    ) %>%
+    merge_metadata("nutzungstypen_berlin", c(berlin_usage = "Typ_Nutzung")) %>%
+    merge_metadata("strukturtypen_berlin", c(berlin_type = "Typ")) %>%
     paste_columns(sep = ": ") %>%
     subst_special_chars()
 }
