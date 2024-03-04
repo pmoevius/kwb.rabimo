@@ -158,7 +158,10 @@ index_string_to_integers <- function(x, splits = c(",", "-"))
 
 # in_range ---------------------------------------------------------------------
 #' @importFrom kwb.utils inRange
-in_range <- kwb.utils::inRange
+in_range <- function(x, a, b, tolerance = 0.005)
+{
+  x + tolerance >= a & x - tolerance <= b
+}
 
 # interpolate ------------------------------------------------------------------
 interpolate <- function(x, y, xout)
