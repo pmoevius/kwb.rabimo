@@ -46,7 +46,7 @@ prepare_input_data <- function(input_data, config)
   # Convert percentages to fractions
   input <- calculate_fractions(input)
 
-  input[["sealed"]] <- with(input, roof + pvd + 1e-14) # do we still need this?
+  input[["sealed"]] <- with(input, roof + pvd)
 
   # Get (usage, yield, irrigation) tuples based on Berlin-specific codes
   usage_types <- fetch(c("berlin_usage", "berlin_type"))
