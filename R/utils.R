@@ -330,6 +330,14 @@ rename_and_select <- kwb.utils::renameAndSelect
 #' @importFrom kwb.utils renameColumns
 rename_columns <- kwb.utils::renameColumns
 
+# rescale_to_row_sum -----------------------------------------------------------
+rescale_to_row_sum <- function(x, row_sum = 1)
+{
+  kwb.utils::stopIfNotMatrix(x)
+
+  x / rowSums(x) * row_sum
+}
+
 # reset_row_names --------------------------------------------------------------
 #' @importFrom kwb.utils resetRowNames
 reset_row_names <- kwb.utils::resetRowNames
