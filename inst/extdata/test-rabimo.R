@@ -5,30 +5,64 @@
 # - Manually go through the MAIN sections within "if (FALSE) {...}"
 #
 
-# MAIN: Convert Berlin data to new structure -----------------------------------
+# MAIN: Convert Berlin data (2019) to new structure ----------------------------
 if (FALSE)
 {
-  new_data <- kwb.rabimo::prepare_berlin_data(
+  old_inputs <- list(
     data = kwb.abimo::abimo_input_2019,
     config = kwb.abimo::read_config()
   )
 
-  data <- new_data$data
-  config <- new_data$config
+  new_inputs <- kwb.rabimo::prepare_berlin_data(
+    data = old_inputs$data,
+    config = old_inputs$config
+  )
 
   # Run R-Abimo with the new data structures
-  result <- kwb.rabimo::run_rabimo(input = data, config = config)
+  result <- kwb.rabimo::run_rabimo(
+    input = new_inputs$data,
+    config = new_inputs$config
+  )
+}
 
-  # Fehler: Not all values in column 'sealed' are between 0 and 1 as expected
-  # (36 failures).
+# MAIN: Convert Berlin data (2020) to new structure ----------------------------
+if (FALSE)
+{
+  # Read dbf file. Do not convert character to factor (as.is = TRUE)
+  old_inputs <- list(
+    data = foreign::read.dbf(get_path("berlin_2020"), as.is = TRUE),
+    config = kwb.abimo::read_config()
+  )
 
-  range(data$sealed)
+  # Handle errors that would occur below when running run_rabimo()
 
-  data$sealed[data$sealed > 1] <- 1
+  # Fehler: Column 'district' must not contain missing values (NA, found 1181
+  # times).
+  data <- old_inputs$data
+  data$BEZIRK <- kwb.utils::defaultIfNA(data$BEZIRK, -99L)
 
-  # Try to run R-Abimo again
-  result <- kwb.rabimo::run_rabimo(input = data, config = config)
+  # Fehler: Column 'gw_dist' must not contain missing values (NA, found 4
+  # times). Please give a value (may be 0) in each row.
+  data <- data[kwb.utils::matchesCriteria(data, "!is.na(FLUR)"), ]
 
+  # Fehler: The sum of columns 'srf1_pvd', 'srf2_pvd', 'srf3_pvd', 'srf4_pvd' is
+  # not 1 or 0 in each row as expected (see above). The tolerance was: 0.005000
+  columns <- c("BELAG1", "BELAG2", "BELAG3", "BELAG4")
+  data[, columns] <- kwb.rabimo:::rescale_to_row_sum(
+    as.matrix(kwb.utils::selectColumns(data, columns)),
+    row_sum = 100
+  )
+
+  new_inputs <- kwb.rabimo::prepare_berlin_data(
+    data = data,
+    config = old_inputs$config
+  )
+
+  # Run R-Abimo with the new data structures
+  result <- kwb.rabimo::run_rabimo(
+    input = new_inputs$data,
+    config = new_inputs$config
+  )
 }
 
 # MAIN: Provide function arguments for run_rabimo(), prepare_input_data() ------
@@ -40,10 +74,8 @@ if (FALSE)
     # Clean column "STR_FLGES"
     kwb.rabimo:::set_columns_to_zero_where_almost_zero(columns = "STR_FLGES")
 
-  # PROBLEM: HANDLE NAs!!
+  # Check for NA
   table_with_na(berlin_2020_data$STR_FLGES)
-
-  #berlin_2019_data <- kwb.abimo::abimo_input_2019
 
   # Provide Abimo default configuration
   config <- kwb.rabimo::abimo_config_to_config(kwb.abimo::read_config())
