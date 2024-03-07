@@ -34,16 +34,16 @@ actual_evaporation_waterbody_or_pervious <- function(
     dbg = TRUE
   }
 
-  ep_year <- select_elements(climate, "epot_yr")
+  epot_year <- select_elements(climate, "epot_yr")
 
   # Initialise result vector
-  y <- numeric(length = length(ep_year))
+  y <- numeric(length = length(epot_year))
 
   # For water bodies, use the potential evaporation
   usages <- select_elements(usage_tuple, "land_type")
   is_waterbody <- land_type_is_waterbody(usages)
 
-  y[is_waterbody] <- ep_year[is_waterbody]
+  y[is_waterbody] <- epot_year[is_waterbody]
 
   # if all block areas are waterbodies, return
   if (all(is_waterbody)) {
@@ -54,7 +54,7 @@ actual_evaporation_waterbody_or_pervious <- function(
   i <- which(!is_waterbody)
 
   # otherwise calculate the real evapotranspiration
-  stopifnot(all(ep_year[i] > 0)) # ???
+  stopifnot(all(epot_year[i] > 0)) # ???
 
   # determine the BAGROV parameter(s) for unsealed surfaces
   bagrov_values <- get_bagrov_parameter_unsealed(
@@ -87,8 +87,8 @@ actual_evaporation_waterbody_or_pervious <- function(
     select_elements(usage_tuple, "irrigation")[i]
 
   y[i] <- real_evapo_transpiration(
-    potential_evaporation = ep_year[i],
-    x_ratio = available_water / ep_year[i],
+    potential_evaporation = epot_year[i],
+    x_ratio = available_water / epot_year[i],
     bagrov_parameter = bagrov_values
     #, use_abimo_algorithm = TRUE
     , ...
@@ -100,7 +100,7 @@ actual_evaporation_waterbody_or_pervious <- function(
   # indices of entries related to non-water usage and capillary rises < 0
   j <- which(!is_waterbody & rises < 0)
 
-  y[j] <- y[j] + (ep_year[j] - y[j]) * exp(depths[j] / rises[j])
+  y[j] <- y[j] + (epot_year[j] - y[j]) * exp(depths[j] / rises[j])
 
   nas <- rep(NA_real_, length(y))
 
