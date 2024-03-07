@@ -118,7 +118,7 @@ get_rooting_depth <- function(land_type, veg_class)
 
   y <- rep(NA_real_, n)
 
-  is_agri <- land_type_is_agricultural(land_type)
+  is_agri <- land_type_is_urban(land_type)
   y[is_agri] <- ifelse(veg_class[is_agri] <= 50, 0.6, 0.7)
   y[land_type_is_vegetationless(land_type)] <- 0.2
   y[land_type_is_horticultural(land_type)] <- 0.7
@@ -136,7 +136,7 @@ getRootingDepth_1 <- function(land_type, veg_class)
   stopifnot(length(land_type) == 1L)
   stopifnot(length(veg_class) == 1L)
 
-  if (land_type_is_agricultural(land_type)) {
+  if (land_type_is_urban(land_type)) {
     return(ifelse(veg_class <= 50, 0.6, 0.7))
   }
 
@@ -231,7 +231,7 @@ estimate_days_of_growth <- function(land_type, veg_class, default = 50L)
   y <- rep(NA_integer_, n)
 
   # Special case for agricultural use
-  is_agri <- land_type_is_agricultural(land_type)
+  is_agri <- land_type_is_urban(land_type)
   y[is_agri] <- ifelse(veg_class[is_agri] <= 50, 60L, 75L)
 
   # Constant estimates for other uses
@@ -252,7 +252,7 @@ estimate_days_of_growth_1 <- function(land_type, veg_class, default = 50)
   stopifnot(length(veg_class) == 1L)
 
   # Special case for agricultural use
-  if (land_type_is_agricultural(land_type)) {
+  if (land_type_is_urban(land_type)) {
     return(ifelse(veg_class <= 50, 60, 75))
   }
 
