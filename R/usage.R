@@ -1,5 +1,0 @@
-land_type_is_agricultural <- function(x) x == "agricultural_L"
-land_type_is_forest <- function(x) x == "forested_W"
-land_type_is_horticultural <- function(x) x == "horticultural_K"
-land_type_is_vegetationless <- function(x) x == "vegetationless_D"
-land_type_is_waterbody <- function(x) x == "waterbody_G"
