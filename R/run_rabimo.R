@@ -5,7 +5,7 @@
 #' @param data data frame with columns as returned by
 #'   \code{\link{prepare_input_data}}
 #' @param config configuration object (list) as returned by
-#'   \code{abimo_config_to_config()}, used on \code{kwb.abimo::read_config()}
+#'   \code{\link{abimo_config_to_config}}
 #' @param simulate_abimo logical indicating whether or not to simulate exactly
 #'   what Abimo does (including obvious errors!).
 #'   Default: \code{TRUE}!
