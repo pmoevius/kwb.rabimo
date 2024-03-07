@@ -118,8 +118,8 @@ get_rooting_depth <- function(land_type, veg_class)
 
   y <- rep(NA_real_, n)
 
-  is_agri <- land_type_is_urban(land_type)
-  y[is_agri] <- ifelse(veg_class[is_agri] <= 50, 0.6, 0.7)
+  is_urban <- land_type_is_urban(land_type)
+  y[is_urban] <- ifelse(veg_class[is_urban] <= 50, 0.6, 0.7)
   y[land_type_is_vegetationless(land_type)] <- 0.2
   y[land_type_is_horticultural(land_type)] <- 0.7
   y[land_type_is_forest(land_type)] <- 1.0
@@ -231,8 +231,8 @@ estimate_days_of_growth <- function(land_type, veg_class, default = 50L)
   y <- rep(NA_integer_, n)
 
   # Special case for agricultural use
-  is_agri <- land_type_is_urban(land_type)
-  y[is_agri] <- ifelse(veg_class[is_agri] <= 50, 60L, 75L)
+  is_urban <- land_type_is_urban(land_type)
+  y[is_urban] <- ifelse(veg_class[is_urban] <= 50, 60L, 75L)
 
   # Constant estimates for other uses
   y[land_type_is_vegetationless(land_type)] <- 50L
