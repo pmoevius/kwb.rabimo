@@ -7,14 +7,14 @@
 run_rabimo(data, config, simulate_abimo = TRUE)
 }
 \arguments{
-\item{data}{data frame with columns as required by Abimo or
-data frame with columns as returned by \code{\link{prepare_input_data}}}
+\item{data}{data frame with columns as returned by
+\code{\link{prepare_input_data}}}
 
-\item{config}{configuration object (list) as returned by the function
-\code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}}
+\item{config}{configuration object (list) as returned by
+\code{abimo_config_to_config()}, used on \code{kwb.abimo::read_config()}}
 
-\item{simulate_abimo}{logical of length one indicating whether or not to
-simulate exactly what Abimo does (including obvious errors!).
+\item{simulate_abimo}{logical indicating whether or not to simulate exactly
+what Abimo does (including obvious errors!).
 Default: \code{TRUE}!}
 }
 \value{
