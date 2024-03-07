@@ -25,7 +25,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   #
 
   # Check whether data has the expected structure
-  stop_on_invalid_input(data)
+  stop_on_invalid_data(data)
 
   # Check whether config has the expected structure
   stop_on_invalid_config(config)

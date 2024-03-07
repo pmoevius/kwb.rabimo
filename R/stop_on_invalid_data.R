@@ -1,5 +1,5 @@
-# stop_on_invalid_input --------------------------------------------------------
-stop_on_invalid_input <- function(input)
+# stop_on_invalid_data ---------------------------------------------------------
+stop_on_invalid_data <- function(input)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
   #input <- prepare_input_data(kwb.abimo::abimo_input_2019, abimo_config_to_config(kwb.abimo::read_config()))
