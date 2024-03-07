@@ -1,4 +1,4 @@
-# BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION ---------------------------------------
+# BERLIN_TYPES_TO_LAND_TYPE_VEG_CLASS_IRRIGATION -------------------------------
 
 #' Assignment between (NUTZUNG, TYP) and (usage, yield, irrigation)
 #'
@@ -16,7 +16,7 @@
 #'
 #' @importFrom dplyr left_join
 #' @export
-BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION <- local({
+BERLIN_TYPES_TO_LAND_TYPE_VEG_CLASS_IRRIGATION <- local({
   # Helper function to read csv file from extdata/
   read_csv <- function(name, colClasses = NA) {
     base_name <- sprintf("berlin_%s.csv", name)

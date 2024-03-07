@@ -27,7 +27,7 @@ get_usage_tuple <- function(usage, type, include_inputs = FALSE)
 
   result <- as.data.frame(multi_column_lookup(
     data = data,
-    lookup = BERLIN_TYPES_TO_USAGE_YIELD_IRRIGATION,
+    lookup = BERLIN_TYPES_TO_LAND_TYPE_VEG_CLASS_IRRIGATION,
     value = c("land_type", "veg_class", "irrigation"),
     includeKeys = include_inputs
   ))
