@@ -29,7 +29,6 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   # Create accessor functions to data columns and config elements
   fetch_data <- create_accessor(data)
   fetch_config <- create_accessor(config)
-  #get_fraction <- create_fraction_accessor(data)
 
   # Get climate data
   climate <- cat_and_run(
@@ -51,8 +50,6 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
       dbg = FALSE
     )
   )
-
-  stopifnot(!anyNA(soil_properties$mean_potential_capillary_rise_rate))
 
   # Precalculate all results of realEvapoTranspiration()
   evaporation_sealed <- cat_and_run(

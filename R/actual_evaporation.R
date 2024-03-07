@@ -7,7 +7,9 @@
 #'   (potential evaporation in mm per year and in the summer period,
 #'   respecively), \code{prec.year}, \code{prec.summer} (precipitation in mm
 #'   per year and in the summer period, respectively).
-#' @param soil_properties list as returned by \code{\link{get_soil_properties}}
+#' @param soil_properties list as returned by \code{\link{get_soil_properties}},
+#'   with elements \code{mean_potential_capillary_rise_rate}, \code{g02},
+#'   \code{potential_capillary_rise_TAS}, \code{depth_to_water_table}
 #' @param dbg logical indicating whether or not to show debug messages
 #' @param \dots further arguments passed to \code{\link{real_evapo_transpiration}}
 #'   such as \code{run_parallel}, \code{blocksize}
@@ -33,6 +35,10 @@ actual_evaporation_waterbody_or_pervious <- function(
     digits = NULL
     dbg = TRUE
   }
+
+  rpot <- select_elements(soil_properties, "mean_potential_capillary_rise_rate")
+
+  stopifnot(!anyNA(r_pot))
 
   epot_year <- select_elements(climate, "epot_yr")
 
@@ -64,8 +70,7 @@ actual_evaporation_waterbody_or_pervious <- function(
     irrigation = select_elements(usage_tuple, "irrigation")[i],
     prec_summer = select_elements(climate, "prec_s")[i],
     epot_summer = select_elements(climate, "epot_s")[i],
-    mean_potential_capillary_rise_rate =
-      select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i]
+    mean_potential_capillary_rise_rate = rpot[i]
   )
 
   if (!is.null(digits)) {
@@ -83,7 +88,7 @@ actual_evaporation_waterbody_or_pervious <- function(
 
   available_water <-
     select_elements(climate, "prec_yr")[i] +
-    select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i] +
+    rpot[i] +
     select_elements(usage_tuple, "irrigation")[i]
 
   y[i] <- real_evapo_transpiration(
