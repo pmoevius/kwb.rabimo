@@ -11,7 +11,8 @@
 #' @param config configuration object (list) as returned by the function
 #'   \code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}
 #' @return \code{data} with columns renamed and additional columns
-#'  (e.g. ratios calculated from percentages, (main) usage, yield, irrigation)
+#'  (e.g. ratios calculated from percentages, land type, vegetation class,
+#'  irrigation)
 prepare_input_data <- function(data, config)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
@@ -48,7 +49,7 @@ prepare_input_data <- function(data, config)
 
   data[["sealed"]] <- with(data, roof + pvd)
 
-  # Get (usage, yield, irrigation) tuples based on Berlin-specific codes
+  # Get (land_type, veg_class, irrigation) tuples based on Berlin-specific codes
   usage_types <- fetch(c("berlin_usage", "berlin_type"))
 
   usages <- get_usage_tuple(

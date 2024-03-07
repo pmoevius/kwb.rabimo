@@ -8,7 +8,7 @@ get_potential_evaporation(is_waterbody, district, lookup)
 }
 \arguments{
 \item{is_waterbody}{(vector of) logical indicating whether a block area is
-of type (from the type/yield/irrigation tuple) "waterbody"}
+of type (from the land_type/veg_class/irrigation tuple) "waterbody"}
 
 \item{district}{(vector of) integer indicating the district number of the
 plot area (from the original input column "BEZIRK")}

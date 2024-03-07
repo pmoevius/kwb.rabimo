@@ -2,8 +2,8 @@
 
 #' Run R-Abimo, the R-implementation of Water Balance Model Abimo
 #'
-#' @details If \code{input_data} contains a column \code{yield} it is expected that
-#'   the data are already prepared as otherwise would do the function
+#' @details If \code{data} contains a column \code{veg_class} it is expected
+#'   that the data are already prepared as otherwise would do the function
 #'   \code{\link{prepare_input_data}}.
 #'
 #' @param data data frame with columns as required by Abimo or

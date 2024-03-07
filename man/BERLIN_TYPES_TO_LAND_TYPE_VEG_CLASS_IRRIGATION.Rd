@@ -3,7 +3,7 @@
 \docType{data}
 \name{BERLIN_TYPES_TO_LAND_TYPE_VEG_CLASS_IRRIGATION}
 \alias{BERLIN_TYPES_TO_LAND_TYPE_VEG_CLASS_IRRIGATION}
-\title{Assignment between (NUTZUNG, TYP) and (usage, yield, irrigation)}
+\title{Assignment between (NUTZUNG, TYP) and (land_type, veg_class, irrigation)}
 \format{
 An object of class \code{data.frame} with 180 rows and 5 columns.
 }
@@ -15,7 +15,7 @@ The following tables are read from csv files and then merged:
 }
 \details{
 berlin_tuples.csv
-table of different occurring (usage, yield, irrigation) tuples
+table of different occurring (land_type, veg_class, irrigation) tuples
 
 berlin_type_tuple_groups.csv
 assignments between berlin_type (input column "TYP") and tuples

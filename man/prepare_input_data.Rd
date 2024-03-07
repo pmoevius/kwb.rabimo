@@ -17,7 +17,8 @@ STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150}
 }
 \value{
 \code{data} with columns renamed and additional columns
-(e.g. ratios calculated from percentages, (main) usage, yield, irrigation)
+(e.g. ratios calculated from percentages, land type, vegetation class,
+irrigation)
 }
 \description{
 Rename columns from ABIMO 3.2 original names to ABIMO 3.3 internal names

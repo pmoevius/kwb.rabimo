@@ -4,10 +4,10 @@ stop_on_invalid_input <- function(input)
   #kwb.utils::assignPackageObjects("kwb.rabimo")
   #input <- prepare_input_data(kwb.abimo::abimo_input_2019, abimo_config_to_config(kwb.abimo::read_config()))
 
-  if (!"code" %in% names(input)) {
+  if (!"veg_class" %in% names(input)) {
     clean_stop(
       "input data has not the expected format. ",
-      "I was looking for column 'code'",
+      "I was looking for column 'veg_class'",
       "You might want to use the function prepare_berlin_data()."
     )
   }

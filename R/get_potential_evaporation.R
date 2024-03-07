@@ -3,7 +3,7 @@
 #' Provide Data on Potential Evaporation
 #'
 #' @param is_waterbody (vector of) logical indicating whether a block area is
-#'   of type (from the type/yield/irrigation tuple) "waterbody"
+#'   of type (from the land_type/veg_class/irrigation tuple) "waterbody"
 #' @param district (vector of) integer indicating the district number of the
 #'   plot area (from the original input column "BEZIRK")
 #' @param lookup data frame with key columns \code{is_waterbody}, \code{district}
