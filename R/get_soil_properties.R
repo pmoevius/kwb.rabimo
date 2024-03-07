@@ -23,7 +23,7 @@ get_soil_properties <- function(
 )
 {
   # Nothing to do for waterbodies
-  is_waterbody <- usage_is_waterbody(land_type)
+  is_waterbody <- land_type_is_waterbody(land_type)
 
   # Feldkapazitaet
   usable_field_capacity <- ifelse(
@@ -32,7 +32,7 @@ get_soil_properties <- function(
     no = estimate_water_holding_capacity(
       f30 = field_capacity_30,
       f150 = field_capacity_150,
-      is_forest = usage_is_forest(land_type)
+      is_forest = land_type_is_forest(land_type)
     )
   )
 
@@ -118,11 +118,11 @@ get_rooting_depth <- function(land_type, veg_class)
 
   y <- rep(NA_real_, n)
 
-  is_agri <- usage_is_agricultural(land_type)
+  is_agri <- land_type_is_agricultural(land_type)
   y[is_agri] <- ifelse(veg_class[is_agri] <= 50, 0.6, 0.7)
-  y[usage_is_vegetationless(land_type)] <- 0.2
-  y[usage_is_horticultural(land_type)] <- 0.7
-  y[usage_is_forest(land_type)] <- 1.0
+  y[land_type_is_vegetationless(land_type)] <- 0.2
+  y[land_type_is_horticultural(land_type)] <- 0.7
+  y[land_type_is_forest(land_type)] <- 1.0
 
   # in any other case
   y[is.na(y)] <- 0.2
@@ -136,19 +136,19 @@ getRootingDepth_1 <- function(land_type, veg_class)
   stopifnot(length(land_type) == 1L)
   stopifnot(length(veg_class) == 1L)
 
-  if (usage_is_agricultural(land_type)) {
+  if (land_type_is_agricultural(land_type)) {
     return(ifelse(veg_class <= 50, 0.6, 0.7))
   }
 
-  if (usage_is_vegetationless(land_type)) {
+  if (land_type_is_vegetationless(land_type)) {
     return(0.2)
   }
 
-  if (usage_is_horticultural(land_type)) {
+  if (land_type_is_horticultural(land_type)) {
     return(0.7)
   }
 
-  if (usage_is_forest(land_type)) {
+  if (land_type_is_forest(land_type)) {
     return(1.0)
   }
 
@@ -231,13 +231,13 @@ estimate_days_of_growth <- function(land_type, veg_class, default = 50L)
   y <- rep(NA_integer_, n)
 
   # Special case for agricultural use
-  is_agri <- usage_is_agricultural(land_type)
+  is_agri <- land_type_is_agricultural(land_type)
   y[is_agri] <- ifelse(veg_class[is_agri] <= 50, 60L, 75L)
 
   # Constant estimates for other uses
-  y[usage_is_vegetationless(land_type)] <- 50L
-  y[usage_is_horticultural(land_type)] <- 100L
-  y[usage_is_forest(land_type)] <- 90L
+  y[land_type_is_vegetationless(land_type)] <- 50L
+  y[land_type_is_horticultural(land_type)] <- 100L
+  y[land_type_is_forest(land_type)] <- 90L
 
   # Return default for any other use
   y[is.na(y)] <- default
@@ -252,7 +252,7 @@ estimate_days_of_growth_1 <- function(land_type, veg_class, default = 50)
   stopifnot(length(veg_class) == 1L)
 
   # Special case for agricultural use
-  if (usage_is_agricultural(land_type)) {
+  if (land_type_is_agricultural(land_type)) {
     return(ifelse(veg_class <= 50, 60, 75))
   }
 

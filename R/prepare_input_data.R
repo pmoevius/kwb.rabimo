@@ -58,7 +58,7 @@ prepare_input_data <- function(data, config)
 
   # Calculate potential evaporation for all areas
   pot_evaporation <- get_potential_evaporation(
-    is_waterbody = usage_is_waterbody(usages[["land_type"]]),
+    is_waterbody = land_type_is_waterbody(usages[["land_type"]]),
     district = fetch("district"),
     lookup = fetch_config("potential_evaporation")
   )
@@ -70,7 +70,7 @@ prepare_input_data <- function(data, config)
   data[["block_type"]] <- get_block_type(usage_types)
 
   # Set roof area that are NAs to 0 for water bodies
-  data$roof[usage_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
+  data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
 
   # Set order of columns as defined in "column-names.csv"
   select_columns(data, get_column_selection())

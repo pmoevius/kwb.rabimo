@@ -41,7 +41,7 @@ actual_evaporation_waterbody_or_pervious <- function(
 
   # For water bodies, use the potential evaporation
   usages <- select_elements(usage_tuple, "land_type")
-  is_waterbody <- usage_is_waterbody(usages)
+  is_waterbody <- land_type_is_waterbody(usages)
 
   y[is_waterbody] <- ep_year[is_waterbody]
 
@@ -125,7 +125,7 @@ get_bagrov_parameter_unsealed <- function(
   # Initialise result vector
   y <- numeric(length = length(g02))
 
-  is_forest <- usage_is_forest(usage)
+  is_forest <- land_type_is_forest(usage)
   no_forest <- !is_forest
 
   y[is_forest] <- lookup_bagrov_forest(g02[is_forest])
