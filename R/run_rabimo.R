@@ -27,7 +27,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   stop_on_invalid_config(config)
 
   # Create accessor functions to data columns and config elements
-  fetch_input <- create_accessor(data)
+  fetch_data <- create_accessor(data)
   fetch_config <- create_accessor(config)
   #get_fraction <- create_fraction_accessor(data)
 
@@ -43,11 +43,11 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   soil_properties <- cat_and_run(
     "Preparing soil property data for all block areas",
     expr = get_soil_properties(
-      land_type = fetch_input("land_type"),
-      veg_class = fetch_input("veg_class"),
-      depth_to_water_table = fetch_input("gw_dist"),
-      field_capacity_30 = fetch_input("ufc30"),
-      field_capacity_150 = fetch_input("ufc150"),
+      land_type = fetch_data("land_type"),
+      veg_class = fetch_data("veg_class"),
+      depth_to_water_table = fetch_data("gw_dist"),
+      field_capacity_30 = fetch_data("ufc30"),
+      field_capacity_150 = fetch_data("ufc150"),
       dbg = FALSE
     )
   )
@@ -76,7 +76,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
       "areas"
     ),
     actual_evaporation_waterbody_or_pervious(
-      usage_tuple = fetch_input(c("land_type", "veg_class", "irrigation")),
+      usage_tuple = fetch_data(c("land_type", "veg_class", "irrigation")),
       climate = climate,
       soil_properties = soil_properties,
       min_size_for_parallel = 100L,
@@ -124,8 +124,8 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
     nrow = nrow(data)
   )
 
-  unbuilt_surface_fractions <- fetch_input(paste0("srf", 1:4,"_pvd"))
-  road_surface_fractions <- fetch_input(paste0("srf", 1:4,"_pvd_rd"))
+  unbuilt_surface_fractions <- fetch_data(paste0("srf", 1:4,"_pvd"))
+  road_surface_fractions <- fetch_data(paste0("srf", 1:4,"_pvd_rd"))
 
   runoff_sealed_actual <-  runoff_sealed * (
     with(data, main_fraction * pvd * swg_pvd) * unbuilt_surface_fractions +
@@ -156,7 +156,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
 
   # fraction_unsealed <- if (simulate_abimo) {
   #   #fetch("areaFractionMain") * # ??? TODO: VERIFY THIS ????
-  #   (1 - fetch_input("mainFractionSealed"))
+  #   (1 - fetch_data("mainFractionSealed"))
   # } else {
   #   get_fraction("main/!sealed")
   # }
@@ -193,7 +193,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   total_evaporation <- climate[["prec_yr"]] - total_runoff
 
   # Provide total area for calculation of "flows"
-  total_area <- fetch_input("total_area")
+  total_area <- fetch_data("total_area")
 
   # Calculate volume 'rowvol' from runoff (qcm/s)
   surface_runoff_flow <- yearly_height_to_volume_flow(
@@ -225,7 +225,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   # Compose result data frame. Use mget() to get the result vectors from the
   # local environment and put them into the data frame
   result_data <- cbind(
-    fetch_input("code", drop = FALSE),
+    fetch_data("code", drop = FALSE),
     mget(names(name_mapping)[-1L])
   )
 
