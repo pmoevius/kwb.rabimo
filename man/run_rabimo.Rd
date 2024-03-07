@@ -4,10 +4,10 @@
 \alias{run_rabimo}
 \title{Run R-Abimo, the R-implementation of Water Balance Model Abimo}
 \usage{
-run_rabimo(input, config, simulate_abimo = TRUE)
+run_rabimo(data, config, simulate_abimo = TRUE)
 }
 \arguments{
-\item{input}{data frame with columns as required by Abimo or
+\item{data}{data frame with columns as required by Abimo or
 data frame with columns as returned by \code{\link{prepare_input_data}}}
 
 \item{config}{configuration object (list) as returned by the function
