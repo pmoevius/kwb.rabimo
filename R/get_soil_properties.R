@@ -5,8 +5,8 @@
 #' Provide variables that are relevant to calculate the actual evaporation for
 #' unsealed areas
 #'
-#' @param land_type land_type string, one of "vegetationless_D", "waterbody_G",
-#'   "horticultural_K", "agricultural_L", "forested_W"
+#' @param land_type land_type string, one of "vegetationless", "waterbody",
+#'   "horticultural", "urban", "forested"
 #' @param veg_class vegetation class
 #' @param depth_to_water_table depth to water table
 #' @param field_capacity_30 field capacity in 30 cm depth
@@ -258,9 +258,9 @@ estimate_days_of_growth_1 <- function(land_type, veg_class, default = 50)
 
   # Constant estimates for other uses
   days_of_growth <- list(
-    vegetationless_D = 50,
-    horticultural_K = 100,
-    forested_W = 90
+    vegetationless = 50,
+    horticultural = 100,
+    forested = 90
   )
 
   # Lookup constant estimate. Return default if use is not in list
