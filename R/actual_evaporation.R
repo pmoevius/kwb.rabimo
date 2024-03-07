@@ -60,7 +60,7 @@ actual_evaporation_waterbody_or_pervious <- function(
   bagrov_values <- get_bagrov_parameter_unsealed(
     g02 = select_elements(soil_properties, "g02")[i],
     usage = usages[i],
-    yield = select_elements(usage_tuple, "veg_class")[i],
+    veg_class = select_elements(usage_tuple, "veg_class")[i],
     irrigation = select_elements(usage_tuple, "irrigation")[i],
     prec_summer = select_elements(climate, "prec_s")[i],
     epot_summer = select_elements(climate, "epot_s")[i],
@@ -115,7 +115,7 @@ actual_evaporation_waterbody_or_pervious <- function(
 get_bagrov_parameter_unsealed <- function(
     g02,
     usage,
-    yield,
+    veg_class,
     irrigation,
     prec_summer,
     epot_summer,
@@ -136,7 +136,7 @@ get_bagrov_parameter_unsealed <- function(
     no = 1
   )
 
-  y[no_forest] <- lookup_bagrov_unsealed(g02[no_forest], yield[no_forest]) *
+  y[no_forest] <- lookup_bagrov_unsealed(g02[no_forest], veg_class[no_forest]) *
     factor_dry[no_forest]
 
   # in case of a "wet" summer, correct the BAGROV parameter with a factor
@@ -185,10 +185,10 @@ lookup_bagrov_forest <- function(g02)
 }
 
 # lookup_bagrov_unsealed -------------------------------------------------------
-lookup_bagrov_unsealed <- function(g02, yield, do_correction = TRUE)
+lookup_bagrov_unsealed <- function(g02, veg_class, do_correction = TRUE)
 {
   # Calculate the k index (integer)
-  k <- yield_to_k_index(yield)
+  k <- veg_class_to_k_index(veg_class)
 
   # Calculate result based on the k index
   y <-
@@ -203,8 +203,8 @@ lookup_bagrov_unsealed <- function(g02, yield, do_correction = TRUE)
 
   # Apply correction where needed
   i <- which(
-    (y >= 2.0 & yield < 60) |
-      (g02 >= 20.0 & yield >= 60)
+    (y >= 2.0 & veg_class < 60) |
+      (g02 >= 20.0 & veg_class >= 60)
   )
 
   y[i] <-
@@ -214,10 +214,10 @@ lookup_bagrov_unsealed <- function(g02, yield, do_correction = TRUE)
   y
 }
 
-# yield_to_k_index -------------------------------------------------------------
-yield_to_k_index <- function(yield)
+# veg_class_to_k_index -------------------------------------------------------------
+veg_class_to_k_index <- function(veg_class)
 {
-  k <- as.integer(ifelse(yield < 50, yield / 5, yield / 10 + 5))
+  k <- as.integer(ifelse(veg_class < 50, veg_class / 5, veg_class / 10 + 5))
 
   # make sure that k is at least 1
   k <- pmax(1L, k)
