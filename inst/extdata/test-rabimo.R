@@ -30,7 +30,8 @@ if (FALSE)
 {
   # Read dbf file. Do not convert character to factor (as.is = TRUE)
   old_inputs <- list(
-    data = foreign::read.dbf(get_path("berlin_2020_local"), as.is = TRUE),
+    #data = foreign::read.dbf(get_path("berlin_2020_local"), as.is = TRUE),
+    data = foreign::read.dbf(get_path("berlin_2020"), as.is = TRUE),
     config = kwb.abimo::read_config()
   )
 
@@ -58,11 +59,26 @@ if (FALSE)
     config = old_inputs$config
   )
 
+  # For comparison: Run Abimo with the old data structures
+  data_old <- data
+  data_old[, columns] <- lapply(data_old[, columns], as.integer)
+
+  result_old <- kwb.abimo::run_abimo(
+    input_data = data_old,
+    config = old_inputs$config
+  )
+
   # Run R-Abimo with the new data structures
   result <- kwb.rabimo::run_rabimo(
     input = new_inputs$data,
     config = new_inputs$config
   )
+
+  # Compare new results with old results
+  compare_results(data = result, old = result_old)
+
+  # Plot the differences between Abimo and R-Abimo, per variable
+  plot_differences(abimo_result = result_old, rabimo_result = result)
 
   # modify input data to calculate natural scenario (forest)
   nat_inputs <- new_inputs
@@ -122,6 +138,9 @@ if (FALSE)
     "0600151371000200"
   )
 
+  # Compare results for the given codes only
+  compare_results(data = result, old = result_old, codes = codes)
+
   input_output_2020 <- new_inputs$data %>%
     cbind(result) %>%
     cbind(result_nat) %>%
@@ -151,7 +170,7 @@ if (FALSE)
   file_dbf <- "lausitzer.dbf"
   kwb.abimo::write.dbf.abimo(input_output_2020, file_dbf)
 
-  }
+}
 
 # MAIN: Provide function arguments for run_rabimo(), prepare_input_data() ------
 if (FALSE)
@@ -272,7 +291,7 @@ get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
   data_2020 = "<isu5_2020>/isu5_2020_berlin/cleaned",
   berlin_2020 = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
   ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf",
-  berlin_2020_local = "C:/Users/fdpunt/Documents/Projekte/AMAREX/Daten/ISU5_2020_Rohdaten/cleaned/cleaned/isu5_2020_abimo_cleaned.dbf"
+  berlin_2020_local = "~/Projekte/AMAREX/Daten/ISU5_2020_Rohdaten/cleaned/cleaned/isu5_2020_abimo_cleaned.dbf"
 )))
 
 # Define function: table_with_na() ---------------------------------------------
@@ -406,4 +425,43 @@ provide_fictive_data <- function()
   data$NUTZUNG <- 10L
 
   data
+}
+
+# compare_results --------------------------------------------------------------
+compare_results <- function(data, old, codes = NULL)
+{
+  #data = result; old = result_old; codes = NULL
+  #str(data)
+  #str(old)
+
+  codes <- kwb.utils::defaultIfNULL(codes, intersect(data$CODE, old$CODE))
+
+  given_codes_only <- function(data) {
+    data[data$CODE %in% codes, ]
+  }
+
+  data <- given_codes_only(data)
+
+  old <- given_codes_only(old)
+  old$CODE <- as.character(old$CODE)
+
+  stopifnot(identical(data$CODE, old$CODE))
+
+  diffs <- lapply(stats::setNames(nm = names(data)[-1L]), function(column) {
+    x <- data[[column]]
+    y <- old[[column]]
+    x/y - 1
+  })
+
+  lapply(diffs, range)
+}
+
+# plot_differences -------------------------------------------------------------
+plot_differences <- function(abimo_result, rabimo_result)
+{
+  for (name in names(abimo_result)[-1L]) {
+    x <- abimo_result[[name]]
+    y <- rabimo_result[[name]]
+    plot(x, y, xlab = "Abimo", ylab = "Rabimo", main = name, asp = 1)
+  }
 }
