@@ -30,7 +30,7 @@ if (FALSE)
 {
   # Read dbf file. Do not convert character to factor (as.is = TRUE)
   old_inputs <- list(
-    data = foreign::read.dbf(get_path("berlin_2020"), as.is = TRUE),
+    data = foreign::read.dbf(get_path("berlin_2020_local"), as.is = TRUE),
     config = kwb.abimo::read_config()
   )
 
@@ -63,6 +63,22 @@ if (FALSE)
     input = new_inputs$data,
     config = new_inputs$config
   )
+
+  # modify input data to calculate natural scenario (forest)
+  nat_inputs <- new_inputs
+  nat_inputs$data$land_type <- "agricultural_"
+  nat_inputs$data$irrigation <- 0
+  nat_inputs$data$veg_class <- 60
+  nat_inputs$data$roof <- 0
+  nat_inputs$data$pvd <- 0
+
+  #Run R-Abimo for the natural scenario
+  result_nat <- kwb.rabimo::run_rabimo(
+    input = nat_inputs$data,
+    config = nat_inputs$config
+  )
+
+  names(result_nat) <- paste0(names(result_nat),"_n")
 
   # Selection of blocks
   codes <- c(
@@ -108,21 +124,34 @@ if (FALSE)
 
   input_output_2020 <- new_inputs$data %>%
     cbind(result) %>%
+    cbind(result_nat) %>%
     dplyr::filter(.data[["code"]] %in% codes) %>%
     kwb.utils::resetRowNames()
+
+  # calculate DeltaW
+  deltaW <- 0.5*(abs(input_output_2020$ROW - input_output_2020$ROW_n) +
+                   abs(input_output_2020$RI - input_output_2020$RI_n) +
+                   abs(input_output_2020$VERDUNSTUN - input_output_2020$VERDUNSTUN_n))/
+    input_output_2020$prec_yr *100
+
+  input_output_2020 <- input_output_2020 %>%
+    cbind(deltaW)
 
 
   table(input_output_2020$code %in% codes)
 
   length(codes)
 
-
   View(input_output_2020)
 
   file <- "abimo_input_output_2020.xlsx"
   writexl::write_xlsx(input_output_2020, file)
   kwb.utils::hsOpenWindowsExplorer(dirname(file))
-}
+
+  file_dbf <- "lausitzer.dbf"
+  kwb.abimo::write.dbf.abimo(input_output_2020, file_dbf)
+
+  }
 
 # MAIN: Provide function arguments for run_rabimo(), prepare_input_data() ------
 if (FALSE)
@@ -242,7 +271,8 @@ get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
   isu5_2020 = "<amarex_ap4>/ABIMO_Daten/ISU5_2020_datengrundlage",
   data_2020 = "<isu5_2020>/isu5_2020_berlin/cleaned",
   berlin_2020 = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
-  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf"
+  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf",
+  berlin_2020_local = "C:/Users/fdpunt/Documents/Projekte/AMAREX/Daten/ISU5_2020_Rohdaten/cleaned/cleaned/isu5_2020_abimo_cleaned.dbf"
 )))
 
 # Define function: table_with_na() ---------------------------------------------
