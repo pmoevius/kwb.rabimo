@@ -41,11 +41,11 @@ actual_evaporation_waterbody_or_pervious <- function(
   fetch_climate <- create_accessor(climate)
   fetch_soil <- create_accessor(soil_properties)
 
-  r_pot <- fetch_soil("mean_potential_capillary_rise_rate")
+  rpot <- fetch_soil("mean_potential_capillary_rise_rate")
   epot_year <- fetch_climate("epot_yr")
 
   # Check input(s)
-  stopifnot(!anyNA(r_pot))
+  stopifnot(!anyNA(rpot))
 
   # Initialise result vector
   y <- numeric(length(epot_year))
@@ -75,7 +75,7 @@ actual_evaporation_waterbody_or_pervious <- function(
     irrigation = fetch_usage("irrigation")[i],
     prec_summer = fetch_climate("prec_s")[i],
     epot_summer = fetch_climate("epot_s")[i],
-    mean_potential_capillary_rise_rate = r_pot[i]
+    mean_potential_capillary_rise_rate = rpot[i]
   )
 
   if (!is.null(digits)) {
@@ -93,7 +93,7 @@ actual_evaporation_waterbody_or_pervious <- function(
 
   available_water <-
     fetch_climate("prec_yr")[i] +
-    r_pot[i] +
+    rpot[i] +
     fetch_usage("irrigation")[i]
 
   y[i] <- real_evapo_transpiration(
