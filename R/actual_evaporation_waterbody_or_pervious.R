@@ -46,11 +46,11 @@ actual_evaporation_waterbody_or_pervious <- function(
   epot_year <- select_elements(climate, "epot_yr")
 
   # Initialise result vector
-  y <- numeric(length = length(epot_year))
+  y <- numeric(length(epot_year))
 
   # For water bodies, use the potential evaporation
-  usages <- select_elements(usage_tuple, "land_type")
-  is_waterbody <- land_type_is_waterbody(usages)
+  land_types <- select_elements(usage_tuple, "land_type")
+  is_waterbody <- land_type_is_waterbody(land_types)
 
   y[is_waterbody] <- epot_year[is_waterbody]
 
@@ -59,7 +59,7 @@ actual_evaporation_waterbody_or_pervious <- function(
     return(y)
   }
 
-  # indices of entries related to any other usage
+  # indices of entries related to any other land_type
   i <- which(!is_waterbody)
 
   # otherwise calculate the real evapotranspiration
@@ -68,7 +68,7 @@ actual_evaporation_waterbody_or_pervious <- function(
   # determine the BAGROV parameter(s) for unsealed surfaces
   bagrov_values <- get_bagrov_parameter_unsealed(
     g02 = fetch_soil("g02")[i],
-    usage = usages[i],
+    land_type = land_types[i],
     veg_class = select_elements(usage_tuple, "veg_class")[i],
     irrigation = select_elements(usage_tuple, "irrigation")[i],
     prec_summer = select_elements(climate, "prec_s")[i],
@@ -105,7 +105,7 @@ actual_evaporation_waterbody_or_pervious <- function(
   rises <- fetch_soil("potential_capillary_rise")
   depths <- fetch_soil("depth_to_water_table")
 
-  # indices of entries related to non-water usage and capillary rises < 0
+  # indices of entries related to non-water land_type and capillary rises < 0
   j <- which(!is_waterbody & rises < 0)
 
   y[j] <- y[j] + (epot_year[j] - y[j]) * exp(depths[j] / rises[j])
@@ -122,7 +122,7 @@ actual_evaporation_waterbody_or_pervious <- function(
 # get_bagrov_parameter_unsealed (C++ name: getEffectivityParameter) ------------
 get_bagrov_parameter_unsealed <- function(
     g02,
-    usage,
+    land_type,
     veg_class,
     irrigation,
     prec_summer,
@@ -133,7 +133,7 @@ get_bagrov_parameter_unsealed <- function(
   # Initialise result vector
   y <- numeric(length = length(g02))
 
-  is_forest <- land_type_is_forest(usage)
+  is_forest <- land_type_is_forest(land_type)
   no_forest <- !is_forest
 
   y[is_forest] <- lookup_bagrov_forest(g02[is_forest])
