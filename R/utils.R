@@ -69,18 +69,6 @@ expand_to_matrix <- function(x, nrow = NULL, ncol = NULL)
   }
 }
 
-# expand_to_vector -------------------------------------------------------------
-expand_to_vector <- function(x, indices)
-{
-  stopifnot(length(x) == length(indices))
-
-  result <- list()
-
-  result[unlist(indices)] <- rep(x, lengths(indices))
-
-  result
-}
-
 # filter_elements --------------------------------------------------------------
 filter_elements <- function(x, pattern)
 {
@@ -264,12 +252,6 @@ multi_column_lookup <- kwb.utils::multiColumnLookup
 #' @importFrom kwb.utils multiSubstitute
 multi_substitute <- kwb.utils::multiSubstitute
 
-# n_dims -----------------------------------------------------------------------
-n_dims <- function(x)
-{
-  length(dim(x))
-}
-
 # paste_columns ----------------------------------------------------------------
 #' @importFrom kwb.utils pasteColumns
 paste_columns <- kwb.utils::pasteColumns
@@ -295,17 +277,6 @@ print_if <- kwb.utils::printIf
 range_to_seq <- function(x, by = 1)
 {
   do.call(seq, c(as.list(range(x)), list(by = by)))
-}
-
-# rbind_first_rows -------------------------------------------------------------
-rbind_first_rows <- function(x)
-{
-  stopifnot(is.list(x), all(sapply(x, n_dims) == 2L))
-
-  x %>%
-    lapply(utils::head, 1L) %>%
-    do.call(what = rbind) %>%
-    reset_row_names()
 }
 
 # remove_columns ---------------------------------------------------------------
@@ -361,12 +332,6 @@ select_columns <- kwb.utils::selectColumns
 # select_elements --------------------------------------------------------------
 #' @importFrom kwb.utils selectElements
 select_elements <- kwb.utils::selectElements
-
-# seq_along_rows ---------------------------------------------------------------
-seq_along_rows <- function(data)
-{
-  seq_len(nrow(data))
-}
 
 # set_columns_to_zero ----------------------------------------------------------
 set_columns_to_zero <- function(data, columns, check, text)
@@ -430,14 +395,6 @@ set_columns_to_zero_where_na <- function(data, columns)
 # set_names --------------------------------------------------------------------
 #' @importFrom stats setNames
 set_names <- stats::setNames
-
-# split_into_identical_rows ----------------------------------------------------
-split_into_identical_rows <- function(data)
-{
-  data %>%
-    cbind(row. = seq_along_rows(data)) %>%
-    split(f = data, drop = TRUE)
-}
 
 # stop_formatted ---------------------------------------------------------------
 #' @importFrom kwb.utils stopFormatted

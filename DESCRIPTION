@@ -26,7 +26,6 @@ Imports:
     kwb.abimo,
     kwb.utils,
     magrittr,
-    methods,
     parallel,
     rlang,
     xml2
