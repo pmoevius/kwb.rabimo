@@ -141,7 +141,7 @@ get_bagrov_parameter_unsealed <- function(
   y[is_forest] <- lookup_bagrov_forest(g02[is_forest])
 
   factor_dry <- ifelse(
-    test = irrigation > 0 & isDrySummer(prec_summer, epot_summer),
+    test = irrigation > 0 & is_dry_summer(prec_summer, epot_summer),
     yes = irrigation_in_dry_summer_correction_factor(irrigation[no_forest]),
     no = 1
   )
@@ -259,10 +259,10 @@ BAGROV_COEFFICIENTS <- c(
   0.33895,  3.721 , 6.69999, -0.07   , 0.013
 )
 
-# isDrySummer ------------------------------------------------------------------
+# is_dry_summer ----------------------------------------------------------------
 # TODO: Remove redundancy with is_wet_summer.
 # Variables are (almost!) one another's opposite!
-isDrySummer <- function(prec_summer, epot_summer)
+is_dry_summer <- function(prec_summer, epot_summer)
 {
   prec_summer <= 0 & epot_summer <= 0
 }
@@ -274,7 +274,7 @@ irrigation_in_dry_summer_correction_factor <- function(irrigation)
 }
 
 # is_wet_summer ----------------------------------------------------------------
-# TODO: Remove redundancy with isDrySummer.
+# TODO: Remove redundancy with is_dry_summer.
 # Variables are (almost!) one another's opposite!
 is_wet_summer <- function(prec_summer, epot_summer)
 {
