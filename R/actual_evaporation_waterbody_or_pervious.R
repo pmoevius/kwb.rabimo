@@ -9,7 +9,7 @@
 #'   per year and in the summer period, respectively).
 #' @param soil_properties list as returned by \code{\link{get_soil_properties}},
 #'   with elements \code{mean_potential_capillary_rise_rate}, \code{g02},
-#'   \code{potential_capillary_rise_TAS}, \code{depth_to_water_table}
+#'   \code{potential_capillary_rise}, \code{depth_to_water_table}
 #' @param dbg logical indicating whether or not to show debug messages
 #' @param \dots further arguments passed to \code{\link{real_evapo_transpiration}}
 #'   such as \code{run_parallel}, \code{blocksize}
@@ -102,7 +102,7 @@ actual_evaporation_waterbody_or_pervious <- function(
     , ...
   )
 
-  rises <- fetch_soil("potential_capillary_rise_TAS")
+  rises <- fetch_soil("potential_capillary_rise")
   depths <- fetch_soil("depth_to_water_table")
 
   # indices of entries related to non-water usage and capillary rises < 0

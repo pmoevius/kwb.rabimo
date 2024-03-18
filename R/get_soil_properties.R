@@ -70,7 +70,7 @@ get_soil_properties <- function(
   data.frame(
     depth_to_water_table = depth_to_water_table,
     usable_field_capacity = usable_field_capacity,
-    potential_capillary_rise_TAS = potential_capillary_rise,
+    potential_capillary_rise = potential_capillary_rise,
     mean_potential_capillary_rise_rate_raw = mean_potential_capillary_rise_rate_raw,
     mean_potential_capillary_rise_rate = mean_potential_capillary_rise_rate,
     g02 = g02

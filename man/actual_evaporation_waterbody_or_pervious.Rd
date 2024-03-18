@@ -23,7 +23,7 @@ per year and in the summer period, respectively).}
 
 \item{soil_properties}{list as returned by \code{\link{get_soil_properties}},
 with elements \code{mean_potential_capillary_rise_rate}, \code{g02},
-\code{potential_capillary_rise_TAS}, \code{depth_to_water_table}}
+\code{potential_capillary_rise}, \code{depth_to_water_table}}
 
 \item{dbg}{logical indicating whether or not to show debug messages}
 
