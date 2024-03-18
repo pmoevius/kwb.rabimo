@@ -36,7 +36,10 @@ actual_evaporation_waterbody_or_pervious <- function(
     dbg = TRUE
   }
 
-  rpot <- select_elements(soil_properties, "mean_potential_capillary_rise_rate")
+  # Soil property accessor
+  fetch_soil <- create_accessor(soil_properties)
+
+  r_pot <- fetch_soil("mean_potential_capillary_rise_rate")
 
   stopifnot(!anyNA(r_pot))
 
@@ -64,13 +67,13 @@ actual_evaporation_waterbody_or_pervious <- function(
 
   # determine the BAGROV parameter(s) for unsealed surfaces
   bagrov_values <- get_bagrov_parameter_unsealed(
-    g02 = select_elements(soil_properties, "g02")[i],
+    g02 = fetch_soil("g02")[i],
     usage = usages[i],
     veg_class = select_elements(usage_tuple, "veg_class")[i],
     irrigation = select_elements(usage_tuple, "irrigation")[i],
     prec_summer = select_elements(climate, "prec_s")[i],
     epot_summer = select_elements(climate, "epot_s")[i],
-    mean_potential_capillary_rise_rate = rpot[i]
+    mean_potential_capillary_rise_rate = r_pot[i]
   )
 
   if (!is.null(digits)) {
@@ -88,7 +91,7 @@ actual_evaporation_waterbody_or_pervious <- function(
 
   available_water <-
     select_elements(climate, "prec_yr")[i] +
-    rpot[i] +
+    r_pot[i] +
     select_elements(usage_tuple, "irrigation")[i]
 
   y[i] <- real_evapo_transpiration(
@@ -99,8 +102,8 @@ actual_evaporation_waterbody_or_pervious <- function(
     , ...
   )
 
-  rises <- select_elements(soil_properties, "potential_capillary_rise_TAS")
-  depths <- select_elements(soil_properties, "depth_to_water_table")
+  rises <- fetch_soil("potential_capillary_rise_TAS")
+  depths <- fetch_soil("depth_to_water_table")
 
   # indices of entries related to non-water usage and capillary rises < 0
   j <- which(!is_waterbody & rises < 0)
