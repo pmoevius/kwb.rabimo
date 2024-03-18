@@ -21,7 +21,9 @@ actual_evaporation_waterbody_or_pervious(
 respecively), \code{prec.year}, \code{prec.summer} (precipitation in mm
 per year and in the summer period, respectively).}
 
-\item{soil_properties}{list as returned by \code{\link{get_soil_properties}}}
+\item{soil_properties}{list as returned by \code{\link{get_soil_properties}},
+with elements \code{mean_potential_capillary_rise_rate}, \code{g02},
+\code{potential_capillary_rise_TAS}, \code{depth_to_water_table}}
 
 \item{dbg}{logical indicating whether or not to show debug messages}
 
