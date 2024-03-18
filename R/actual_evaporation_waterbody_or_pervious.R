@@ -36,20 +36,22 @@ actual_evaporation_waterbody_or_pervious <- function(
     dbg = TRUE
   }
 
-  # Soil property accessor
+  # Create accessor functions
+  fetch_usage <- create_accessor(usage_tuple)
+  fetch_climate <- create_accessor(climate)
   fetch_soil <- create_accessor(soil_properties)
 
   r_pot <- fetch_soil("mean_potential_capillary_rise_rate")
+  epot_year <- fetch_climate("epot_yr")
 
+  # Check input(s)
   stopifnot(!anyNA(r_pot))
-
-  epot_year <- select_elements(climate, "epot_yr")
 
   # Initialise result vector
   y <- numeric(length(epot_year))
 
   # For water bodies, use the potential evaporation
-  land_types <- select_elements(usage_tuple, "land_type")
+  land_types <- fetch_usage("land_type")
   is_waterbody <- land_type_is_waterbody(land_types)
 
   y[is_waterbody] <- epot_year[is_waterbody]
@@ -69,10 +71,10 @@ actual_evaporation_waterbody_or_pervious <- function(
   bagrov_values <- get_bagrov_parameter_unsealed(
     g02 = fetch_soil("g02")[i],
     land_type = land_types[i],
-    veg_class = select_elements(usage_tuple, "veg_class")[i],
-    irrigation = select_elements(usage_tuple, "irrigation")[i],
-    prec_summer = select_elements(climate, "prec_s")[i],
-    epot_summer = select_elements(climate, "epot_s")[i],
+    veg_class = fetch_usage("veg_class")[i],
+    irrigation = fetch_usage("irrigation")[i],
+    prec_summer = fetch_climate("prec_s")[i],
+    epot_summer = fetch_climate("epot_s")[i],
     mean_potential_capillary_rise_rate = r_pot[i]
   )
 
@@ -90,9 +92,9 @@ actual_evaporation_waterbody_or_pervious <- function(
   ))
 
   available_water <-
-    select_elements(climate, "prec_yr")[i] +
+    fetch_climate("prec_yr")[i] +
     r_pot[i] +
-    select_elements(usage_tuple, "irrigation")[i]
+    fetch_usage("irrigation")[i]
 
   y[i] <- real_evapo_transpiration(
     potential_evaporation = epot_year[i],
