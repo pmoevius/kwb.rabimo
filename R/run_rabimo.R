@@ -2,43 +2,38 @@
 
 #' Run R-Abimo, the R-implementation of Water Balance Model Abimo
 #'
-#' @details If \code{input_data} contains a column \code{yield} it is expected that
-#'   the data are already prepared as otherwise would do the function
-#'   \code{\link{prepare_input_data}}.
-#'
-#' @param input data frame with columns as required by Abimo or
-#'   data frame with columns as returned by \code{\link{prepare_input_data}}
-#' @param config configuration object (list) as returned by the function
-#'   \code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}
-#' @param simulate_abimo logical of length one indicating whether or not to
-#'   simulate exactly what Abimo does (including obvious errors!).
+#' @param data data frame with columns as returned by
+#'   \code{\link{prepare_input_data}}
+#' @param config configuration object (list) as returned by
+#'   \code{\link{abimo_config_to_config}}
+#' @param simulate_abimo logical indicating whether or not to simulate exactly
+#'   what Abimo does (including obvious errors!).
 #'   Default: \code{TRUE}!
 #' @return data frame with columns as returned by Abimo
 #' @export
-run_rabimo <- function(input, config, simulate_abimo = TRUE)
+run_rabimo <- function(data, config, simulate_abimo = TRUE)
 {
   # Provide functions and variables for debugging
   # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
 
   #
-  # Go to inst/extdata/test-rabimo.R to provide input and config for debugging
+  # Go to inst/extdata/test-rabimo.R to provide data and config for debugging
   #
 
-  # Check whether input has the expected structure
-  stop_on_invalid_input(input)
+  # Check whether data has the expected structure
+  stop_on_invalid_data(data)
 
   # Check whether config has the expected structure
   stop_on_invalid_config(config)
 
-  # Create accessor functions to input columns and config elements
-  fetch_input <- create_accessor(input)
+  # Create accessor functions to data columns and config elements
+  fetch_data <- create_accessor(data)
   fetch_config <- create_accessor(config)
-  #get_fraction <- create_fraction_accessor(input)
 
   # Get climate data
   climate <- cat_and_run(
-    "Collecting climate related data from input",
-    get_climate(input)
+    "Collecting climate related data",
+    get_climate(data)
   )
 
   # Prepare soil properties for all rows. They are required to calculate the
@@ -47,16 +42,14 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   soil_properties <- cat_and_run(
     "Preparing soil property data for all block areas",
     expr = get_soil_properties(
-      land_type = fetch_input("land_type"),
-      veg_class = fetch_input("veg_class"),
-      depth_to_water_table = fetch_input("gw_dist"),
-      field_capacity_30 = fetch_input("ufc30"),
-      field_capacity_150 = fetch_input("ufc150"),
+      land_type = fetch_data("land_type"),
+      veg_class = fetch_data("veg_class"),
+      depth_to_water_table = fetch_data("gw_dist"),
+      field_capacity_30 = fetch_data("ufc30"),
+      field_capacity_150 = fetch_data("ufc150"),
       dbg = FALSE
     )
   )
-
-  stopifnot(!anyNA(soil_properties$mean_potential_capillary_rise_rate))
 
   # Precalculate all results of realEvapoTranspiration()
   evaporation_sealed <- cat_and_run(
@@ -66,7 +59,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
         real_evapo_transpiration(
           potential_evaporation = select_columns(climate, "epot_yr"),
           x_ratio = select_columns(climate, "x_ratio"),
-          bagrov_parameter = rep(x, nrow(input)),
+          bagrov_parameter = rep(x, nrow(data)),
           use_abimo_algorithm = simulate_abimo
         )
       }) %>%
@@ -80,7 +73,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
       "areas"
     ),
     actual_evaporation_waterbody_or_pervious(
-      usage_tuple = fetch_input(c("land_type", "veg_class", "irrigation")),
+      usage_tuple = fetch_data(c("land_type", "veg_class", "irrigation")),
       climate = climate,
       soil_properties = soil_properties,
       min_size_for_parallel = 100L,
@@ -106,11 +99,11 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   runoff_factors <- fetch_config("runoff_factors")
 
   # actual runoff from roof surface (area based, with no infiltration)
-  runoff_roof_actual <- with(input, main_fraction * roof * swg_roof) *
+  runoff_roof_actual <- with(data, main_fraction * roof * swg_roof) *
     runoff_factors[["roof"]] * runoff_roof
 
   # actual infiltration from roof surface (area based, with no runoff)
-  infiltration_roof_actual <- with(input, main_fraction * roof * (1-swg_roof)) *
+  infiltration_roof_actual <- with(data, main_fraction * roof * (1-swg_roof)) *
     runoff_roof
 
   # Calculate runoff for all surface classes at once
@@ -125,23 +118,23 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
 
   runoff_factor_matrix <- expand_to_matrix(
     x = filter_elements(runoff_factors, "surface"),
-    nrow = nrow(input)
+    nrow = nrow(data)
   )
 
-  unbuilt_surface_fractions <- fetch_input(paste0("srf", 1:4,"_pvd"))
-  road_surface_fractions <- fetch_input(paste0("srf", 1:4,"_pvd_rd"))
+  unbuilt_surface_fractions <- fetch_data(paste0("srf", 1:4,"_pvd"))
+  road_surface_fractions <- fetch_data(paste0("srf", 1:4,"_pvd_rd"))
 
   runoff_sealed_actual <-  runoff_sealed * (
-    with(input, main_fraction * pvd * swg_pvd) * unbuilt_surface_fractions +
-      with(input, road_fraction * pvd_rd * swg_pvd_rd) * road_surface_fractions
+    with(data, main_fraction * pvd * swg_pvd) * unbuilt_surface_fractions +
+      with(data, road_fraction * pvd_rd * swg_pvd_rd) * road_surface_fractions
   ) *
     runoff_factor_matrix
 
   # infiltration of sealed surfaces
   # (road and non-road) areas (for all surface classes at once)
   infiltration_sealed_actual <- runoff_sealed * (
-    with(input, main_fraction * pvd) * unbuilt_surface_fractions +
-      with(input, road_fraction * pvd_rd) * road_surface_fractions) -
+    with(data, main_fraction * pvd) * unbuilt_surface_fractions +
+      with(data, road_fraction * pvd_rd) * road_surface_fractions) -
     runoff_sealed_actual
 
   #Total Runoff of unsealed surfaces (unsealedSurface_RUV)
@@ -149,7 +142,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
 
   # Infiltration of road (unsealed areas)
   infiltration_unsealed_roads <-
-    with(input, road_fraction * (1-pvd_rd)) *
+    with(data, road_fraction * (1-pvd_rd)) *
   runoff_sealed[, ncol(runoff_sealed)] # last (less sealed) surface class
 
   # Infiltration from unsealed non-road surfaces (old: riuv)
@@ -160,15 +153,15 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
 
   # fraction_unsealed <- if (simulate_abimo) {
   #   #fetch("areaFractionMain") * # ??? TODO: VERIFY THIS ????
-  #   (1 - fetch_input("mainFractionSealed"))
+  #   (1 - fetch_data("mainFractionSealed"))
   # } else {
   #   get_fraction("main/!sealed")
   # }
 
   fraction_unsealed <- if(simulate_abimo) {
-    with(input, 1 - sealed)
+    with(data, 1 - sealed)
   } else {
-    with(input, main_fraction * (1 - sealed))
+    with(data, main_fraction * (1 - sealed))
   }
 
   infiltration_unsealed_surfaces <- fraction_unsealed * runoff_unsealed
@@ -197,7 +190,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   total_evaporation <- climate[["prec_yr"]] - total_runoff
 
   # Provide total area for calculation of "flows"
-  total_area <- fetch_input("total_area")
+  total_area <- fetch_data("total_area")
 
   # Calculate volume 'rowvol' from runoff (qcm/s)
   surface_runoff_flow <- yearly_height_to_volume_flow(
@@ -229,7 +222,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   # Compose result data frame. Use mget() to get the result vectors from the
   # local environment and put them into the data frame
   result_data <- cbind(
-    fetch_input("code", drop = FALSE),
+    fetch_data("code", drop = FALSE),
     mget(names(name_mapping)[-1L])
   )
 
@@ -242,7 +235,7 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
   # Return intermediate results as attributes
   structure(
     abimo_result,
-    input = input,
+    data = data,
     result_data = result_data,
     intermediates = list(
       climate = climate,
@@ -269,4 +262,26 @@ run_rabimo <- function(input, config, simulate_abimo = TRUE)
       fraction_unsealed = fraction_unsealed
     )
   )
+}
+
+# get_climate: provides climate relevant input data ----------------------------
+get_climate <- function(input)
+{
+  climate <- select_columns(input, c("prec_yr", "prec_s", "epot_yr", "epot_s"))
+
+  climate[["x_ratio"]] <- climate[["prec_yr"]] / climate[["epot_yr"]]
+
+  climate
+}
+
+# yearly_height_to_volume_flow -------------------------------------------------
+
+#' Convert Yearly Height (mm) to Volume Flow (unit?)
+#'
+#' @param height height in mm
+#' @param area area in square metres
+#' @export
+yearly_height_to_volume_flow <- function(height, area)
+{
+  height * 3.171 * area / 100000.0
 }

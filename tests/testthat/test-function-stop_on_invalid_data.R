@@ -1,8 +1,8 @@
 #library(testthat)
 
-test_that("stop_on_invalid_input() works", {
+test_that("stop_on_invalid_data() works", {
 
-  f <- kwb.rabimo:::stop_on_invalid_input
+  f <- kwb.rabimo:::stop_on_invalid_data
 
   expect_error(f())
 

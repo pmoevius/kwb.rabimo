@@ -14,8 +14,8 @@ get_soil_properties(
 )
 }
 \arguments{
-\item{land_type}{land_type string, one of "vegetationless_D", "waterbody_G",
-"horticultural_K", "agricultural_L", "forested_W"}
+\item{land_type}{land_type string, one of "vegetationless", "waterbody",
+"horticultural", "urban", "forested"}
 
 \item{veg_class}{vegetation class}
 

@@ -120,6 +120,7 @@ y_ratio_3 <- function(
     index = seq_along(bagrov_parameter)
   )
 
+  # TODO: Can we use kwb.utils::callWithData() here?
   combisets <- split(combis, combis$bagrov_parameter)
 
   if (use_abimo_algorithm) {
@@ -170,7 +171,6 @@ y_ratio_3 <- function(
           ncores
         ),
         expr = {
-          # Call the call_with_data function in a (parallel) loop
           parallel::parLapply(cl, combisets, fun = getBagrovCurve)
         }
       )

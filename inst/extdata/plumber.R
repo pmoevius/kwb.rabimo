@@ -43,7 +43,7 @@ function(n_records = 3L, seed = 12345L)
   rows <- sample(n_max, size = min(c(n_max, n_records)))
 
   kwb.rabimo::prepare_input_data(
-    input_data = data_old[rows, ],
+    data = data_old[rows, ],
     config = kwb.rabimo::abimo_config_to_config(config_old)
   )
 }

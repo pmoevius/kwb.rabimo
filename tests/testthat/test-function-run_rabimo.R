@@ -6,24 +6,7 @@ test_that("run_rabimo() works", {
 
   expect_error(f())
 
-  config <- list(
-    bagrov_values = c(
-      roof = 1,
-      surface1 = 2,
-      surface2 = 3,
-      surface3 = 4,
-      surface4 = 5
-    ),
-    runoff_factors = c(
-      roof = -1,
-      surface1 = -2,
-      surface2 = -3,
-      surface3 = -4,
-      surface4 = -5
-    )
-  )
-
-  input <- data.frame(
+  data <- data.frame(
     code = "a",
     land_type = "a",
     prec_yr = 100,
@@ -55,7 +38,24 @@ test_that("run_rabimo() works", {
     total_area = 100
   )
 
+  config <- list(
+    bagrov_values = c(
+      roof = 1,
+      surface1 = 2,
+      surface2 = 3,
+      surface3 = 4,
+      surface4 = 5
+    ),
+    runoff_factors = c(
+      roof = -1,
+      surface1 = -2,
+      surface2 = -3,
+      surface3 = -4,
+      surface4 = -5
+    )
+  )
+
   f <- kwb.rabimo::run_rabimo
-  expect_output(f(input, config))
+  expect_output(f(data, config))
 
 })

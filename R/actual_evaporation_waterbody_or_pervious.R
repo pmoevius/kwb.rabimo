@@ -7,7 +7,9 @@
 #'   (potential evaporation in mm per year and in the summer period,
 #'   respecively), \code{prec.year}, \code{prec.summer} (precipitation in mm
 #'   per year and in the summer period, respectively).
-#' @param soil_properties list as returned by \code{\link{get_soil_properties}}
+#' @param soil_properties list as returned by \code{\link{get_soil_properties}},
+#'   with elements \code{mean_potential_capillary_rise_rate}, \code{g02},
+#'   \code{potential_capillary_rise}, \code{depth_to_water_table}
 #' @param dbg logical indicating whether or not to show debug messages
 #' @param \dots further arguments passed to \code{\link{real_evapo_transpiration}}
 #'   such as \code{run_parallel}, \code{blocksize}
@@ -34,38 +36,46 @@ actual_evaporation_waterbody_or_pervious <- function(
     dbg = TRUE
   }
 
-  ep_year <- select_elements(climate, "epot_yr")
+  # Create accessor functions
+  fetch_usage <- create_accessor(usage_tuple)
+  fetch_climate <- create_accessor(climate)
+  fetch_soil <- create_accessor(soil_properties)
+
+  rpot <- fetch_soil("mean_potential_capillary_rise_rate")
+  epot_year <- fetch_climate("epot_yr")
+
+  # Check input(s)
+  stopifnot(!anyNA(rpot))
 
   # Initialise result vector
-  y <- numeric(length = length(ep_year))
+  y <- numeric(length(epot_year))
 
   # For water bodies, use the potential evaporation
-  usages <- select_elements(usage_tuple, "land_type")
-  is_waterbody <- usage_is_waterbody(usages)
+  land_types <- fetch_usage("land_type")
+  is_waterbody <- land_type_is_waterbody(land_types)
 
-  y[is_waterbody] <- ep_year[is_waterbody]
+  y[is_waterbody] <- epot_year[is_waterbody]
 
   # if all block areas are waterbodies, return
   if (all(is_waterbody)) {
     return(y)
   }
 
-  # indices of entries related to any other usage
+  # indices of entries related to any other land_type
   i <- which(!is_waterbody)
 
   # otherwise calculate the real evapotranspiration
-  stopifnot(all(ep_year[i] > 0)) # ???
+  stopifnot(all(epot_year[i] > 0)) # ???
 
   # determine the BAGROV parameter(s) for unsealed surfaces
   bagrov_values <- get_bagrov_parameter_unsealed(
-    g02 = select_elements(soil_properties, "g02")[i],
-    usage = usages[i],
-    yield = select_elements(usage_tuple, "veg_class")[i],
-    irrigation = select_elements(usage_tuple, "irrigation")[i],
-    prec_summer = select_elements(climate, "prec_s")[i],
-    epot_summer = select_elements(climate, "epot_s")[i],
-    mean_potential_capillary_rise_rate =
-      select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i]
+    g02 = fetch_soil("g02")[i],
+    land_type = land_types[i],
+    veg_class = fetch_usage("veg_class")[i],
+    irrigation = fetch_usage("irrigation")[i],
+    prec_summer = fetch_climate("prec_s")[i],
+    epot_summer = fetch_climate("epot_s")[i],
+    mean_potential_capillary_rise_rate = rpot[i]
   )
 
   if (!is.null(digits)) {
@@ -82,25 +92,25 @@ actual_evaporation_waterbody_or_pervious <- function(
   ))
 
   available_water <-
-    select_elements(climate, "prec_yr")[i] +
-    select_elements(soil_properties, "mean_potential_capillary_rise_rate")[i] +
-    select_elements(usage_tuple, "irrigation")[i]
+    fetch_climate("prec_yr")[i] +
+    rpot[i] +
+    fetch_usage("irrigation")[i]
 
   y[i] <- real_evapo_transpiration(
-    potential_evaporation = ep_year[i],
-    x_ratio = available_water / ep_year[i],
+    potential_evaporation = epot_year[i],
+    x_ratio = available_water / epot_year[i],
     bagrov_parameter = bagrov_values
     #, use_abimo_algorithm = TRUE
     , ...
   )
 
-  rises <- select_elements(soil_properties, "potential_capillary_rise_TAS")
-  depths <- select_elements(soil_properties, "depth_to_water_table")
+  rises <- fetch_soil("potential_capillary_rise")
+  depths <- fetch_soil("depth_to_water_table")
 
-  # indices of entries related to non-water usage and capillary rises < 0
+  # indices of entries related to non-water land_type and capillary rises < 0
   j <- which(!is_waterbody & rises < 0)
 
-  y[j] <- y[j] + (ep_year[j] - y[j]) * exp(depths[j] / rises[j])
+  y[j] <- y[j] + (epot_year[j] - y[j]) * exp(depths[j] / rises[j])
 
   nas <- rep(NA_real_, length(y))
 
@@ -114,8 +124,8 @@ actual_evaporation_waterbody_or_pervious <- function(
 # get_bagrov_parameter_unsealed (C++ name: getEffectivityParameter) ------------
 get_bagrov_parameter_unsealed <- function(
     g02,
-    usage,
-    yield,
+    land_type,
+    veg_class,
     irrigation,
     prec_summer,
     epot_summer,
@@ -125,18 +135,18 @@ get_bagrov_parameter_unsealed <- function(
   # Initialise result vector
   y <- numeric(length = length(g02))
 
-  is_forest <- usage_is_forest(usage)
+  is_forest <- land_type_is_forest(land_type)
   no_forest <- !is_forest
 
   y[is_forest] <- lookup_bagrov_forest(g02[is_forest])
 
   factor_dry <- ifelse(
-    test = irrigation > 0 & isDrySummer(prec_summer, epot_summer),
+    test = irrigation > 0 & is_dry_summer(prec_summer, epot_summer),
     yes = irrigation_in_dry_summer_correction_factor(irrigation[no_forest]),
     no = 1
   )
 
-  y[no_forest] <- lookup_bagrov_unsealed(g02[no_forest], yield[no_forest]) *
+  y[no_forest] <- lookup_bagrov_unsealed(g02[no_forest], veg_class[no_forest]) *
     factor_dry[no_forest]
 
   # in case of a "wet" summer, correct the BAGROV parameter with a factor
@@ -185,10 +195,10 @@ lookup_bagrov_forest <- function(g02)
 }
 
 # lookup_bagrov_unsealed -------------------------------------------------------
-lookup_bagrov_unsealed <- function(g02, yield, do_correction = TRUE)
+lookup_bagrov_unsealed <- function(g02, veg_class, do_correction = TRUE)
 {
   # Calculate the k index (integer)
-  k <- yield_to_k_index(yield)
+  k <- veg_class_to_k_index(veg_class)
 
   # Calculate result based on the k index
   y <-
@@ -203,8 +213,8 @@ lookup_bagrov_unsealed <- function(g02, yield, do_correction = TRUE)
 
   # Apply correction where needed
   i <- which(
-    (y >= 2.0 & yield < 60) |
-      (g02 >= 20.0 & yield >= 60)
+    (y >= 2.0 & veg_class < 60) |
+      (g02 >= 20.0 & veg_class >= 60)
   )
 
   y[i] <-
@@ -214,10 +224,10 @@ lookup_bagrov_unsealed <- function(g02, yield, do_correction = TRUE)
   y
 }
 
-# yield_to_k_index -------------------------------------------------------------
-yield_to_k_index <- function(yield)
+# veg_class_to_k_index -------------------------------------------------------------
+veg_class_to_k_index <- function(veg_class)
 {
-  k <- as.integer(ifelse(yield < 50, yield / 5, yield / 10 + 5))
+  k <- as.integer(ifelse(veg_class < 50, veg_class / 5, veg_class / 10 + 5))
 
   # make sure that k is at least 1
   k <- pmax(1L, k)
@@ -249,10 +259,10 @@ BAGROV_COEFFICIENTS <- c(
   0.33895,  3.721 , 6.69999, -0.07   , 0.013
 )
 
-# isDrySummer ------------------------------------------------------------------
+# is_dry_summer ----------------------------------------------------------------
 # TODO: Remove redundancy with is_wet_summer.
 # Variables are (almost!) one another's opposite!
-isDrySummer <- function(prec_summer, epot_summer)
+is_dry_summer <- function(prec_summer, epot_summer)
 {
   prec_summer <= 0 & epot_summer <= 0
 }
@@ -264,7 +274,7 @@ irrigation_in_dry_summer_correction_factor <- function(irrigation)
 }
 
 # is_wet_summer ----------------------------------------------------------------
-# TODO: Remove redundancy with isDrySummer.
+# TODO: Remove redundancy with is_dry_summer.
 # Variables are (almost!) one another's opposite!
 is_wet_summer <- function(prec_summer, epot_summer)
 {

@@ -20,7 +20,7 @@ if (FALSE)
 
   # Run R-Abimo with the new data structures
   result <- kwb.rabimo::run_rabimo(
-    input = new_inputs$data,
+    data = new_inputs$data,
     config = new_inputs$config
   )
 }
@@ -70,7 +70,7 @@ if (FALSE)
 
   # Run R-Abimo with the new data structures
   result <- kwb.rabimo::run_rabimo(
-    input = new_inputs$data,
+    data = new_inputs$data,
     config = new_inputs$config
   )
 
@@ -320,7 +320,7 @@ call_abimo_and_rabimo <- function(abimo_data, abimo_config, rabimo_config)
 
   # Run R-Abimo, the R-implementation of Abimo in this package
   rabimo_result <- kwb.rabimo::run_rabimo(
-    input = rabimo_data,
+    data = rabimo_data,
     config = rabimo_config
   )
 
