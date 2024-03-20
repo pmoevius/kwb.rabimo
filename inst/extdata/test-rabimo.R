@@ -30,8 +30,7 @@ if (FALSE)
 {
   # Read dbf file. Do not convert character to factor (as.is = TRUE)
   old_inputs <- list(
-    #data = foreign::read.dbf(get_path("berlin_2020_local"), as.is = TRUE),
-    data = foreign::read.dbf(get_path("berlin_2020"), as.is = TRUE),
+    data = foreign::read.dbf(get_path("berlin_2020_clean"), as.is = TRUE),
     config = kwb.abimo::read_config()
   )
 
@@ -85,7 +84,8 @@ if (FALSE)
 if (FALSE)
 {
   # Convert raw 2020 data to R-Abimo format
-
+  berlin_2020_data <- get_path("berlin_2020_combined") %>%
+    foreign::read.dbf(as.is = TRUE)
 
 }
 
@@ -93,7 +93,7 @@ if (FALSE)
 if (FALSE)
 {
   # Read dbf file. Do not convert character to factor (as.is = TRUE)
-  berlin_2020_data <- get_path("berlin_2020") %>%
+  berlin_2020_data <- get_path("berlin_2020_clean") %>%
     foreign::read.dbf(as.is = TRUE) %>%
     # Clean column "STR_FLGES"
     kwb.rabimo:::set_columns_to_zero_where_almost_zero(columns = "STR_FLGES")
@@ -206,7 +206,9 @@ get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
   amarex_ap4 = "Y:/SUW_Department/Projects/AMAREX/Work-packages/AP_4",
   isu5_2020 = "<amarex_ap4>/ABIMO_Daten/ISU5_2020_datengrundlage",
   data_2020 = "<isu5_2020>/isu5_2020_berlin/cleaned",
-  berlin_2020 = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
+  berlin_2020_clean = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
+  berlin_2020_raw = "<isu5_2020>/finaler_eingang_von_sensbw/isu5_2020_combined",
+  berlin_2020_combined = "<berlin_2020_raw>/isu5_2020_abimo_hyras9120_amarex.dbf",
   ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf"
 )))
 
