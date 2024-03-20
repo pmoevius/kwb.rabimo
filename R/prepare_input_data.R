@@ -17,11 +17,15 @@ prepare_input_data <- function(data, config)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
   #data <- kwb.abimo::abimo_input_2019
+  #data <- berlin_2020_data
   #config <- abimo_config_to_config(kwb.abimo::read_config())
 
   #
   # See inst/extdata/test-rabimo.R for test data assignments
   #
+
+  # set format to upper case to match 2019 data when using raw 2020 data
+  names(data) <- toupper(names(data))
 
   # 1. Rename columns from ABIMO 3.2 names to ABIMO new* internal names
   # 2. Select only the columns that are required
