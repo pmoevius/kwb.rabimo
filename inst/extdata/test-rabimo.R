@@ -82,6 +82,13 @@ if (FALSE)
 
 }
 
+if (FALSE)
+{
+  # Convert raw 2020 data to R-Abimo format
+
+
+}
+
 # MAIN: Provide function arguments for run_rabimo(), prepare_input_data() ------
 if (FALSE)
 {
@@ -200,8 +207,7 @@ get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
   isu5_2020 = "<amarex_ap4>/ABIMO_Daten/ISU5_2020_datengrundlage",
   data_2020 = "<isu5_2020>/isu5_2020_berlin/cleaned",
   berlin_2020 = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
-  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf",
-  berlin_2020_local = "~/Projekte/AMAREX/Daten/ISU5_2020_Rohdaten/cleaned/cleaned/isu5_2020_abimo_cleaned.dbf"
+  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf"
 )))
 
 # Define function: table_with_na() ---------------------------------------------
