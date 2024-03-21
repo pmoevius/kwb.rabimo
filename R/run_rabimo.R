@@ -15,6 +15,8 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
 {
   # Provide functions and variables for debugging
   # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
+  # data <- inputs_2020$data
+  # config <- inputs_2020$config
 
   #
   # Go to inst/extdata/test-rabimo.R to provide data and config for debugging

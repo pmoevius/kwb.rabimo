@@ -28,8 +28,37 @@ prepare_input_data <- function(data, config)
   names(data) <- toupper(names(data))
 
   # 1. Rename columns from ABIMO 3.2 names to ABIMO new* internal names
-  # 2. Select only the columns that are required
+  # 2. Select only the columns that are required                                # check: columns that are not rquired are still in the dataframe
   data <- rename_columns(data, renamings = get_column_renamings())
+
+  if("ART" %in% names(data))
+  {
+    # road indices
+    rd_ind <- which(x = grepl("Stra", data$ART))
+
+    # set road areas to "berlin_usage" 300                                        # good way to identify roads?
+    data$berlin_usage[rd_ind] <- 300
+
+    # copy district information into the right column
+    data$district[rd_ind] <- data$BEZIRK_1[rd_ind]
+
+    # PROBLEM: Roads between two districts have no district information. allow Nas?
+
+  }
+
+  #
+
+  # If area fractions are missing (NA) set them to 0
+  data <- set_columns_to_zero_where_na(
+    data = data,
+    columns = grep("roof|pvd|srf", names(data), value = TRUE)
+  )
+
+  # if area main or area road are missing (NA) set them to 0
+  data <- set_columns_to_zero_where_na(
+    data = data,
+    columns = grep("area_", names(data), value = TRUE)
+  )
 
   # Create column accessor function
   fetch <- create_accessor(data)
@@ -38,12 +67,6 @@ prepare_input_data <- function(data, config)
   # correct precipitation with correction factor from the config file
   data[["prec_yr"]] <- fetch("prec_yr") *
     fetch_config("precipitation_correction_factor")
-
-  # If area fractions are missing (NA) set them to 0
-  data <- set_columns_to_zero_where_na(
-    data = data,
-    columns = grep("roof|pvd|srf", names(data), value = TRUE)
-  )
 
   # Calculate total area
   data[["total_area"]] <- fetch("area_main") + fetch("area_rd")
@@ -61,7 +84,7 @@ prepare_input_data <- function(data, config)
     type = usage_types[[2L]]
   )
 
-  # Calculate potential evaporation for all areas
+  # Calculate potential evaporation for all areas                               # roads have no district: etp 775
   pot_evaporation <- get_potential_evaporation(
     is_waterbody = land_type_is_waterbody(usages[["land_type"]]),
     district = fetch("district"),
@@ -73,6 +96,9 @@ prepare_input_data <- function(data, config)
 
   # Add a text column describing the type of block (usage)
   data[["block_type"]] <- get_block_type(usage_types)
+
+  # Write road specification into "block_type"
+  data[grepl("300", data[["block_type"]]),"block_type"] <- "300_road"
 
   # Set roof area that are NAs to 0 for water bodies
   data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
@@ -230,10 +256,12 @@ get_block_type <- function(usage_types)
   }
 
   usage_types %>%
-    merge_metadata("nutzungstypen_berlin", c(berlin_usage = "Typ_Nutzung")) %>%
-    merge_metadata("strukturtypen_berlin", c(berlin_type = "Typ")) %>%
+    merge_metadata("nutzungstypen_berlin", c(berlin_usage = "Use_ID")) %>%
+    merge_metadata("strukturtypen_berlin", c(berlin_type = "Type_ID")) %>%
+    remove_columns(pattern = "_GER$") %>%
     paste_columns(sep = ": ") %>%
     subst_special_chars()
+
 }
 
 # get_column_selection ---------------------------------------------------------
