@@ -81,29 +81,37 @@ if (FALSE)
 
 }
 
+# MAIN: Convert raw 2020 data to R-Abimo format --------------------------------
 if (FALSE)
 {
-  ## Convert raw 2020 data to R-Abimo format
-
   # Read dbf file
   berlin_2020_data <- get_path("berlin_2020_combined") %>%
-    foreign::read.dbf(as.is = TRUE)
+    foreign::read.dbf(as.is = TRUE) %>%
+    kwb.utils:::cache_and_return(name = "berlin_2020_data")
+
+  # Read data from cache if there is no access to KWB server
+  berlin_2020_data <- kwb.utils:::get_cached("berlin_2020_data")
 
   # Set all NAs to zero (test)
   #berlin_2020_data <- kwb.utils::defaultIfNA(berlin_2020_data, 0)
 
-  inputs_2020 <- prepare_berlin_data(
+  inputs_2020 <- kwb.rabimo::prepare_berlin_data(
     data = berlin_2020_data,
-    config = kwb.abimo::read_config())
+    config = kwb.abimo::read_config()
+  )
 
-  # change config to list format
-  #config <- kwb.rabimo::abimo_config_to_config(kwb.abimo::read_config())
+  # Fehler: Column 'gw_dist' must not contain missing values (NA, found 4
+  # times). Please give a value (may be 0) in each row.
+  data <- inputs_2020$data
+  data <- data[kwb.utils::matchesCriteria(data, "!is.na(gw_dist)"), ]
 
   # calculate R-ABIMO results
-  results <-  kwb.rabimo::run_rabimo(
-    data = inputs_2020$data,
+  results <- kwb.rabimo::run_rabimo(
+    data = data,
     config = inputs_2020$config
   )
+
+  inputs_2020$data$code[which(is.na(inputs_2020$data$gw_dist))]
 
 }
 
