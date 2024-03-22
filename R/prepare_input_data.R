@@ -18,35 +18,42 @@ prepare_input_data <- function(data, config)
   #kwb.utils::assignPackageObjects("kwb.rabimo")
   #data <- kwb.abimo::abimo_input_2019
   #data <- berlin_2020_data
+  #data <- kwb.utils:::get_cached("berlin_2020_data")
   #config <- abimo_config_to_config(kwb.abimo::read_config())
 
   #
   # See inst/extdata/test-rabimo.R for test data assignments
   #
 
-  # set format to upper case to match 2019 data when using raw 2020 data
+  # Try to identify the "format" of the data frame
+  data_format <- identify_data_format_or_stop(data)
+
+  # Set column names to upper case to match 2019 data when using raw 2020 data
   names(data) <- toupper(names(data))
 
   # 1. Rename columns from ABIMO 3.2 names to ABIMO new* internal names
-  # 2. Select only the columns that are required                                # check: columns that are not rquired are still in the dataframe
-  data <- rename_columns(data, renamings = get_column_renamings())
+  # 2. Select only the columns that are required
 
-  if("ART" %in% names(data))
+  # check: columns that are not required are still in the dataframe
+  data <- rename_columns(data, get_column_renamings())
+
+  if (data_format == "format_2020")
   {
-    # road indices
-    rd_ind <- which(x = grepl("Stra", data$ART))
+    # Identify roads
+    is_road <- grepl("Stra.e", select_columns(data, "ART"))
 
-    # set road areas to "berlin_usage" 300                                        # good way to identify roads?
-    data$berlin_usage[rd_ind] <- 300
+    # Check that there is no "usage" type for roads
+    stopifnot(all(is.na(select_columns(data, "berlin_usage")[is_road])))
 
-    # copy district information into the right column
-    data$district[rd_ind] <- data$BEZIRK_1[rd_ind]
+    # Set "berlin_usage" for roads to 300
+    data$berlin_usage[is_road] <- 300
 
-    # PROBLEM: Roads between two districts have no district information. allow Nas?
+    # Copy district information into the right column
+    data$district[is_road] <- select_columns(data, "BEZIRK_1")[is_road]
 
+    # PROBLEM: Roads between two districts have no district information
+    # -> allow NAs
   }
-
-  #
 
   # If area fractions are missing (NA) set them to 0
   data <- set_columns_to_zero_where_na(
@@ -106,6 +113,33 @@ prepare_input_data <- function(data, config)
   # Set order of columns as defined in "column-names.csv"
   select_columns(data, get_column_selection())
 }
+
+# identify_data_format_or_stop -------------------------------------------------
+identify_data_format_or_stop <- function(data)
+{
+  columns <- names(data)
+
+  expected <- list(
+    format_2020 = "art",
+    format_2019 = "CODE"
+  )
+
+  for (format_name in names(expected)) {
+    if (expected[[format_name]] %in% columns) {
+      return(format_name)
+    }
+  }
+
+  stop_formatted(
+    paste0(
+      "Unknown format. I was looking for one of these columns: %s.\n",
+      "I found these: %s"
+    ),
+    string_list(unlist(expected)),
+    string_list(columns)
+  )
+}
+
 
 # get_column_renamings ---------------------------------------------------------
 get_column_renamings <- function()
