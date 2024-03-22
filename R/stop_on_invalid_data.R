@@ -37,7 +37,9 @@ stop_on_invalid_data <- function(input)
   # Do not accept any NA
   check_columns(
     data = input,
-    columns = intersect(columns_with("data_type", "numeric"), names(input)),
+    columns = names(input) %>%
+      intersect(columns_with("data_type", "numeric")) %>%
+      intersect(columns_with("type", "required")),
     check = function(x) !is.na(x),
     msg = paste(
       "Column '%s' must not contain missing values (NA, found %d times).",
