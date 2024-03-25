@@ -69,7 +69,7 @@ stop_on_invalid_data <- function(input)
     )
   )
 
-  check_sum_up_to_1_or_0(input, (columns <- sprintf("srf%d_pvd", 1:4)))
+  check_sum_up_to_1_or_0(input, (columns <- sprintf("srf%d_pvd", 1:5)))
   check_sum_up_to_1_or_0(input, paste0(columns, "_rd"))
 }
 
