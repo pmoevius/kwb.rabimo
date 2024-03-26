@@ -3,6 +3,7 @@ stop_on_invalid_data <- function(input)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
   #input <- prepare_input_data(kwb.abimo::abimo_input_2019, abimo_config_to_config(kwb.abimo::read_config()))
+  #input <- data
 
   # Read information on column names and types
   column_info <- read_column_info()
@@ -61,7 +62,8 @@ stop_on_invalid_data <- function(input)
   # Check fractions
   check_columns(
     data = input,
-    columns = columns_with("unit", "0..1"),
+    columns = columns_with("unit", "0..1") %>%
+      intersect(names(input)),
     check = function(x) in_range(x, 0, 1),
     msg = paste(
       "Not all values in column '%s' are between 0 and 1 as expected",
@@ -69,8 +71,13 @@ stop_on_invalid_data <- function(input)
     )
   )
 
-  check_sum_up_to_1_or_0(input, sprintf("srf%d_pvd", 1:5))
-  check_sum_up_to_1_or_0(input, sprintf("srf%d_pvd_rd", 1:4))
+  pattern_no_roads <- "^srf.*pvd$"
+  pattern_roads <- "^srf.*rd$"
+  surface_cols_no_rd <- grep(pattern_no_roads, names(input), value = TRUE)
+  surface_cols_rd <- grep(pattern_roads, names(input), value = TRUE)
+
+  check_sum_up_to_1_or_0(input, surface_cols_no_rd)
+  check_sum_up_to_1_or_0(input, surface_cols_rd)
 }
 
 # get_expected_data_type -------------------------------------------------------

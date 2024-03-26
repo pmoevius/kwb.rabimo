@@ -111,7 +111,8 @@ prepare_input_data <- function(data, config)
   data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
 
   # Set order of columns as defined in "column-names.csv"
-  select_columns(data, get_column_selection())
+  select_columns(data, get_column_selection() %>%
+                   dplyr::intersect(names(data)))
 }
 
 # identify_data_format_or_stop -------------------------------------------------
@@ -172,7 +173,8 @@ calculate_fractions <- function(data)
   # Determine names of columns that need to be divided by 100
   columns <- read_column_info() %>%
     dplyr::filter(.data[["by_100"]] == "x") %>%
-    select_columns("rabimo_berlin")
+    select_columns("rabimo_berlin") %>%
+    intersect(names(data))
 
   for (column in columns) {
     data[[column]] <- fetch(column) / 100

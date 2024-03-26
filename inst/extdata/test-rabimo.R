@@ -13,7 +13,7 @@ if (FALSE)
     config = kwb.abimo::read_config()
   )
 
-  new_inputs <- kwb.rabimo::prepare_berlin_data(
+  new_inputs <- kwb.rabimo::prepare_berlin_inputs(
     data = old_inputs$data,
     config = old_inputs$config
   )
@@ -25,7 +25,59 @@ if (FALSE)
   )
 }
 
-# MAIN: Convert Berlin data (2020) to new structure ----------------------------
+# MAIN: Convert raw 2020 data to R-Abimo format --------------------------------
+if (FALSE)
+{
+  # Read dbf file
+  berlin_2020_data <- get_path("berlin_2020_combined") %>%
+    foreign::read.dbf(as.is = TRUE) %>%
+    kwb.utils:::cache_and_return(name = "berlin_2020_data")
+
+  # Read data from cache if there is no access to KWB server
+  berlin_2020_data <- kwb.utils:::get_cached("berlin_2020_data")
+
+  # Set all NAs to zero (test)
+  #berlin_2020_data <- kwb.utils::defaultIfNA(berlin_2020_data, 0)
+
+  inputs_2020 <- kwb.rabimo::prepare_berlin_inputs(
+    data = berlin_2020_data,
+    config = kwb.abimo::read_config()
+  )
+
+  # Fehler: Column 'gw_dist' must not contain missing values (NA, found 4
+  # times). Please give a value (may be 0) in each row.
+  data <- inputs_2020$data
+  data <- data[kwb.utils::matchesCriteria(data, "!is.na(gw_dist)"), ]
+
+  # Fehler: The sum of columns 'srf1_pvd', 'srf2_pvd', 'srf3_pvd', 'srf4_pvd'
+  # is not 1 or 0 in each row as expected (see above). The tolerance was: 0.005000
+  # manual correction for testing: change sfr5_pvt to reach 1 in any case
+  columns <- sprintf("srf%d_pvd", 1:5)
+
+  data <- data %>%
+    dplyr::mutate(srf5_pvd = round(
+      ifelse(srf1_pvd + srf2_pvd + srf3_pvd + srf4_pvd + srf5_pvd < 1,
+             yes = 1 - srf1_pvd - srf2_pvd - srf3_pvd - srf4_pvd,
+             no = srf5_pvd),
+      digits = 2))
+
+  # manual correction for testing: if the sum of all surface classes exceeds 1
+  # reduce the fractions to get to 1, avoiding negative results
+  data[, columns] <- kwb.rabimo:::rescale_to_row_sum(
+    as.matrix(kwb.utils::selectColumns(data, columns)),
+    row_sum = 1
+  )
+
+  # calculate R-ABIMO results
+  results <- kwb.rabimo::run_rabimo(
+    data = data,
+    config = inputs_2020$config
+  )
+
+}
+
+
+# MAIN: Convert Berlin data (clean 2020) to new structure ----------------------------
 if (FALSE)
 {
   # Read dbf file. Do not convert character to factor (as.is = TRUE)
@@ -53,7 +105,7 @@ if (FALSE)
     row_sum = 100
   )
 
-  new_inputs <- kwb.rabimo::prepare_berlin_data(
+  new_inputs <- kwb.rabimo::prepare_berlin_inputs(
     data = data,
     config = old_inputs$config
   )
@@ -78,58 +130,6 @@ if (FALSE)
 
   # Plot the differences between Abimo and R-Abimo, per variable
   plot_differences(abimo_result = result_old, rabimo_result = result)
-
-}
-
-# MAIN: Convert raw 2020 data to R-Abimo format --------------------------------
-if (FALSE)
-{
-  # Read dbf file
-  berlin_2020_data <- get_path("berlin_2020_combined") %>%
-    foreign::read.dbf(as.is = TRUE) %>%
-    kwb.utils:::cache_and_return(name = "berlin_2020_data")
-
-  # Read data from cache if there is no access to KWB server
-  berlin_2020_data <- kwb.utils:::get_cached("berlin_2020_data")
-
-  # Set all NAs to zero (test)
-  #berlin_2020_data <- kwb.utils::defaultIfNA(berlin_2020_data, 0)
-
-  inputs_2020 <- kwb.rabimo::prepare_berlin_data(
-    data = berlin_2020_data,
-    config = kwb.abimo::read_config()
-  )
-
-  # Fehler: Column 'gw_dist' must not contain missing values (NA, found 4
-  # times). Please give a value (may be 0) in each row.
-  data <- inputs_2020$data
-  data <- data[kwb.utils::matchesCriteria(data, "!is.na(gw_dist)"), ]
-
-  # Fehler: The sum of columns 'srf1_pvd', 'srf2_pvd', 'srf3_pvd', 'srf4_pvd'
-  # is not 1 or 0 in each row as expected (see above). The tolerance was: 0.005000
-  # manual correction for testing: change sfr5_pvt to reach 1 in any case
-  columns <- c("srf1_pvd", "srf2_pvd", "srf3_pvd", "srf4_pvd", "srf5_pvd")
-  data <- data %>%
-    dplyr::mutate(srf5_pvd = round(ifelse(srf1_pvd + srf2_pvd + srf3_pvd +
-                                            srf4_pvd + srf5_pvd < 1,
-                                          yes = 1 - srf1_pvd - srf2_pvd - srf3_pvd - srf4_pvd,
-                                          no = srf5_pvd),
-                                   digits = 2))
-
-  # manual correction for testing: if the sum of all surface classes exceeds 1
-  # reduce the fractions to get to 1, avoiding negative results
-  data[, columns] <- kwb.rabimo:::rescale_to_row_sum(
-    as.matrix(kwb.utils::selectColumns(data, columns)),
-    row_sum = 1
-  )
-
-  # calculate R-ABIMO results
-  results <- kwb.rabimo::run_rabimo(
-    data = data,
-    config = inputs_2020$config
-  )
-
-  inputs_2020$data$code[which(is.na(inputs_2020$data$gw_dist))]
 
 }
 
