@@ -37,6 +37,18 @@ prepare_input_data <- function(data, config)
   # check: columns that are not required are still in the dataframe
   data <- rename_columns(data, get_column_renamings())
 
+  # If area fractions are missing (NA) set them to 0
+  data <- set_columns_to_zero_where_na(
+    data = data,
+    columns = grep("roof|pvd|srf", names(data), value = TRUE)
+  )
+
+  # if area main or area road are missing (NA) set them to 0
+  data <- set_columns_to_zero_where_na(
+    data = data,
+    columns = grep("area_", names(data), value = TRUE)
+  )
+
   if (data_format == "format_2020")
   {
     # Identify roads
@@ -51,21 +63,20 @@ prepare_input_data <- function(data, config)
     # Copy district information into the right column
     data$district[is_road] <- select_columns(data, "BEZIRK_1")[is_road]
 
-    # PROBLEM: Roads between two districts have no district information
-    # -> allow NAs
+    surface_class_columns <- sprintf("srf%d_pvd", 1:5)
+    delta_to_100 <- 100 - rowSums(data[surface_class_columns])
+
+    # Assign missing surface class partition to surface class 5
+    data[delta_to_100 > 0, "srf5_pvd"] <-
+      data[delta_to_100 > 0, "srf5_pvd"] + delta_to_100[delta_to_100 > 0]
+
+    # if for some areas the sum of all surface classes exceeds 1 correct it
+    # by reducing proportionally all surface classes
+    data[, surface_class_columns] <- kwb.rabimo:::rescale_to_row_sum(
+      as.matrix(kwb.utils::selectColumns(data, surface_class_columns)),
+      row_sum = 100
+    )
   }
-
-  # If area fractions are missing (NA) set them to 0
-  data <- set_columns_to_zero_where_na(
-    data = data,
-    columns = grep("roof|pvd|srf", names(data), value = TRUE)
-  )
-
-  # if area main or area road are missing (NA) set them to 0
-  data <- set_columns_to_zero_where_na(
-    data = data,
-    columns = grep("area_", names(data), value = TRUE)
-  )
 
   # Create column accessor function
   fetch <- create_accessor(data)
