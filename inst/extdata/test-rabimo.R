@@ -23,6 +23,11 @@ if (FALSE)
     data = new_inputs$data,
     config = new_inputs$config
   )
+
+  old_abimo_results <- kwb.abimo::run_abimo(
+    input_data = old_inputs$data, config = old_inputs$config)
+
+  plot_differences(abimo_result = old_abimo_results, rabimo_result = result)
 }
 
 # MAIN: Convert raw 2020 data to R-Abimo format --------------------------------
