@@ -49,36 +49,38 @@ prepare_input_data <- function(data, config)
     stopifnot(all(is.na(select_columns(data, "berlin_usage")[is_road])))
 
     # Set "berlin_usage" for roads to 300
-    data$berlin_usage[is_road] <- 300
+    data$berlin_usage[is_road] <- 300L
 
-    # Copy district information into the right column
+    # Copy district information into the correct column
     data$district[is_road] <- select_columns(data, "BEZIRK_1")[is_road]
 
     surface_class_columns <- sprintf("srf%d_pvd", 1:5)
+
     delta_to_100 <- 100 - rowSums(data[surface_class_columns])
+    has_delta <- delta_to_100 > 0
 
     # Assign missing surface class partition to surface class 5
-    data[delta_to_100 > 0, "srf5_pvd"] <-
-      data[delta_to_100 > 0, "srf5_pvd"] + delta_to_100[delta_to_100 > 0]
+    data[["srf5_pvd"]][has_delta] <-
+      data[["srf5_pvd"]][has_delta] + delta_to_100[has_delta]
 
     # if for some areas the sum of all surface classes exceeds 1 correct it
     # by reducing proportionally all surface classes
     data[, surface_class_columns] <- rescale_to_row_sum(
-      as.matrix(kwb.utils::selectColumns(data, surface_class_columns)),
+      as.matrix(select_columns(data, surface_class_columns)),
       row_sum = 100
     )
   }
 
   # Create column accessor function
-  fetch <- create_accessor(data)
+  fetch_data <- create_accessor(data)
   fetch_config <- create_accessor(config)
 
   # correct precipitation with correction factor from the config file
-  data[["prec_yr"]] <- fetch("prec_yr") *
+  data[["prec_yr"]] <- fetch_data("prec_yr") *
     fetch_config("precipitation_correction_factor")
 
   # Calculate total area
-  data[["total_area"]] <- fetch("area_main") + fetch("area_rd")
+  data[["total_area"]] <- fetch_data("area_main") + fetch_data("area_rd")
 
   # Convert percentages to fractions
   data <- calculate_fractions(data)
@@ -86,7 +88,7 @@ prepare_input_data <- function(data, config)
   data[["sealed"]] <- with(data, roof + pvd)
 
   # Get (land_type, veg_class, irrigation) tuples based on Berlin-specific codes
-  usage_types <- fetch(c("berlin_usage", "berlin_type"))
+  usage_types <- fetch_data(c("berlin_usage", "berlin_type"))
 
   usages <- get_usage_tuple(
     usage = usage_types[[1L]],
@@ -96,7 +98,7 @@ prepare_input_data <- function(data, config)
   # Calculate potential evaporation for all areas                               # roads have no district: etp 775
   pot_evaporation <- get_potential_evaporation(
     is_waterbody = land_type_is_waterbody(usages[["land_type"]]),
-    district = fetch("district"),
+    district = fetch_data("district"),
     lookup = fetch_config("potential_evaporation")
   )
 
@@ -164,13 +166,13 @@ read_column_info <- function()
 calculate_fractions <- function(data)
 {
   # Column accessor
-  fetch <- create_accessor(data)
+  fetch_data <- create_accessor(data)
 
-  total_area <- fetch("total_area")
+  total_area <- fetch_data("total_area")
 
   # Transform percentage to fractions
-  data[["main_fraction"]] <- fetch("area_main") / total_area
-  data[["road_fraction"]] <- fetch("area_rd") / total_area
+  data[["main_fraction"]] <- fetch_data("area_main") / total_area
+  data[["road_fraction"]] <- fetch_data("area_rd") / total_area
 
   # Determine names of columns that need to be divided by 100
   columns <- read_column_info() %>%
@@ -179,7 +181,7 @@ calculate_fractions <- function(data)
     intersect(names(data))
 
   for (column in columns) {
-    data[[column]] <- fetch(column) / 100
+    data[[column]] <- fetch_data(column) / 100
   }
 
   data
