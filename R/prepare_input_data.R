@@ -37,7 +37,7 @@ prepare_input_data <- function(data, config)
   # If area fractions or area main or area road are missing (NA) set them to 0
   data <- set_columns_to_zero_where_na(
     data = data,
-    columns = grep("roof|pvd|srf|area_", names(data), value = TRUE)
+    columns = matching_names(data, pattern = "roof|pvd|srf|area_")
   )
 
   if (data_format == "format_2020")

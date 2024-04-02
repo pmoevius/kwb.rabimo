@@ -240,6 +240,12 @@ list_to_data_frame_with_keys <- function(
   move_columns_to_front(result, key_name)
 }
 
+# matching_names ---------------------------------------------------------------
+matching_names <- function(data, pattern)
+{
+  grep(pattern, names(data), value = TRUE)
+}
+
 # move_columns_to_front --------------------------------------------------------
 #' @importFrom kwb.utils moveColumnsToFront
 move_columns_to_front <- kwb.utils::moveColumnsToFront

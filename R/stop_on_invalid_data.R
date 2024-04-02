@@ -71,10 +71,8 @@ stop_on_invalid_data <- function(input)
     )
   )
 
-  pattern_no_roads <- "^srf.*pvd$"
-  pattern_roads <- "^srf.*rd$"
-  surface_cols_no_rd <- grep(pattern_no_roads, names(input), value = TRUE)
-  surface_cols_rd <- grep(pattern_roads, names(input), value = TRUE)
+  surface_cols_no_rd <- matching_names(input, pattern_no_roads())
+  surface_cols_rd <- matching_names(input, pattern_roads())
 
   check_sum_up_to_1_or_0(input, surface_cols_no_rd)
   check_sum_up_to_1_or_0(input, surface_cols_rd)
