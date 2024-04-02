@@ -95,21 +95,20 @@ prepare_input_data <- function(data, config)
     type = usage_types[[2L]]
   )
 
-  # Calculate potential evaporation for all areas                               # roads have no district: etp 775
-  pot_evaporation <- get_potential_evaporation(
+  # Calculate potential evaporation for all areas and column-bind everything
+  # together. Roads have no district: etp 775
+  data <- cbind(data, usages,
+    get_potential_evaporation(
     is_waterbody = land_type_is_waterbody(usages[["land_type"]]),
     district = fetch_data("district"),
     lookup = fetch_config("potential_evaporation")
-  )
-
-  # Column-bind everything together
-  data <- cbind(data, usages, pot_evaporation)
+  ))
 
   # Add a text column describing the type of block (usage)
   data[["block_type"]] <- get_block_type(usage_types)
 
   # Write road specification into "block_type"
-  data[grepl("300", data[["block_type"]]),"block_type"] <- "300_road"
+  data[["block_type"]][grepl("300", data[["block_type"]])] <- "300_road"
 
   # Set roof area that are NAs to 0 for water bodies
   data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
