@@ -112,9 +112,9 @@ prepare_input_data <- function(data, config)
   # Set roof area that are NAs to 0 for water bodies
   data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
 
-  # Set order of columns as defined in "column-names.csv"
-  select_columns(data, get_column_selection() %>%
-                   dplyr::intersect(names(data)))
+  # Select only the required columns and use the order as in "column-names.csv"
+  data %>%
+    select_columns(dplyr::intersect(get_column_selection(), names(data)))
 }
 
 # identify_data_format_or_stop -------------------------------------------------
