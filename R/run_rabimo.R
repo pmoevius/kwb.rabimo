@@ -114,10 +114,8 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   # (contains both surface runoff and infiltration components)
 
   # Identify active surface class columns in input data
-  pattern_no_roads <- "^srf.*pvd$"
-  pattern_roads <- "^srf.*rd$"
-  surface_cols_no_rd <- matching_names(data, pattern_no_roads)
-  surface_cols_rd <- matching_names(data, pattern_roads)
+  surface_cols_no_rd <- matching_names(data, pattern_no_roads())
+  surface_cols_rd <- matching_names(data, pattern_roads())
   digits <- gsub("\\D", "", surface_cols_no_rd)
 
   # choose columns related to surface classes
