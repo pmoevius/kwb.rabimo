@@ -31,22 +31,13 @@ prepare_input_data <- function(data, config)
   # Set column names to upper case to match 2019 data when using raw 2020 data
   names(data) <- toupper(names(data))
 
-  # 1. Rename columns from ABIMO 3.2 names to ABIMO new* internal names
-  # 2. Select only the columns that are required
-
-  # check: columns that are not required are still in the dataframe
+  # Rename columns from ABIMO 3.2 names to new ABIMO-internal names
   data <- rename_columns(data, get_column_renamings())
 
-  # If area fractions are missing (NA) set them to 0
+  # If area fractions or area main or area road are missing (NA) set them to 0
   data <- set_columns_to_zero_where_na(
     data = data,
-    columns = grep("roof|pvd|srf", names(data), value = TRUE)
-  )
-
-  # if area main or area road are missing (NA) set them to 0
-  data <- set_columns_to_zero_where_na(
-    data = data,
-    columns = grep("area_", names(data), value = TRUE)
+    columns = grep("roof|pvd|srf|area_", names(data), value = TRUE)
   )
 
   if (data_format == "format_2020")
