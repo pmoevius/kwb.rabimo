@@ -29,15 +29,16 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   # Check whether config has the expected structure
   stop_on_invalid_config(config)
 
-  # Create accessor functions to data columns and config elements
-  fetch_data <- create_accessor(data)
-  fetch_config <- create_accessor(config)
-
   # Get climate data
   climate <- cat_and_run(
     "Collecting climate related data",
     get_climate(data)
   )
+
+  # Create accessor functions to data columns and config elements
+  fetch_data <- create_accessor(data)
+  fetch_config <- create_accessor(config)
+  fetch_climate <- create_accessor(climate)
 
   # Prepare soil properties for all rows. They are required to calculate the
   # actual evapotranspiration of unsealed areas. In the case of water bodies,
@@ -54,14 +55,14 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
     )
   )
 
-  # Precalculate all results of realEvapoTranspiration()
+  # Pre-calculate all results of realEvapoTranspiration()
   evaporation_sealed <- cat_and_run(
     "Precalculating actual evapotranspirations for impervious areas",
     expr = fetch_config("bagrov_values") %>%
       lapply(function(x) {
         real_evapo_transpiration(
-          potential_evaporation = select_columns(climate, "epot_yr"),
-          x_ratio = select_columns(climate, "x_ratio"),
+          potential_evaporation = fetch_climate("epot_yr"),
+          x_ratio = fetch_climate("x_ratio"),
           bagrov_parameter = rep(x, nrow(data)),
           use_abimo_algorithm = simulate_abimo
         )
@@ -69,7 +70,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
       do.call(what = data.frame)
   )
 
-  # Precalculate all results of actualEvaporationWaterbodyOrPervious()
+  # Pre-calculate all results of actualEvaporationWaterbodyOrPervious()
   evaporation_unsealed <- cat_and_run(
     paste(
       "Precalculating actual evapotranspirations for waterbodies or pervious",
@@ -85,7 +86,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
     )
   )
 
-  runoff_all <- climate[["prec_yr"]] - cbind(
+  runoff_all <- fetch_climate("prec_yr") - cbind(
     evaporation_sealed,
     unsealed = evaporation_unsealed
   )
@@ -135,7 +136,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   road_surface_fractions <- fetch_data(surface_cols_rd)
 
   # add an empty column in road_surface_fraction to match dimension if needed
-  if(!identical(length(surface_cols_no_rd), length(surface_cols_rd))){
+  if (!identical(length(surface_cols_no_rd), length(surface_cols_rd))) {
     road_surface_fractions$srf5_pvd_rd <- 0
   }
 
@@ -152,8 +153,8 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
       with(data, road_fraction * pvd_rd) * road_surface_fractions) -
     runoff_sealed_actual
 
-  #Total Runoff of unsealed surfaces (unsealedSurface_RUV)
-  runoff_unsealed <- climate[["prec_yr"]] - as.numeric(evaporation_unsealed)
+  # Total Runoff of unsealed surfaces (unsealedSurface_RUV)
+  runoff_unsealed <- fetch_climate("prec_yr") - as.numeric(evaporation_unsealed) # why as.numeric()?
 
   # Infiltration of road (unsealed areas)
   infiltration_unsealed_roads <-
