@@ -4,10 +4,13 @@
 \alias{abimo_config_to_config}
 \title{Convert Abimo Configuration to List}
 \usage{
-abimo_config_to_config(abimo_config)
+abimo_config_to_config(abimo_config, add_class_5 = FALSE)
 }
 \arguments{
 \item{abimo_config}{as returned by \code{kwb.abimo::read_config}}
+
+\item{add_class_5}{logical indicating whether or not to add fields for a
+fifth surface class. The default is \code{FALSE}.}
 }
 \value{
 list with elements

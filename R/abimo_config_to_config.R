@@ -1,6 +1,8 @@
 #' Convert Abimo Configuration to List
 #'
 #' @param abimo_config as returned by \code{kwb.abimo::read_config}
+#' @param add_class_5 logical indicating whether or not to add fields for a
+#'   fifth surface class. The default is \code{FALSE}.
 #' @return list with elements
 #'   \code{"potential_evaporation"},
 #'   \code{"runoff_factors"},
@@ -11,7 +13,7 @@
 #' @export
 #' @examples
 #' str(kwb.rabimo::abimo_config_to_config(kwb.abimo::read_config()))
-abimo_config_to_config <- function(abimo_config)
+abimo_config_to_config <- function(abimo_config, add_class_5 = FALSE)
 {
   #abimo_config <- kwb.abimo::read_config()
   #`%>%` <- magrittr::`%>%`
@@ -78,6 +80,11 @@ abimo_config_to_config <- function(abimo_config)
       Belaglsklasse = "surface"
     )))
   })
+
+  if (add_class_5) {
+    result$runoff_factors <- c(result$runoff_factors, surface5 = 0.48)
+    result$bagrov_values <- c(result$bagrov_values, surface5 = 0.25)
+  }
 
   result
 }
