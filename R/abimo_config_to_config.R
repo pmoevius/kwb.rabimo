@@ -1,6 +1,8 @@
 #' Convert Abimo Configuration to List
 #'
 #' @param abimo_config as returned by \code{kwb.abimo::read_config}
+#' @param add_class_5 logical indicating whether or not to add fields for a
+#'   fifth surface class. The default is \code{FALSE}.
 #' @return list with elements
 #'   \code{"potential_evaporation"},
 #'   \code{"runoff_factors"},

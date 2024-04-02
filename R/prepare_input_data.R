@@ -72,7 +72,7 @@ prepare_input_data <- function(data, config)
 
     # if for some areas the sum of all surface classes exceeds 1 correct it
     # by reducing proportionally all surface classes
-    data[, surface_class_columns] <- kwb.rabimo:::rescale_to_row_sum(
+    data[, surface_class_columns] <- rescale_to_row_sum(
       as.matrix(kwb.utils::selectColumns(data, surface_class_columns)),
       row_sum = 100
     )
