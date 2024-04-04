@@ -44,7 +44,7 @@ if (FALSE)
   # Set all NAs to zero (test)
   #berlin_2020_data <- kwb.utils::defaultIfNA(berlin_2020_data, 0)
 
-  inputs_2020 <- kwb.rabimo::prepare_berlin_inputs(
+  rabimo_inputs_2020 <- kwb.rabimo::prepare_berlin_inputs(
     data = berlin_2020_data,
     config = kwb.abimo::read_config()
   )
@@ -52,15 +52,21 @@ if (FALSE)
   # Fehler: Column 'gw_dist' must not contain missing values (NA, found 4
   # times). Please give a value (may be 0) in each row.
   # MANUAL CORRECTION
-  data <- inputs_2020$data
+  data <- rabimo_inputs_2020$data
   data <- data[kwb.utils::matchesCriteria(data, "!is.na(gw_dist)"), ]
+
+  rabimo_inputs_2020$data <- data
 
   # calculate R-ABIMO results
   results <- kwb.rabimo::run_rabimo(
     data = data,
-    config = inputs_2020$config
+    config = rabimo_inputs_2020$config
   )
 
+  # save inputs list in package
+  if(FALSE){
+    usethis::use_data(rabimo_inputs_2020)
+  }
 }
 
 
