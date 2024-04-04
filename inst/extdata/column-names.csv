@@ -10,6 +10,7 @@ area_main,FLGES,,Total non-road area within the block,m2,required?,numeric
 area_rd,STR_FLGES,,Total road area within the block,m2,required?,numeric
 main_fraction,,,Non-road fraction of total block area (area_main/total_area),0..1,required,numeric
 roof,PROBAU,x,Roof fraction of non-road built area,0..1,required,numeric
+green_roof,,,Green roof fraction of roof area, 0...1, required, numeric
 swg_roof,KAN_BEB,x,Fraction of ... ,0..1,required,numeric
 pvd,PROVGU,x,Fraction of ...,0..1,required,numeric
 swg_pvd,KAN_VGU,x,Fraction of ...,0..1,required,numeric

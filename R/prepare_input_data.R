@@ -85,7 +85,11 @@ prepare_input_data <- function(data, config)
   # Convert percentages to fractions
   data <- calculate_fractions(data)
 
+  # insert column with total sealed area
   data[["sealed"]] <- with(data, roof + pvd)
+
+  # insert empty green-roof column (fraction of roof)
+  data[["green_roof"]] <- 0
 
   # Get (land_type, veg_class, irrigation) tuples based on Berlin-specific codes
   usage_types <- fetch_data(c("berlin_usage", "berlin_type"))
