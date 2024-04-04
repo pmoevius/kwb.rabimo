@@ -1,15 +1,13 @@
 # Test script for implementing stormwater management in RABIMO
 
-# rabimo_input_2020 <- readRDS(file = "C:/development/r-projects/kwb.rabimo/inst/extdata/inputs_2020.rds")
-# usethis::use_data(rabimo_input_2020)
-
 kwb.utils::assignPackageObjects("kwb.rabimo")
 `%>%` <- magrittr::`%>%`
 
-input <- kwb.rabimo::rabimo_inputs_2020
+# get 2020 input data and config in R-Abimo format
+inputs <- kwb.rabimo::rabimo_inputs_2020
 
-input_data <- input$data
-input_config <- input$config
+input_data <- inputs$data
+input_config <- inputs$config
 
 # subset input for testing
 codes <- c("0000000004000011","0000000004000017","0000000004000018",
@@ -61,10 +59,6 @@ results_gr <- kwb.rabimo::run_rabimo(data = updated_input_data,
 results_no_gr <- kwb.rabimo::run_rabimo(data = input_data,
                                         config = input_config,
                                         check = FALSE)
-
-compare <- cbind(select_columns(updated_input_data,
-                                c("code", "roof", "green_roof")),
-                 results_gr[-1] - results_no_gr[-1])
 
 compare <- updated_input_data %>%
   select_columns(c("code", "roof", "green_roof")) %>%
