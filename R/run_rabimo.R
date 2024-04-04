@@ -11,23 +11,28 @@
 #'   Default: \code{TRUE}!
 #' @return data frame with columns as returned by Abimo
 #' @export
-run_rabimo <- function(data, config, simulate_abimo = TRUE)
+run_rabimo <- function(data, config, simulate_abimo = TRUE, check = TRUE)
 {
   # Provide functions and variables for debugging
   # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
-  # data <- data
-  # config <- inputs_2020$config
+  # data <- input_data
+  # config <- input_config
   # `%>%` <- magrittr::`%>%`
+  # check = FALSE
 
   #
   # Go to inst/extdata/test-rabimo.R to provide data and config for debugging
   #
 
   # Check whether data has the expected structure
-  stop_on_invalid_data(data)
+  if(check)
+  {
+    stop_on_invalid_data(data)
 
-  # Check whether config has the expected structure
-  stop_on_invalid_config(config)
+    # Check whether config has the expected structure
+    stop_on_invalid_config(config)
+  }
+
 
   # Get climate data
   climate <- cat_and_run(
@@ -98,17 +103,31 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
   # total runoff of roof areas
   # (total runoff, contains both surface runoff and infiltration components)
   runoff_roof <- select_columns(runoff_all, "roof")
+  runoff_green_roof <- select_columns(runoff_all, "green_roof")
 
   # Provide runoff coefficients for impervious surfaces
   runoff_factors <- fetch_config("runoff_factors")
 
   # actual runoff from roof surface (area based, with no infiltration)
-  runoff_roof_actual <- with(data, main_fraction * roof * swg_roof) *
+  runoff_roof_actual <- with(data, main_fraction *
+                               roof * (1 - green_roof) * swg_roof) *
     runoff_factors[["roof"]] * runoff_roof
 
+  # actual runoff from green roof surface (area based, with no infiltration)
+  runoff_green_roof_actual <- with(data, main_fraction *
+                               roof * green_roof * swg_roof) *
+    runoff_factors[["roof"]] * runoff_green_roof
+
   # actual infiltration from roof surface (area based, with no runoff)
-  infiltration_roof_actual <- with(data, main_fraction * roof * (1-swg_roof)) *
+  infiltration_roof_actual <- with(data, main_fraction * roof *
+                                     (1-green_roof) * (1-swg_roof)) *
     runoff_roof
+
+  # actual infiltration from green_roof surface (area based, with no runoff)
+  infiltration_green_roof_actual <- with(data, main_fraction * roof *
+                                     green_roof * (1-swg_roof)) *
+    runoff_green_roof
+
 
   # Calculate runoff for all surface classes at once
   # (contains both surface runoff and infiltration components)
@@ -159,19 +178,6 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
     with(data, road_fraction * (1-pvd_rd)) *
     runoff_sealed[, ncol(runoff_sealed)] # last (less sealed) surface class
 
-  # Infiltration from unsealed non-road surfaces (old: riuv)
-  # original C++ code (check if correct):
-  # infiltration.unsealedSurfaces = (
-  #   100.0F - current_area.mainPercentageSealed()
-  # ) / 100.0F * runoff.unsealedSurface_RUV;
-
-  # fraction_unsealed <- if (simulate_abimo) {
-  #   #fetch("areaFractionMain") * # ??? TODO: VERIFY THIS ????
-  #   (1 - fetch_data("mainFractionSealed"))
-  # } else {
-  #   get_fraction("main/!sealed")
-  # }
-
   fraction_unsealed <- if(simulate_abimo) {
     with(data, 1 - sealed)
   } else {
@@ -184,13 +190,14 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE)
 
   total_infiltration <-
     infiltration_roof_actual +
+    infiltration_green_roof_actual +
     infiltration_unsealed_surfaces +
     infiltration_unsealed_roads +
     rowSums(infiltration_sealed_actual)
 
   # Calculate runoff 'ROW' for entire block area (FLGES + STR_FLGES) (mm/a)
 
-  total_surface_runoff <- runoff_roof_actual +
+  total_surface_runoff <- runoff_roof_actual + runoff_green_roof_actual +
     #orig.: runoff_unsealed_roads <- was set to zero in the master branch
     rowSums(runoff_sealed_actual)
 
