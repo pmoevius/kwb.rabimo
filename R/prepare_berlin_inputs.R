@@ -48,6 +48,16 @@ prepare_berlin_inputs <- function(
 # prepare_config ---------------------------------------------------------------
 prepare_config <- function(config)
 {
+
+  # add evaporation effect of swales (percentage of water that does not infiltrate)
+  config[["swale"]] <- c(swale_evaporation_factor = 0.1)
+
+  # add bagrov value for green roofs
+  current_bagrov <-  config[["bagrov_values"]]
+  config[["bagrov_values"]] <- c(current_bagrov[1],
+                                 "green_roof" = 0.65,
+                                 current_bagrov[2:length(current_bagrov)])
+
   expected <- c("precipitation_correction_factor", "potential_evaporation")
 
   # Try to get the expected elements (for clear error message, if applicable)
