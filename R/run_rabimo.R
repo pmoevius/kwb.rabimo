@@ -115,7 +115,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE, check = TRUE)
 
   # actual runoff from green roof surface (area based, with no infiltration)
   runoff_green_roof_actual <- with(data, main_fraction *
-                               roof * green_roof * swg_roof) *
+                                     roof * green_roof * swg_roof) *
     runoff_factors[["roof"]] * runoff_green_roof
 
   # actual infiltration from roof surface (area based, with no runoff)
@@ -125,7 +125,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE, check = TRUE)
 
   # actual infiltration from green_roof surface (area based, with no runoff)
   infiltration_green_roof_actual <- with(data, main_fraction * roof *
-                                     green_roof * (1-swg_roof)) *
+                                           green_roof * (1-swg_roof)) *
     runoff_green_roof
 
 
@@ -186,20 +186,24 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE, check = TRUE)
 
   infiltration_unsealed_surfaces <- fraction_unsealed * runoff_unsealed
 
-  # Calculate infiltration rate 'RI' for entire block partial area (mm/a)
+  # Calculate runoff 'ROW' for entire block area (FLGES + STR_FLGES) (mm/a)
+  total_surface_runoff <- (runoff_roof_actual + runoff_green_roof_actual +
+                             #orig.: runoff_unsealed_roads <- was set to zero in the master branch
+                             rowSums(runoff_sealed_actual))
 
+  # Calculate infiltration rate 'RI' for entire block partial area (mm/a)
   total_infiltration <-
-    infiltration_roof_actual +
+    (infiltration_roof_actual +
     infiltration_green_roof_actual +
     infiltration_unsealed_surfaces +
     infiltration_unsealed_roads +
-    rowSums(infiltration_sealed_actual)
+    rowSums(infiltration_sealed_actual))
 
-  # Calculate runoff 'ROW' for entire block area (FLGES + STR_FLGES) (mm/a)
-
-  total_surface_runoff <- runoff_roof_actual + runoff_green_roof_actual +
-    #orig.: runoff_unsealed_roads <- was set to zero in the master branch
-    rowSums(runoff_sealed_actual)
+  # Correct Surface Runoff and Infiltration if area has an infiltration swale
+  swale_delta <- total_surface_runoff * (fetch_data("to_swale"))
+  total_surface_runoff <- total_surface_runoff - swale_delta
+  total_infiltration <- total_infiltration +
+    swale_delta * (1-(fetch_config("swale")["swale_evaporation_factor"]))
 
   # Calculate "total system losses" 'R' due to runoff and infiltration
   # for entire block partial area
