@@ -26,45 +26,80 @@ codes <- c("0000000004000011","0000000004000017","0000000004000018",
 
 input_data <- input_data[which(input_data$code %in% codes),]
 
-## GREEN-ROOF ------------------------------------------------------------------
-current_bagrov <- input_config$bagrov_values
+if (FALSE)
+{
+  ## RESULTS WITHOUT WSUD
+  results_no_wsud <- kwb.rabimo::run_rabimo(data = input_data,
+                                          config = input_config,
+                                          check = FALSE)
 
-# add green roof parameters to config
-input_config$bagrov_values <- c(current_bagrov[1],
-                                "green_roof" = 0.65,
-                                current_bagrov[2:length(current_bagrov)])
+  ## GREEN-ROOF ----------------------------------------------------------------
+  current_bagrov <- input_config$bagrov_values
 
+  # add green roof parameters to config
+  input_config$bagrov_values <- c(current_bagrov[1],
+                                  "green_roof" = 0.65,
+                                  current_bagrov[2:length(current_bagrov)])
 
-# add column "green_roof" [must also happen in prepare_berlin..()]
-input_data <- input_data %>%
-  dplyr::mutate(green_roof = 0) %>%
-  dplyr::relocate(green_roof, .after = roof)
+  # fake storm-water management input from user: green_roof
+  set.seed(123)
+  green_roof_input <- data.frame(code = codes) %>%
+    dplyr::mutate(green_roof = round(runif(length(codes)),2)) %>%
+    dplyr::sample_frac(0.6)
 
-# fake storm-water management input from user: green_roof
-set.seed(123)
-green_roof_input <- data.frame(code = codes) %>%
-  dplyr::mutate(green_roof = round(runif(length(codes)),2)) %>%
-  dplyr::sample_frac(0.6)
+  # update green roof column in input_data
+  updated_input_data <- update_input(original_data = input_data,
+                                      update_data = green_roof_input,
+                                      value_column = "green_roof")
 
-updated_input_data <- input_data %>%
-  dplyr::left_join(green_roof_input, by = "code", suffix = c("",".new")) %>%
-  dplyr::mutate(green_roof = dplyr::coalesce(green_roof.new, green_roof)) %>%
-  dplyr::select(-green_roof.new)
-
-# calculate water balance results with green-roof component
-results_gr <- kwb.rabimo::run_rabimo(data = updated_input_data,
-                                     config = input_config,
-                                     check = FALSE)
-
-results_no_gr <- kwb.rabimo::run_rabimo(data = input_data,
-                                        config = input_config,
-                                        check = FALSE)
-
-compare <- updated_input_data %>%
-  select_columns(c("code", "roof", "green_roof")) %>%
-  cbind(results_gr[-1] - results_no_gr[-1])
+  # calculate water balance results with green-roof component
+  results_only_gr <- kwb.rabimo::run_rabimo(data = updated_input_data,
+                                       config = input_config,
+                                       check = FALSE)
 
 
+
+  compare_gr <- updated_input_data %>%
+    select_columns(c("code", "roof", "green_roof")) %>%
+    cbind(results_only_gr[-1] - results_no_wsud[-1])
+
+  input_data_with_greenroof <- updated_input_data
+
+  ## INFILTRATION TRENCH ---------------------------------------------------------
+
+  # vector with total percentage of the runoff-relevant area (sealed area)
+  # that is connected to an infiltration swale
+  area_to_swale <- data.frame(code = codes) %>%
+    dplyr::mutate(to_swale = round(runif(length(codes)),2)) %>%
+    dplyr::sample_frac(0.4)
+
+  # the to_swale input vector must be merged with the input-data
+  updated_input_data <- update_input(original_data = input_data,
+                                     update_data = area_to_swale,
+                                     value_column = "to_swale")
+
+  results_only_swale <- kwb.rabimo::run_rabimo(data = updated_input_data,
+                                               config = input_config,
+                                               check = FALSE)
+
+  compare_swale <- updated_input_data %>%
+    select_columns(c("code", "to_swale", "pvd")) %>%
+    cbind(results_only_swale[-1] - results_no_wsud[-1])
+
+}
+
+
+# update_input ------------------------------------------------------------
+update_input <- function(original_data, update_data, value_column)
+{
+  stopifnot(all(update_data[["code"]] %in% original_data[["code"]]))
+
+  original_data[match(update_data[["code"]],original_data[["code"]]),
+                value_column] <- update_data[[value_column]]
+
+  original_data
+
+}
 
 
 
