@@ -34,12 +34,6 @@ if (FALSE)
                                           check = FALSE)
 
   ## GREEN-ROOF ----------------------------------------------------------------
-  current_bagrov <- input_config$bagrov_values
-
-  # add green roof parameters to config
-  input_config$bagrov_values <- c(current_bagrov[1],
-                                  "green_roof" = 0.65,
-                                  current_bagrov[2:length(current_bagrov)])
 
   # fake storm-water management input from user: green_roof
   set.seed(123)
@@ -65,7 +59,7 @@ if (FALSE)
 
   input_data_with_greenroof <- updated_input_data
 
-  ## INFILTRATION TRENCH ---------------------------------------------------------
+  ## INFILTRATION TRENCH -------------------------------------------------------
 
   # vector with total percentage of the runoff-relevant area (sealed area)
   # that is connected to an infiltration swale
