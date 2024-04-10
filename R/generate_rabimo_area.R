@@ -1,0 +1,47 @@
+# generate_rabimo_area ---------------------------------------------------------
+
+#' Generate an area in R-ABIMO format with default values.
+#' All default values can be overridden by entering new key-value pairs.
+#'
+#' @param \dots key = value pairs overriding the default column values
+#' @param column_info data frame as returned by \code{\link{read_column_info}}
+#' @export
+generate_rabimo_area <- function(code, ..., column_info = read_column_info()) {
+
+  dictionary <- column_info %>%
+    dplyr::filter(type != "berlin-specific") %>%
+    select_columns(c("rabimo_berlin", "default", "data_type"))
+
+  arguments <- dictionary$default %>%
+    as.list() %>%
+    stats::setNames(dictionary$rabimo_berlin)
+
+  is_numeric <- dictionary$data_type == "numeric"
+  arguments[is_numeric] <- lapply(arguments[is_numeric], as.numeric)
+
+  arguments["code"] <- code
+
+  area_main <- arguments[["area_main"]]
+  total_area <- arguments[["total_area"]]
+  arguments["main_fraction"] <- round(area_main/total_area , 2)
+
+  roof <- arguments[["roof"]]
+  paved <- arguments[["pvd"]]
+  arguments["sealed"] <- round(roof + paved, 2)
+
+  result <- kwb.utils::callWith(data.frame, arguments, ...)
+
+  result
+}
+
+# test function
+if (FALSE) {
+  kwb.utils::assignPackageObjects("kwb.rabimo")
+
+  config <- kwb.rabimo::rabimo_inputs_2020$config
+
+  my_area <- generate_rabimo_area(code = "a_code")
+
+  kwb.rabimo::run_rabimo(data = my_area, config = config,
+                         check = FALSE, simulate_abimo = FALSE)
+}
