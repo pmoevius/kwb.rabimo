@@ -22,6 +22,17 @@ paved_area <- generate_rabimo_area(code = "all_paved", roof = 0, pvd = 1,
 
 area_to_swale <- generate_rabimo_area(code = "roof_to_swale",
                                       roof = 1, pvd = 0, to_swale = 1)
+# problem: the swale must be outside the area since roof = 1 (whole area)
+# this can not be modeled in WABILA
+
+# no runoff
+only_garden_area <- generate_rabimo_area(code ="garden", roof = 0, pvd = 0)
+
+# area with 50% roof and 50% garden. The ro from the roof goes into the sewer.
+mixed_roof_garden_area <- generate_rabimo_area(code = "roof_and_garden",
+                                               roof = 0.5, pvd = 0)
+
+
 
 # model areas in WABILA --------------------------------------------------------
 
@@ -81,58 +92,62 @@ wabila_roof_to_swale_results <- c(a_swale, g_swale, v_swale)
 
 # compare result in R-ABIMO ----------------------------------------------------
 
-# R-ABIMO results
-result_simple_roof <- select_columns(
-  run_rabimo(data = simple_roof_area, config = config,
-             simulate_abimo = FALSE, check = FALSE),
-  c("ROW","RI","VERDUNSTUN"))
-
-result_green_roof <-  select_columns(
-  run_rabimo(data = green_roof_area, config = config,
-             simulate_abimo = FALSE, check = FALSE),
-  c("ROW","RI","VERDUNSTUN"))
-
-result_paved_area <-  select_columns(
-  run_rabimo(data = paved_area, config = config,
-             simulate_abimo = FALSE, check = FALSE),
-  c("ROW","RI","VERDUNSTUN"))
-
-result_roof_to_swale <- select_columns(
-  run_rabimo(data = area_to_swale, config = config,
-             simulate_abimo = FALSE, check = FALSE),
-  c("ROW","RI","VERDUNSTUN"))
-
 # express results in percentage and compare with WABILA
-factors_simple_roof <- result_simple_roof %>%
-  magrittr::divide_by(simple_roof_area$prec_yr) %>%
-  setNames(c("runoff","infiltration","evaporation")) %>%
-  rbind(wabila_roof_results) %>%
-  as.matrix() %>%
-  magrittr::set_rownames(c("rabimo", "wabila"))
+factor_simple_roof <- get_area_balance(area = simple_roof_area,
+                                       config = config,
+                                       wabila_results = wabila_roof_results)
 
-factors_green_roof <- result_green_roof %>%
-  magrittr::divide_by(green_roof_area$prec_yr) %>%
-  setNames(c("runoff","infiltration","evaporation")) %>%
-  rbind(wabila_green_roof_results) %>%
-  as.matrix() %>%
-  magrittr::set_rownames(c("rabimo", "wabila"))
+factor_green_roof <- get_area_balance(area = green_roof_area,
+                                       config = config,
+                                       wabila_results = wabila_green_roof_results)
 
-factors_paved_area <- result_paved_area %>%
-  magrittr::divide_by(paved_area$prec_yr) %>%
-  setNames(c("runoff","infiltration","evaporation")) %>%
-  rbind(wabila_paved_results) %>%
-  as.matrix() %>%
-  magrittr::set_rownames(c("rabimo", "wabila"))
+factors_paved_area <- get_area_balance(area = paved_area,
+                                      config = config,
+                                      wabila_results = wabila_paved_results)
 
-factors_roof_to_swale <- result_roof_to_swale %>%
-  magrittr::divide_by(area_to_swale$prec_yr) %>%
-  setNames(c("runoff","infiltration","evaporation")) %>%
-  rbind(wabila_roof_to_swale_results) %>%
-  as.matrix() %>%
-  magrittr::set_rownames(c("rabimo", "wabila"))
+factors_roof_to_swale <- get_area_balance(area = area_to_swale,
+                                          config = config,
+                                          wabila_results = wabila_roof_to_swale_results)
 
-print(factors_simple_roof)
-print(factors_green_roof)
-print(factors_paved_area)
-print(factors_roof_to_swale)
+
+factors_only_garden <- get_area_balance(area = only_garden_area,
+                                        config = config)
+
+factors_mixed_garden <- get_area_balance(area = mixed_roof_garden_area,
+                                         config = config)
+
+
+
+# get_area_balance -------------------------------------------------------------
+get_area_balance <- function(area, config, rabimo_results = NULL,
+                             wabila_results = NULL,
+                             simulate_abimo = FALSE, check = FALSE)
+{
+  results <- if (is.null(rabimo_results)){
+    run_rabimo(data = area, config = config,
+               simulate_abimo = simulate_abimo,
+               check = check)
+  } else {
+    rabimo_results
+  }
+
+  results <- results %>%
+    select_columns(c("ROW","RI","VERDUNSTUN"))
+
+  precipitation <- area[["prec_yr"]]
+
+  factors <- results %>%
+    magrittr::divide_by(precipitation) %>%
+    setNames(c("runoff","infiltration","evaporation")) %>%
+    as.matrix() %>%
+    magrittr::set_rownames("rabimo")
+
+  if (length(wabila_results) == 3){
+    factors <- factors %>%
+      rbind(wabila_results) %>%
+      magrittr::set_rownames(c("rabimo", "wabila"))
+  }
+
+  return(factors)
+}
 
