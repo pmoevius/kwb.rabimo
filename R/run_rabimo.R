@@ -14,7 +14,7 @@
 run_rabimo <- function(data, config, simulate_abimo = TRUE, check = TRUE)
 {
   # Provide functions and variables for debugging
-  # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = TRUE
+  # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = FALSE
   # data <- input_data
   # config <- input_config
   # `%>%` <- magrittr::`%>%`
@@ -203,7 +203,7 @@ run_rabimo <- function(data, config, simulate_abimo = TRUE, check = TRUE)
   swale_delta <- total_surface_runoff * (fetch_data("to_swale"))
   total_surface_runoff <- total_surface_runoff - swale_delta
   total_infiltration <- total_infiltration +
-    swale_delta * (1-(fetch_config("swale")["swale_evaporation_factor"]))
+    swale_delta * (1-(fetch_config("swale")[["swale_evaporation_factor"]]))
 
   # Calculate "total system losses" 'R' due to runoff and infiltration
   # for entire block partial area
