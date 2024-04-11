@@ -19,17 +19,17 @@ generate_rabimo_area <- function(code, ..., column_info = read_column_info()) {
   is_numeric <- dictionary$data_type == "numeric"
   arguments[is_numeric] <- lapply(arguments[is_numeric], as.numeric)
 
-  arguments["code"] <- code
-
-  area_main <- arguments[["area_main"]]
-  total_area <- arguments[["total_area"]]
-  arguments["main_fraction"] <- round(area_main/total_area , 2)
-
-  roof <- arguments[["roof"]]
-  paved <- arguments[["pvd"]]
-  arguments["sealed"] <- round(roof + paved, 2)
-
   result <- kwb.utils::callWith(data.frame, arguments, ...)
+
+  result["code"] <- code
+
+  area_main <- result[["area_main"]]
+  total_area <- result[["total_area"]]
+  result["main_fraction"] <- round(area_main/total_area , 2)
+
+  roof <- result[["roof"]]
+  paved <- result[["pvd"]]
+  result["sealed"] <- round(roof + paved, 2)
 
   result
 }
