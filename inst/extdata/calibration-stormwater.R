@@ -102,7 +102,6 @@ if (FALSE) {
     v = roof_fraction * wabila_roof[3] + swale_fraction * wabila_swale[3] + garden_fraction * wabila_garden[3]
   )
 
-
   # modify config to match wabila simulation
   config$swale["swale_evaporation_factor"] <- 0.0
 
@@ -209,7 +208,8 @@ calculate_wabila_swale <- function(input = NULL, area, kf, BA = NULL)
   }
 
   if (is.null(BA)){
-    BA = 42.323 * kf^(-0.314)
+    #BA = 42.323 * kf^(-0.314)
+    BA <- estimate_swale_area(kf)
   }
 
   g = 0.8608 + 0.02385 * log(input) - 0.00005331 * ET_p - 0.002827 * BA -
@@ -224,6 +224,26 @@ calculate_wabila_swale <- function(input = NULL, area, kf, BA = NULL)
   return(result)
 
 }
+
+estimate_swale_area <- function(kf){
+
+  stopifnot(kf>=14 && kf<= 3600)
+
+  k_min <- 14
+  k_max <- 3600
+  A_min <- 27.14
+  A_max <- 62.414
+  E_min <- -0.303
+  E_max <- -0.328
+
+
+  A_value <- A_min + ((kf - k_min) * (A_max - A_min)) / (k_max - k_min)
+  E_value <- E_min + ((kf - k_min) * (E_max - E_min)) / (k_max - k_min)
+
+  A_value * kf ^ E_value
+}
+
+
 
 # get_area_balance -------------------------------------------------------------
 get_area_balance <- function(area, config, rabimo_results = NULL,
