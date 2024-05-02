@@ -203,19 +203,16 @@ run_rabimo <- function(
   # Calculate infiltration rate 'RI' for entire block partial area (mm/a)
   total_infiltration <-
     (infiltration_roof_actual +
-    infiltration_green_roof_actual +
-    infiltration_unsealed_surfaces +
-    infiltration_unsealed_roads +
-    rowSums(infiltration_sealed_actual))
+       infiltration_green_roof_actual +
+       infiltration_unsealed_surfaces +
+       infiltration_unsealed_roads +
+       rowSums(infiltration_sealed_actual))
 
   # Correct Surface Runoff and Infiltration if area has an infiltration swale
   swale_delta <- total_surface_runoff * (fetch_data("to_swale"))
   total_surface_runoff <- total_surface_runoff - swale_delta
   total_infiltration <- total_infiltration +
-    swale_delta * (1 - (select_elements(
-      fetch_config("swale"),
-      "swale_evaporation_factor"
-    )))
+    swale_delta * (1 - fetch_config("swale")[["swale_evaporation_factor"]])
 
   # Calculate "total system losses" 'R' due to runoff and infiltration
   # for entire block partial area
@@ -268,6 +265,7 @@ run_rabimo <- function(
     rename_columns(result_data_raw, name_mapping)
   } else {
     remove_columns(result_data_raw, pattern = "_flow") %>%
+      remove_columns("total_runoff") %>%
       move_columns_to_front(c("code", "total_area"))
   }
 
