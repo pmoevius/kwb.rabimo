@@ -3,13 +3,14 @@
 #' Generate an area in R-ABIMO format with default values.
 #' All default values can be overridden by entering new key-value pairs.
 #'
+#' @param code identifier of area
 #' @param \dots key = value pairs overriding the default column values
 #' @param column_info data frame as returned by \code{\link{read_column_info}}
 #' @export
 generate_rabimo_area <- function(code, ..., column_info = read_column_info()) {
 
   dictionary <- column_info %>%
-    dplyr::filter(type != "berlin-specific") %>%
+    dplyr::filter(.data[["type"]] != "berlin-specific") %>%
     select_columns(c("rabimo_berlin", "default", "data_type"))
 
   arguments <- dictionary$default %>%
