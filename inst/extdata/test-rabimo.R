@@ -57,15 +57,24 @@ if (FALSE)
 
   rabimo_inputs_2020$data <- data
 
+  cached <- kwb.utils:::cache_and_return(
+    x = rabimo_inputs_2020,
+    name = "rabimo_inputs_2020")
+
   # calculate R-ABIMO results
   results <- kwb.rabimo::run_rabimo(
     data = data,
-    config = rabimo_inputs_2020$config
+    config = rabimo_inputs_2020$config, simulate_abimo = FALSE, check = FALSE
   )
 
   # save inputs list in package
   if(FALSE){
     usethis::use_data(rabimo_inputs_2020)
+  }
+
+  # export 2020 results
+  if(FALSE){
+    foreign::write.dbf(results, file = paste0(get_path("results"),"berlin_2020.dbf"))
   }
 }
 
@@ -246,7 +255,8 @@ get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
   berlin_2020_clean = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
   berlin_2020_raw = "<isu5_2020>/finaler_eingang_von_sensbw/isu5_2020_combined",
   berlin_2020_combined = "<berlin_2020_raw>/isu5_2020_abimo_hyras9120_amarex.dbf",
-  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf"
+  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf",
+  results = "<amarex_ap4>/ABIMO_Daten/results/"
 )))
 
 # Define function: table_with_na() ---------------------------------------------
