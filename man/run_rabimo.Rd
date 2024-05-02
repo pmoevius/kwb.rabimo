@@ -4,7 +4,13 @@
 \alias{run_rabimo}
 \title{Run R-Abimo, the R-implementation of Water Balance Model Abimo}
 \usage{
-run_rabimo(data, config, simulate_abimo = TRUE, check = TRUE)
+run_rabimo(
+  data,
+  config,
+  simulate_abimo = TRUE,
+  check = TRUE,
+  intermediates = FALSE
+)
 }
 \arguments{
 \item{data}{data frame with columns as returned by
@@ -16,6 +22,11 @@ run_rabimo(data, config, simulate_abimo = TRUE, check = TRUE)
 \item{simulate_abimo}{logical indicating whether or not to simulate exactly
 what Abimo does (including obvious errors!).
 Default: \code{TRUE}!}
+
+\item{check}{logical indicating whether the check functions are executed}
+
+\item{intermediates}{logical indicating whether the intermediate results are
+returned as attributes}
 }
 \value{
 data frame with columns as returned by Abimo

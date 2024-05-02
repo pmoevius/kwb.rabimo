@@ -8,6 +8,8 @@ All default values can be overridden by entering new key-value pairs.}
 generate_rabimo_area(code, ..., column_info = read_column_info())
 }
 \arguments{
+\item{code}{identifier of area}
+
 \item{\dots}{key = value pairs overriding the default column values}
 
 \item{column_info}{data frame as returned by \code{\link{read_column_info}}}
