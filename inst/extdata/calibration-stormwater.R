@@ -32,7 +32,7 @@ if (FALSE) {
     code = "only_green_roof", roof = 1, green_roof = 1, pvd = 0)
 
   wabila_green_roof <- calculate_wabila_green_roof(
-    area = green_roof_area, height = 40, kf = 70, w_diff = 0.5)
+    area = green_roof_area, height = 100, kf = 70, w_diff = 0.5)
 
 
   factor_green_roof <- get_area_balance(area = green_roof_area,
@@ -69,8 +69,8 @@ if (FALSE) {
                                                  veg_class = 20)
 
   roof_fraction <- mixed_roof_garden_area$roof
-  wabila_mix_roof_garden <- wabila_garden * roof_fraction +
-    wabila_roof * (1 - roof_fraction)
+  wabila_mix_roof_garden <- wabila_roof * roof_fraction +
+    wabila_garden * (1 - roof_fraction)
 
   factors_mixed_garden <- get_area_balance(area = mixed_roof_garden_area,
                                            config = config,
@@ -93,7 +93,7 @@ if (FALSE) {
     area = area_to_swale, kf = 14)
 
   roof_fraction <- area_to_swale$roof
-  swale_fraction <- attr(wabila_swale, "estimated swale area")
+  swale_fraction <- attr(wabila_swale, "estimated swale area")*area_to_swale$roof
   garden_fraction <- 1 - roof_fraction - swale_fraction
 
   wabila_swale_roof_garden <- c(
@@ -103,7 +103,7 @@ if (FALSE) {
   )
 
   # modify config to match wabila simulation
-  config$swale["swale_evaporation_factor"] <- 0.0
+  config$swale["swale_evaporation_factor"] <- 0.05
 
   factors_roof_to_swale <- get_area_balance(area = area_to_swale,
                                             config = config,
