@@ -34,9 +34,11 @@ if (FALSE)
 if (FALSE)
 {
   # Read dbf file
-  berlin_2020_data <- get_path("berlin_2020_combined") %>%
-    foreign::read.dbf(as.is = TRUE) %>%
-    kwb.utils:::cache_and_return(name = "berlin_2020_data")
+  if (FALSE){
+    berlin_2020_data <- get_path("berlin_2020_combined") %>%
+      foreign::read.dbf(as.is = TRUE) %>%
+      kwb.utils:::cache_and_return(name = "berlin_2020_data")
+  }
 
   # Read data from cache if there is no access to KWB server
   berlin_2020_data <- kwb.utils:::get_cached("berlin_2020_data")
@@ -64,7 +66,10 @@ if (FALSE)
   # calculate R-ABIMO results
   results <- kwb.rabimo::run_rabimo(
     data = data,
-    config = rabimo_inputs_2020$config, simulate_abimo = FALSE, check = FALSE
+    config = rabimo_inputs_2020$config,
+    simulate_abimo = FALSE,
+    check = FALSE,
+    intermediates = FALSE
   )
 
   # save inputs list in package
