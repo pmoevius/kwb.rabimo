@@ -72,6 +72,10 @@ if (FALSE)
     intermediates = FALSE
   )
 
+  cached <- kwb.utils:::cache_and_return(
+    x = results,
+    name = "rabimo_results_2020")
+
   # save inputs list in package
   if(FALSE){
     usethis::use_data(rabimo_inputs_2020)
