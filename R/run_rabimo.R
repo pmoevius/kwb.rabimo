@@ -144,16 +144,17 @@ run_rabimo <- function(
   surface_cols_no_rd <- matching_names(data, pattern_no_roads())
   surface_cols_rd <- matching_names(data, pattern_roads())
   digits <- gsub("\\D", "", surface_cols_no_rd)
+  surface_class_names <- paste0("surface",digits)
 
   # choose columns related to surface classes
-  runoff_sealed <- select_columns(runoff_all, paste0("surface",digits))
+  runoff_sealed <- select_columns(runoff_all, surface_class_names)
   # head(runoff_sealed)
 
   # Runoff from the actual partial areas that are sealed and connected
   # (road and non-road) areas (for all surface classes at once)
 
   runoff_factor_matrix <- expand_to_matrix(
-    x = runoff_factors[paste0("surface",digits)],
+    x = runoff_factors[surface_class_names],
     nrow = nrow(data)
   )
 
