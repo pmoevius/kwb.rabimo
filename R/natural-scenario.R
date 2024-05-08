@@ -1,86 +1,23 @@
-# Script for calculation of the natural water balance and the deviation from
-# the natural water balance Delta-W
+# Functions about the natural scenarios and the calculation of Delta-W
 
-# load data
-inputs <- rabimo_inputs_2020
-results <- kwb.utils:::get_cached("rabimo_results_2020")
-
-# get useful functions
-# kwb.utils::assignPackageObjects("kwb.rabimo");
-# simulate_abimo = FALSE;check = FALSE
-`%>%` <- magrittr::`%>%`
-
-# modify inputs to simulate the natural state
-nat_input_data_1 <- data_to_natural(inputs$data)
-
-nat_input_data_2 <- data_to_natural(inputs$data, type = "forested")
-
-nat_input_data_3 <- data_to_natural(inputs$data, type = "horticultural")
-
-# calculate water balance for natural scenario(S)
-nat_result_1 <- run_rabimo(data = nat_input_data_1, config = inputs$config,
-                           check = FALSE, intermediates = TRUE, simulate_abimo = FALSE)
-
-nat_result_2 <- run_rabimo(data = nat_input_data_2, config = inputs$config,
-                           check = FALSE, intermediates = TRUE, simulate_abimo = FALSE)
-
-nat_result_3 <- run_rabimo(data = nat_input_data_3, config = inputs$config,
-                           check = FALSE, intermediates = TRUE, simulate_abimo = FALSE)
-
-# compare natural results
-nat_result_1$source <- "undeveloped"
-nat_result_2$source <- "forested"
-nat_result_3$source <- "horticultural"
-
-combined_results <- rbind(nat_result_1, nat_result_2, nat_result_3)
-
-combined_results_long <- combined_results %>%
-  tidyr::pivot_longer(cols = c(total_surface_runoff, total_infiltration, total_evaporation),
-                      names_to = "variable",
-                      values_to = "value") %>%
-  as.data.frame() %>%
-  dplyr::filter(variable != "total_surface_runoff")
-
-land_type_colors <- c("undeveloped" = "coral2",
-                      "forested" = "darkolivegreen3",
-                      "horticultural" = "cornflowerblue")
-
-# all berlin areas
-nat_res_plot_all <-
-  ggplot2::ggplot(data = combined_results_long,
-                  mapping =  ggplot2::aes(x = value, fill = source)) +
-  ggplot2::geom_histogram(binwidth = 5, position = "dodge") +
-  ggplot2::facet_wrap(~ variable, scale = "free") +
-  ggplot2::labs(title = "Comparison of Different Natural Water Balance Scenarios") +
-  ggplot2::scale_fill_manual(values = land_type_colors) +
-  ggplot2::theme_minimal()
-
-nat_res_plot_all
-
-# exclude water bodies and forests
-exclude_patterns <- c("water", "forest")
-
-filtered_input_codes <- inputs$data %>%
-  dplyr::mutate(block_type = tolower(block_type)) %>%
-  dplyr::filter(!grepl(paste(exclude_patterns, collapse = "|"), block_type)) %>%
-  dplyr::select(code) %>%
-  dplyr::pull()
-
-filtered_results_long <- combined_results_long %>%
-  dplyr::filter(code %in% filtered_input_codes)
-
-nat_res_plot_no_water_no_forest <-
-  ggplot2::ggplot(data = filtered_results_long,
-                  mapping =  ggplot2::aes(x = value, fill = source)) +
-  ggplot2::geom_histogram(binwidth = 5, position = "dodge") +
-  ggplot2::facet_wrap(~ variable, scale = "free") +
-  ggplot2::labs(title = "Comparison of Different Natural Water Balance Scenarios (Excluding Water Bodies and Forests)") +
-  ggplot2::scale_fill_manual(values = land_type_colors) +
-  ggplot2::theme_minimal()
-
-nat_res_plot_no_water_no_forest
 
 # data_to_natural --------------------------------------------------------------
+
+#' Transform R-Abimo input Data into their natural scenario equivalent
+#'
+#' Three scenarios are possible:
+#' 1) undeveloped: all paved or constructed areas are set to 0%. No connection
+#'   to the sewer.
+#' 2) forested: like undeveloped, but the land type is declared to be
+#'  "forested".
+#' 3) horticultural: like undeveloped, but the land type is declared to be
+#'   "horticultural".
+#'
+#' @param data the input data in R-Abimo format
+#' @param type a character object containing the name of natural scenario.
+#'   Defaults to "undeveloped"
+#' @return a dataframe with R-Abimo input data for the chosen natural scenario
+#' @export
 data_to_natural <- function(data, type = "undeveloped")
 {
   # check if data has r-abimo format
@@ -101,22 +38,32 @@ data_to_natural <- function(data, type = "undeveloped")
 
   if(type == "undeveloped"){
     return(nat_data)
-  } else if (type == "forested"){
-    nat_data[["land_type"]] <- "forested"
+  }
+
+  nat_data[["land_type"]] <- if (type == "forested"){
+    "forested"
   } else if (type == "horticultural"){
-    nat_data[["land_type"]] <- "horticultural"
+    "horticultural"
   } else {
     stop("please provide a known natural scenario type: undeveloped, horticultural or forested")
   }
 
-  return(nat_data)
-
+  nat_data
 }
 
 # calculate_delta_W ------------------------------------------------------------
-# natural <- nat_result_2[,-ncol(nat_result_1)]
-# urban <- head(results)
 
+#' Deviation from Natural Water Balance (Delta-W)
+#'
+#' Calculate the deviation from the natural water balance (delta-W) given
+#'  R-Abimo results as returned by \code{\link{run_rabimo}}.
+#'
+#' @param natural R-Abimo results for the natural scenario
+#' @param urban R-Abimo results for the "urban" scenario
+#' @param cols_to_omit column names that not contain result data or code identifiers. Defaults to "total_area"
+#' @param return_codes a logical value determining whether the codes should be returned along the delta-w values
+#' @return a dataframe containing the delta-w values (and optionally the areas' codes)
+#' @export
 calculate_delta_W <- function(natural, urban,
                               cols_to_omit = c("total_area"),
                               return_codes = FALSE)
@@ -131,8 +78,9 @@ calculate_delta_W <- function(natural, urban,
                                by = "code", suffix = c("_u","_n"))
 
   # variable columns
-  column_names <- grep("_.$", names(combined), value = TRUE)
-  unique_names <- unique(sub("_.$", "", column_names))
+  pattern <- "_[un]$"
+  column_names <- grep(pattern, names(combined), value = TRUE)
+  unique_names <- unique(sub(pattern, "", column_names))
 
   precipitation <- rowSums(combined[,column_names])/2
 
@@ -148,9 +96,9 @@ calculate_delta_W <- function(natural, urban,
   delta_w <- round(rowSums(as.data.frame(diff_list))/2*100/precipitation,1)
 
   if(return_codes){
-    data.frame(code = urban[["code"]], delta_w)
+    data.frame(code = urban[["code"]], delta_w = delta_w)
   } else {
-    data.frame(delta_w)
+    data.frame(delta_w = delta_w)
   }
 }
 
