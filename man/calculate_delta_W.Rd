@@ -2,8 +2,7 @@
 % Please edit documentation in R/natural-scenario.R
 \name{calculate_delta_W}
 \alias{calculate_delta_W}
-\title{Calculate the Deviation (Delta-W) from the Natural Water Balance given
-R-Abimo results as returned by \code{\link{run_rabimo}}.}
+\title{Deviation from Natural Water Balance (Delta-W)}
 \usage{
 calculate_delta_W(
   natural,
@@ -25,6 +24,6 @@ calculate_delta_W(
 a dataframe containing the delta-w values (and optionally the areas' codes)
 }
 \description{
-Calculate the Deviation (Delta-W) from the Natural Water Balance given
+Calculate the deviation from the natural water balance (delta-W) given
 R-Abimo results as returned by \code{\link{run_rabimo}}.
 }

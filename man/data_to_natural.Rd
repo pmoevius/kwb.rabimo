@@ -7,9 +7,10 @@
 data_to_natural(data, type = "undeveloped")
 }
 \arguments{
-\item{data}{The data Set in R-Abimo format}
+\item{data}{the input data in R-Abimo format}
 
-\item{type}{a character object containing the name of natural scenario. Defaults to "undeveloped"}
+\item{type}{a character object containing the name of natural scenario.
+Defaults to "undeveloped"}
 }
 \value{
 a dataframe with R-Abimo input data for the chosen natural scenario
@@ -17,8 +18,11 @@ a dataframe with R-Abimo input data for the chosen natural scenario
 \description{
 Three scenarios are possible:
 \enumerate{
-\item undeveloped: all paved or constructed areas are set to 0\%. No connection to the sewer.
-\item forested: like undeveloped, but the land type is declared to be "forested".
-\item horticultural: like undeveloped, but the land type is declared to be "horticultural".
+\item undeveloped: all paved or constructed areas are set to 0\%. No connection
+to the sewer.
+\item forested: like undeveloped, but the land type is declared to be
+"forested".
+\item horticultural: like undeveloped, but the land type is declared to be
+"horticultural".
 }
 }
