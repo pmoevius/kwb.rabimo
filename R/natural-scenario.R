@@ -65,7 +65,7 @@ data_to_natural <- function(data, type = "undeveloped")
 #' @return a dataframe containing the delta-w values (and optionally the areas' codes)
 #' @export
 calculate_delta_W <- function(natural, urban,
-                              cols_to_omit = c("total_area"),
+                              cols_to_omit = c("area"),
                               return_codes = FALSE)
 {
 
@@ -104,9 +104,9 @@ calculate_delta_W <- function(natural, urban,
 
 calculate_delta_W_2 <- function(natural,
                                 urban,
-                                water_balance_vars = c("total_surface_runoff",
-                                                       "total_infiltration",
-                                                       "total_evaporation")
+                                water_balance_vars = c("surface_runoff",
+                                                       "infiltration",
+                                                       "evaporation")
                                 )
 {
 

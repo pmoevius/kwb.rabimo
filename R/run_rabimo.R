@@ -267,7 +267,8 @@ run_rabimo <- function(
   } else {
     remove_columns(result_data_raw, pattern = "_flow") %>%
       remove_columns("total_runoff") %>%
-      move_columns_to_front(c("code", "total_area"))
+      move_columns_to_front(c("code", "total_area")) %>%
+      dplyr::rename_with(~gsub("total_","",.))
   }
 
   # Round all columns to three digits (skip first column: "CODE")

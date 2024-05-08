@@ -7,7 +7,7 @@
 calculate_delta_W(
   natural,
   urban,
-  cols_to_omit = c("total_area"),
+  cols_to_omit = c("area"),
   return_codes = FALSE
 )
 }
