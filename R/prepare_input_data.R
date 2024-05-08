@@ -20,6 +20,7 @@ prepare_input_data <- function(data, config)
   #data <- berlin_2020_data
   #data <- kwb.utils:::get_cached("berlin_2020_data")
   #config <- abimo_config_to_config(kwb.abimo::read_config())
+  #`%>%` <- magrittr::`%>%`
 
   #
   # See inst/extdata/test-rabimo.R for test data assignments
@@ -40,8 +41,7 @@ prepare_input_data <- function(data, config)
     columns = matching_names(data, pattern = "roof|pvd|srf|area_")
   )
 
-  if (data_format == "format_2020")
-  {
+  if (data_format == "format_2020"){
     # Identify roads
     is_road <- grepl("Stra.e", select_columns(data, "ART"))
 
@@ -69,6 +69,11 @@ prepare_input_data <- function(data, config)
       as.matrix(select_columns(data, surface_class_columns)),
       row_sum = 100
     )
+  } else if (data_format == "format_2019") {
+
+    # add en empty column for surface class 5 for format consistency
+    data <- kwb.utils::insertColumns(
+      data, srf5_pvd = rep(0,nrow(data)), after = "srf4_pvd")
   }
 
   # Create column accessor function
