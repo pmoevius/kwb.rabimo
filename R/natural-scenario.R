@@ -102,3 +102,34 @@ calculate_delta_W <- function(natural, urban,
   }
 }
 
+calculate_delta_W_2 <- function(natural,
+                                urban,
+                                water_balance_vars = c("total_surface_runoff",
+                                                       "total_infiltration",
+                                                       "total_evaporation")
+                                )
+{
+
+  stopifnot("code" %in% names(natural))
+  stopifnot("code" %in% names(urban))
+  stopifnot(all(urban[["code"]] %in% natural[["code"]]))
+
+  urban_codes <- urban[["code"]]
+
+
+  natural_selection <- natural %>%
+    dplyr::filter(code %in% urban_codes) %>%
+    dplyr::arrange(match(code, urban_codes)) %>%
+    `rownames<-`(NULL)
+
+  diff_matrix <- abs(
+    natural_selection[water_balance_vars] - urban[water_balance_vars])
+
+  precipitation <- rowSums(natural_selection[water_balance_vars])
+
+  cbind(
+    urban_codes,
+    data.frame(delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1)))
+
+}
+
