@@ -128,7 +128,7 @@ calculate_delta_W_2 <- function(natural,
   precipitation <- rowSums(natural_selection[water_balance_vars])
 
   cbind(
-    urban_codes,
+    code = urban_codes,
     data.frame(delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1)))
 
 }
