@@ -106,16 +106,16 @@ calculate_delta_W_2 <- function(natural,
                                 urban,
                                 water_balance_vars = c("surface_runoff",
                                                        "infiltration",
-                                                       "evaporation")
+                                                       "evaporation"),
+                                code_column_name = "code"
                                 )
 {
 
-  stopifnot("code" %in% names(natural))
-  stopifnot("code" %in% names(urban))
-  stopifnot(all(urban[["code"]] %in% natural[["code"]]))
+  stopifnot(code_column_name %in% names(natural))
+  stopifnot(code_column_name %in% names(urban))
+  stopifnot(all(urban[[code_column_name]] %in% natural[[code_column_name]]))
 
-  urban_codes <- urban[["code"]]
-
+  urban_codes <- urban[[code_column_name]]
 
   natural_selection <- natural %>%
     dplyr::filter(code %in% urban_codes) %>%
