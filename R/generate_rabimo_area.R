@@ -34,15 +34,3 @@ generate_rabimo_area <- function(code, ..., column_info = read_column_info()) {
 
   result
 }
-
-# test function
-if (FALSE) {
-  kwb.utils::assignPackageObjects("kwb.rabimo")
-
-  config <- kwb.rabimo::rabimo_inputs_2020$config
-
-  my_area <- generate_rabimo_area(code = "a_code")
-
-  kwb.rabimo::run_rabimo(data = my_area, config = config,
-                         check = FALSE, simulate_abimo = FALSE)
-}
