@@ -19,4 +19,6 @@ test_that("read_column_info() works", {
     "default"
   ))
 
+  expect_true(all(nzchar(result$meaning)))
+
 })
