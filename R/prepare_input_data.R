@@ -127,7 +127,7 @@ prepare_input_data <- function(data, config)
 
   # Select only the required columns and use the order as in "column-names.csv"
   data %>%
-    select_columns(dplyr::intersect(get_column_selection(), names(data)))
+    select_columns(intersect(get_column_selection(), names(data)))
 }
 
 # identify_data_format_or_stop -------------------------------------------------
