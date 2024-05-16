@@ -39,11 +39,11 @@ calculate_delta_W_2(natural = nat_results$undeveloped,
 combined_results <- kwb.utils::rbindAll(nat_results, nameColumn = "source")
 
 combined_results_long <- combined_results %>%
-  tidyr::pivot_longer(cols = c(total_surface_runoff, total_infiltration, total_evaporation),
+  tidyr::pivot_longer(cols =c(surface_runoff, infiltration, evaporation),
                       names_to = "variable",
                       values_to = "value") %>%
   as.data.frame() %>%
-  dplyr::filter(variable != "total_surface_runoff")
+  dplyr::filter(variable != "surface_runoff")
 
 land_type_colors <- c("undeveloped" = "coral2",
                       "forested" = "darkolivegreen3",

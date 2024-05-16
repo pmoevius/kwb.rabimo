@@ -26,6 +26,8 @@ if (FALSE) {
                                          config = config,
                                          wabila_results = wabila_roof)
   factor_simple_roof
+  calculate_delta_mod(factor_simple_roof["rabimo",],
+                      factor_simple_roof["wabila",], has_codes = FALSE)
 
   # CASE 2) green roof area: the whole roof is green ~~~~~~~~~~~~~~~~~~~~~~~~~~~
   green_roof_area <- generate_rabimo_area(
@@ -248,7 +250,10 @@ estimate_swale_area <- function(kf){
 # get_area_balance -------------------------------------------------------------
 get_area_balance <- function(area, config, rabimo_results = NULL,
                              wabila_results = NULL,
-                             simulate_abimo = FALSE, check = FALSE)
+                             simulate_abimo = FALSE, check = FALSE,
+                             result_cols = c("surface_runoff",
+                                             "infiltration",
+                                             "evaporation"))
 {
   results <- if (is.null(rabimo_results)){
     run_rabimo(data = area, config = config,
@@ -259,13 +264,13 @@ get_area_balance <- function(area, config, rabimo_results = NULL,
   }
 
   results <- results %>%
-    select_columns(c("ROW","RI","VERDUNSTUN"))
+    select_columns(result_cols)
 
   precipitation <- area[["prec_yr"]]
 
   factors <- results %>%
     magrittr::divide_by(precipitation) %>%
-    setNames(c("runoff","infiltration","evaporation")) %>%
+    setNames(c("surface_runoff","infiltration","evaporation")) %>%
     as.matrix() %>%
     magrittr::set_rownames("rabimo")
 
@@ -277,4 +282,71 @@ get_area_balance <- function(area, config, rabimo_results = NULL,
 
   return(factors)
 }
+
+# calculate_delta_mod ----------------------------------------------------------
+calculate_delta_mod <- function(results_mod_1, results_mod_2,
+                                has_codes = TRUE,
+                                var_names = c("surface_runoff",
+                                              "infiltration",
+                                              "evaporation"),
+                                codes_name = "code"){
+
+#   results_mod_1 <- test_res_3a
+#   results_mod_2 <- test_res_3b
+
+  stopifnot(identical(dim(results_mod_1), dim(results_mod_2)))
+
+  # force result objects to be data.frames
+  if(is.vector(results_mod_1)){
+    results_mod_1 <- as.data.frame(t(results_mod_1))
+    result_mod_2 <- as.data.frame(t(results_mod_2))
+  } else {
+    results_mod_1 <- as.data.frame(results_mod_1)
+    results_mod_2 <- as.data.frame(results_mod_2)
+  }
+
+  precipitation <- rowSums(results_mod_1[var_names])
+
+  delta_mod <- data.frame(
+    delta_mod = rowSums(
+      abs(results_mod_1[var_names] - results_mod_2[var_names])
+      ) * 0.5 / precipitation
+    )
+
+  if(has_codes){
+    stopifnot(
+      identical(results_mod_1[[codes_name]], results_mod_2[[codes_name]])
+      )
+    codes <- results_mod_1[[codes_name]]
+    delta_mod <- cbind(code = codes, delta_mod = delta_mod)
+  }
+
+  return(delta_mod)
+
+}
+
+# TESTS for calculate_delta_mod()
+# vectors
+# test_res_1a <- c(surface_runoff = 2, infiltration = 10, evaporation = 8)
+# test_res_1b <- c(surface_runoff = 10, infiltration = 0, evaporation = 10)
+#
+# # matrices
+# water_balance_vars = c("surface_runoff", "infiltration", "evaporation")
+# test_res_2a <- matrix(c(30, 20, 60, 50, 10, 30), nrow = 2, dimnames = list(NULL, water_balance_vars))
+# test_res_2b <- matrix(c(60, 20, 20, 80, 20, 0), nrow = 2, dimnames = list(NULL, water_balance_vars))
+#
+# # data frames
+# test_res_3a <- data.frame(surface_runoff = c(40,0,33), infiltration = c(20,0,33),  evaporation = c(40,100,34))
+# test_res_3b <-  data.frame(surface_runoff = c(50,100,100), infiltration = c(30,0,0),  evaporation = c(20,0,0))
+#
+#
+# # data frames with codes
+# test_res_4a <- cbind(test_res_3a, code = c("area1", "area2", "area3"))
+# test_res_4b <- cbind(test_res_3b, code = c("area1", "area2", "area3"))
+#
+#
+# calculate_delta_mod(test_res_1a, test_res_1b, has_codes = F)
+# calculate_delta_mod(test_res_2a, test_res_2b, has_codes = F)
+# calculate_delta_mod(test_res_3a, test_res_3b, has_codes = F)
+# calculate_delta_mod(test_res_4a, test_res_4b, has_codes = T)
 
