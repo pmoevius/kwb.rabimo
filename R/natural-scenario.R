@@ -23,7 +23,7 @@ data_to_natural <- function(data, type = "undeveloped")
   # check if data has r-abimo format
   required_columns <- read_column_info() %>%
     dplyr::filter(type == "required") %>%
-    dplyr::select(rabimo_berlin) %>%
+    dplyr::select(.data[["rabimo_berlin"]]) %>%
     dplyr::pull()
 
   stopifnot(all(required_columns %in% names(data)))
@@ -118,8 +118,8 @@ calculate_delta_W_2 <- function(natural,
 
 
   natural_selection <- natural %>%
-    dplyr::filter(code %in% urban_codes) %>%
-    dplyr::arrange(match(code, urban_codes)) %>%
+    dplyr::filter(.data[["code"]] %in% urban_codes) %>%
+    dplyr::arrange(match(.data[["code"]], urban_codes)) %>%
     `rownames<-`(NULL)
 
   diff_matrix <- abs(
