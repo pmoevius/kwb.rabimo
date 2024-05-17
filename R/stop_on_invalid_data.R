@@ -1,9 +1,8 @@
 # stop_on_invalid_data ---------------------------------------------------------
-stop_on_invalid_data <- function(input)
+stop_on_invalid_data <- function(data)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
-  #input <- prepare_input_data(kwb.abimo::abimo_input_2019, abimo_config_to_config(kwb.abimo::read_config()))
-  #input <- data
+  #data <- prepare_input_data(kwb.abimo::abimo_input_2019, abimo_config_to_config(kwb.abimo::read_config()))
 
   # Read information on column names and types
   column_info <- read_column_info()
@@ -15,7 +14,7 @@ stop_on_invalid_data <- function(input)
   }
 
   # Stop if any required column is missing
-  missing <- setdiff(columns_with("type", "required"), names(input))
+  missing <- setdiff(columns_with("type", "required"), names(data))
 
   if (length(missing)) {
     column_info %>%
@@ -31,14 +30,14 @@ stop_on_invalid_data <- function(input)
 
   # Stop if a column does not have the expected data type
   check_data_types(
-    data = input,
-    types = get_expected_data_type(names(input))
+    data = data,
+    types = get_expected_data_type(names(data))
   )
 
   # Do not accept any NA
   check_columns(
-    data = input,
-    columns = names(input) %>%
+    data = data,
+    columns = names(data) %>%
       intersect(columns_with("data_type", "numeric")) %>%
       intersect(columns_with("type", "required")),
     check = function(x) !is.na(x),
@@ -50,7 +49,7 @@ stop_on_invalid_data <- function(input)
 
   # Check precipitation and evapotranspiration for negative values
   check_columns(
-    data = input,
+    data = data,
     columns = c("prec_yr", "prec_s", "epot_yr", "epot_s"),
     check = function(x) x >= 0,
     msg = paste(
@@ -61,9 +60,9 @@ stop_on_invalid_data <- function(input)
 
   # Check fractions
   check_columns(
-    data = input,
+    data = data,
     columns = columns_with("unit", "0..1") %>%
-      intersect(names(input)),
+      intersect(names(data)),
     check = function(x) in_range(x, 0, 1),
     msg = paste(
       "Not all values in column '%s' are between 0 and 1 as expected",
@@ -71,11 +70,11 @@ stop_on_invalid_data <- function(input)
     )
   )
 
-  surface_cols_no_rd <- matching_names(input, pattern_no_roads())
-  surface_cols_rd <- matching_names(input, pattern_roads())
+  surface_cols_no_rd <- matching_names(data, pattern_no_roads())
+  surface_cols_rd <- matching_names(data, pattern_roads())
 
-  check_sum_up_to_1_or_0(input, surface_cols_no_rd)
-  check_sum_up_to_1_or_0(input, surface_cols_rd)
+  check_sum_up_to_1_or_0(data, surface_cols_no_rd)
+  check_sum_up_to_1_or_0(data, surface_cols_rd)
 }
 
 # get_expected_data_type -------------------------------------------------------
