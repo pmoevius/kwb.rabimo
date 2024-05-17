@@ -31,7 +31,7 @@ stop_on_invalid_data <- function(data)
   # Stop if a column does not have the expected data type
   check_data_types(
     data = data,
-    types = get_expected_data_type(names(data))
+    types = get_expected_data_type(columns = names(data))
   )
 
   # Do not accept any NA
@@ -78,13 +78,19 @@ stop_on_invalid_data <- function(data)
 }
 
 # get_expected_data_type -------------------------------------------------------
-get_expected_data_type <- function(x)
+get_expected_data_type <- function(columns = NULL)
 {
-  info <- read_column_info() %>%
-    dplyr::filter(.data[["rabimo_berlin"]] %in% x) %>%
-    create_accessor()
+  type_info <- read_column_info() %>%
+    columns_to_named_vector(
+      key_column = "rabimo_berlin",
+      value_column = "data_type"
+    )
 
-  stats::setNames(info("data_type"), info("rabimo_berlin"))
+  if (is.null(columns)) {
+    return(type_info)
+  }
+
+  type_info[intersect(names(type_info), columns)]
 }
 
 # check_data_types -------------------------------------------------------------

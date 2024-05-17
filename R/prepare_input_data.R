@@ -127,7 +127,7 @@ prepare_input_data <- function(data, config, dbg = TRUE)
   data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
 
   # Read information about the expected data types
-  data_types <- get_expected_data_types()
+  data_types <- get_expected_data_type()
 
   # Select only the required columns and convert data types as required
   data %>%
