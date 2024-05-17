@@ -7,10 +7,13 @@ test_that("data_to_natural() works", {
   expect_error(f())
 
   expect_error(
-    expect_output(f(data.frame()), "make sure .*all required columns")
+    expect_output(f(data.frame())),
+    regexp = "make sure .*all required columns"
   )
 
-  data <- kwb.rabimo::rabimo_inputs_2020$data %>%
+  data <- kwb.rabimo::rabimo_inputs_2020$data
+
+  data <- data %>%
     kwb.rabimo:::check_or_convert_data_types(
       types = kwb.rabimo:::get_expected_data_type(),
       convert = TRUE,
