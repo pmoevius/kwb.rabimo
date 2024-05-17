@@ -45,9 +45,12 @@ data_to_natural <- function(data, type = "undeveloped")
     stop("please provide a known natural scenario type: undeveloped, horticultural or forested")
   }
 
-  # Read information about the expected data types
-  data_types <- get_expected_data_type()
-  check_or_convert_data_types(nat_data, data_types, convert = TRUE)
+  # Convert data types as required
+  check_or_convert_data_types(
+    nat_data,
+    types = get_expected_data_type(),
+    convert = TRUE
+  )
 }
 
 # calculate_delta_W ------------------------------------------------------------
