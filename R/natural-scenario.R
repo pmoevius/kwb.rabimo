@@ -65,18 +65,22 @@ data_to_natural <- function(data, type = "undeveloped")
 #' @param return_codes a logical value determining whether the codes should be returned along the delta-w values
 #' @return a dataframe containing the delta-w values (and optionally the areas' codes)
 #' @export
-calculate_delta_W <- function(natural, urban,
-                              cols_to_omit = c("area"),
-                              return_codes = FALSE)
+calculate_delta_W <- function(
+    natural,
+    urban,
+    cols_to_omit = c("area"),
+    return_codes = FALSE
+)
 {
-
   stopifnot("code" %in% names(natural))
   stopifnot("code" %in% names(urban))
   stopifnot(all(urban[["code"]] %in% natural[["code"]]))
 
-  combined <- dplyr::left_join(urban,
-                               kwb.utils::removeColumns(natural, cols_to_omit),
-                               by = "code", suffix = c("_u","_n"))
+  combined <- dplyr::left_join(
+    urban,
+    kwb.utils::removeColumns(natural, cols_to_omit),
+    by = "code", suffix = c("_u","_n")
+  )
 
   # variable columns
   pattern <- "_[un]$"
@@ -103,15 +107,13 @@ calculate_delta_W <- function(natural, urban,
   }
 }
 
-calculate_delta_W_2 <- function(natural,
-                                urban,
-                                water_balance_vars = c("surface_runoff",
-                                                       "infiltration",
-                                                       "evaporation"),
-                                code_column_name = "code"
-                                )
+calculate_delta_W_2 <- function(
+    natural,
+    urban,
+    water_balance_vars = c("surface_runoff", "infiltration", "evaporation"),
+    code_column_name = "code"
+)
 {
-
   stopifnot(code_column_name %in% names(natural))
   stopifnot(code_column_name %in% names(urban))
   stopifnot(all(urban[[code_column_name]] %in% natural[[code_column_name]]))
@@ -130,7 +132,6 @@ calculate_delta_W_2 <- function(natural,
 
   cbind(
     code = urban_codes,
-    data.frame(delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1)))
-
+    data.frame(delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1))
+  )
 }
-
