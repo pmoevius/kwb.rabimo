@@ -5,18 +5,23 @@
 inputs <- kwb.rabimo::rabimo_inputs_2020
 results <- kwb.utils:::get_cached("rabimo_results_2020")
 
-# get useful functions
-# kwb.utils::assignPackageObjects("kwb.rabimo");
+# Provide all functions from kwb.rabimo in the global environment
+kwb.utils::assignPackageObjects("kwb.rabimo")
+
 # simulate_abimo = FALSE;check = FALSE
 # `%>%` <- magrittr::`%>%`
 
-# modify inputs to simulate the natural state
+# Convert the "status quo" input data to input data representing different types
+# of "natural states"
+status_quo <- select_elements(inputs, "data")
+
 nat_input_datasets <- list(
-  undeveloped = data_to_natural(inputs$data, type = "undeveloped"),
-  forested = data_to_natural(inputs$data, type = "forested"),
-  horticultural = data_to_natural(inputs$data, type = "horticultural")
+  undeveloped = data_to_natural(status_quo, type = "undeveloped"),
+  forested = data_to_natural(status_quo, type = "forested"),
+  horticultural = data_to_natural(status_quo, type = "horticultural")
 )
 
+# Calculate R-Abimo results for the natural states
 nat_results <- lapply(nat_input_datasets, function(data) {
   run_rabimo(
     data = data,
@@ -27,32 +32,45 @@ nat_results <- lapply(nat_input_datasets, function(data) {
   )
 })
 
-urban_data = dplyr::sample_n(results, 7)
+# Simulate the selection of some blocks
+urban_data <- dplyr::sample_n(results, 7)
 
-calculate_delta_W(natural = nat_results$undeveloped,
-                  urban = urban_data, return_codes = TRUE)
+microbenchmark::microbenchmark(
+  dw1 = calculate_delta_W(
+    natural = nat_results$undeveloped,
+    urban = urban_data,
+    return_codes = TRUE
+  ),
+  dw2 = calculate_delta_W_2(
+    natural = nat_results$undeveloped,
+    urban = urban_data
+  ),
+  check = "identical"
+)
 
-calculate_delta_W_2(natural = nat_results$undeveloped,
-                    urban = urban_data)
+identical(dw1, dw2)
 
 # compare natural results
 combined_results <- kwb.utils::rbindAll(nat_results, nameColumn = "source")
 
 combined_results_long <- combined_results %>%
-  tidyr::pivot_longer(cols =c(surface_runoff, infiltration, evaporation),
-                      names_to = "variable",
-                      values_to = "value") %>%
+  tidyr::pivot_longer(
+    cols = c(surface_runoff, infiltration, evaporation),
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
   as.data.frame() %>%
   dplyr::filter(variable != "surface_runoff")
 
-land_type_colors <- c("undeveloped" = "coral2",
-                      "forested" = "darkolivegreen3",
-                      "horticultural" = "cornflowerblue")
+land_type_colors <- c(
+  "undeveloped" = "coral2",
+  "forested" = "darkolivegreen3",
+  "horticultural" = "cornflowerblue"
+)
 
 # all berlin areas
-nat_res_plot_all <-
-  ggplot2::ggplot(data = combined_results_long,
-                  mapping =  ggplot2::aes(x = value, fill = source)) +
+nat_res_plot_all <- combined_results_long %>%
+  ggplot2::ggplot(mapping =  ggplot2::aes(x = value, fill = source)) +
   ggplot2::geom_histogram(binwidth = 5, position = "dodge") +
   ggplot2::facet_wrap(~ variable, scale = "free") +
   ggplot2::labs(title = "Comparison of Different Natural Water Balance Scenarios") +
@@ -73,9 +91,8 @@ filtered_input_codes <- inputs$data %>%
 filtered_results_long <- combined_results_long %>%
   dplyr::filter(code %in% filtered_input_codes)
 
-nat_res_plot_no_water_no_forest <-
-  ggplot2::ggplot(data = filtered_results_long,
-                  mapping =  ggplot2::aes(x = value, fill = source)) +
+nat_res_plot_no_water_no_forest <- filtered_results_long %>%
+  ggplot2::ggplot(mapping =  ggplot2::aes(x = value, fill = source)) +
   ggplot2::geom_histogram(binwidth = 5, position = "dodge") +
   ggplot2::facet_wrap(~ variable, scale = "free") +
   ggplot2::labs(title = "Comparison of Different Natural Water Balance Scenarios (Excluding Water Bodies and Forests)") +
@@ -84,18 +101,23 @@ nat_res_plot_no_water_no_forest <-
 
 nat_res_plot_no_water_no_forest
 
-developed_area <- generate_rabimo_area("developed")
-dev_forested_area <- generate_rabimo_area("dev_forested", land_type = "forested")
-dev_horticultural_area <- generate_rabimo_area("dev_horticultural",
-                                               land_type = "horticultural")
-nat_undeveloped_area <- data_to_natural(generate_rabimo_area("undeveloped"))
-nat_forested_area <- data_to_natural(generate_rabimo_area("nat_forested",
-                                     land_type = "forested"))
-nat_horticultural_area <- data_to_natural(generate_rabimo_area("nat_horticultural",
-                                          land_type = "horticultural"))
-
-area_list <- list(developed_area, dev_forested_area, dev_horticultural_area,
-                  nat_undeveloped_area, nat_forested_area, nat_horticultural_area)
+area_list <- list(
+  developed_area = "developed" %>%
+    generate_rabimo_area(),
+  dev_forested_area = "dev_forested" %>%
+    generate_rabimo_area(land_type = "forested"),
+  dev_horticultural_area = "dev_horticultural" %>%
+    generate_rabimo_area(land_type = "horticultural"),
+  nat_undeveloped_area = "undeveloped" %>%
+    generate_rabimo_area() %>%
+    data_to_natural(),
+  nat_forested_area = "nat_forested" %>%
+    generate_rabimo_area(land_type = "forested") %>%
+    data_to_natural(),
+  nat_horticultural_area = "nat_horticultural" %>%
+    generate_rabimo_area(land_type = "horticultural") %>%
+    data_to_natural()
+)
 
 area_results <- lapply(area_list, function(data) {
   run_rabimo(
