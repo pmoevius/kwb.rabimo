@@ -34,11 +34,9 @@ run_rabimo <- function(
   # Go to inst/extdata/test-rabimo.R to provide data and config for debugging
   #
 
-  # Check whether data has the expected structure
+  # Check whether data and config have the expected structures
   if (check) {
     stop_on_invalid_data(data)
-
-    # Check whether config has the expected structure
     stop_on_invalid_config(config)
   }
 
