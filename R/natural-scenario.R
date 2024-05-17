@@ -20,15 +20,12 @@
 #' @export
 data_to_natural <- function(data, type = "undeveloped")
 {
-  # check if data has r-abimo format
-  required_columns <- read_column_info() %>%
-    dplyr::filter(type == "required") %>%
-    dplyr::select(.data[["rabimo_berlin"]]) %>%
-    dplyr::pull()
+  #kwb.utils::assignPackageObjects("kwb.rabimo")
 
-  stopifnot(all(required_columns %in% names(data)))
+  # Check if data has R-Abimo format
+  stop_on_invalid_data(data)
 
-  # define patterns for column names rlated to urbanisation
+  # define patterns for column names related to urbanisation
   patterns <- c("pv", "swg", "roof", "sealed")
   urban_columns <- grep(paste(patterns, collapse = "|"), names(data), value = TRUE)
 
