@@ -25,16 +25,21 @@ if (FALSE)
   )
 
   old_abimo_results <- kwb.abimo::run_abimo(
-    input_data = old_inputs$data, config = old_inputs$config)
+    input_data = old_inputs$data,
+    config = old_inputs$config
+  )
 
-  plot_differences(abimo_result = old_abimo_results, rabimo_result = result)
+  plot_differences(
+    abimo_result = old_abimo_results,
+    rabimo_result = result
+  )
 }
 
 # MAIN: Convert raw 2020 data to R-Abimo format --------------------------------
 if (FALSE)
 {
   # Read dbf file
-  if (FALSE){
+  if (FALSE) {
     berlin_2020_data <- get_path("berlin_2020_combined") %>%
       foreign::read.dbf(as.is = TRUE) %>%
       kwb.utils:::cache_and_return(name = "berlin_2020_data")
@@ -61,7 +66,8 @@ if (FALSE)
 
   cached <- kwb.utils:::cache_and_return(
     x = rabimo_inputs_2020,
-    name = "rabimo_inputs_2020")
+    name = "rabimo_inputs_2020"
+  )
 
   # calculate R-ABIMO results
   results <- kwb.rabimo::run_rabimo(
@@ -74,19 +80,24 @@ if (FALSE)
 
   cached <- kwb.utils:::cache_and_return(
     x = results,
-    name = "rabimo_results_2020")
+    name = "rabimo_results_2020"
+  )
 
   # save inputs list in package
-  if(FALSE){
-    usethis::use_data(rabimo_inputs_2020)
+  if (FALSE) {
+    usethis::use_data(rabimo_inputs_2020, overwrite = TRUE)
   }
 
   # export 2020 results
-  if(FALSE){
-    foreign::write.dbf(results, file = paste0(get_path("results"),"berlin_2020.dbf"))
+  if (FALSE){
+    foreign::write.dbf(
+      results,
+      file = file.path(get_path("results"), "berlin_2020_v2.dbf")
+    )
   }
-}
 
+  #kwb.utils::hsOpenWindowsExplorer(get_path("results"))
+}
 
 # MAIN: Convert Berlin data (clean 2020) to new structure ----------------------------
 if (FALSE)
