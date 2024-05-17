@@ -25,21 +25,20 @@ data_to_natural <- function(data, type = "undeveloped")
   # Check if data has R-Abimo format
   stop_on_invalid_data(data)
 
-  # define patterns for column names related to urbanisation
-  patterns <- c("pv", "swg", "roof", "sealed")
-  urban_columns <- grep(paste(patterns, collapse = "|"), names(data), value = TRUE)
+  # Columns related to urbanisation
+  urban_columns <- grep("pv|swg|roof|sealed", names(data), value = TRUE)
 
   # non urbanized state: no building, no pavements
   nat_data <- data %>%
     dplyr::mutate(dplyr::across(dplyr::all_of(urban_columns), ~ 0))
 
-  if(type == "undeveloped"){
+  if (type == "undeveloped") {
     return(nat_data)
   }
 
-  nat_data[["land_type"]] <- if (type == "forested"){
+  nat_data[["land_type"]] <- if (type == "forested") {
     "forested"
-  } else if (type == "horticultural"){
+  } else if (type == "horticultural") {
     "horticultural"
   } else {
     stop("please provide a known natural scenario type: undeveloped, horticultural or forested")
