@@ -1,6 +1,5 @@
 # Functions about the natural scenarios and the calculation of Delta-W
 
-
 # data_to_natural --------------------------------------------------------------
 
 #' Transform R-Abimo input Data into their natural scenario equivalent
@@ -57,6 +56,36 @@ data_to_natural <- function(data, type = "undeveloped")
 #' Deviation from Natural Water Balance (Delta-W)
 #'
 #' Calculate the deviation from the natural water balance (delta-W) given
+#' R-Abimo results as returned by \code{\link{run_rabimo}}.
+#'
+#' @param natural R-Abimo results for the "natural" scenario
+#' @param urban R-Abimo results for the "urban" scenario
+#' @param \dots further arguments passed to the implementation function as
+#'   specified in \code{implementation}
+#' @param implementation one of 1, 2, 3, indicating a different implementation
+#' @return a data frame with the area codes in column \code{code} and the
+#'   delta-W values in column \code{delta_w}
+#' @export
+calculate_delta_W <- function(natural, urban, ..., implementation = 3L)
+{
+  FUN <- if (implementation == 1) {
+    calculate_delta_W_1
+  } else if (implementation == 2) {
+    calculate_delta_W_2
+  } else if (implementation == 3) {
+    calculate_delta_W_3
+  } else {
+    clean_stop("implementation must be one of 1, 2, 3.")
+  }
+
+  FUN(natural, urban, ...)
+}
+
+# calculate_delta_W_1 ----------------------------------------------------------
+
+#' Deviation from Natural Water Balance (Delta-W)
+#'
+#' Calculate the deviation from the natural water balance (delta-W) given
 #'  R-Abimo results as returned by \code{\link{run_rabimo}}.
 #'
 #' @param natural R-Abimo results for the natural scenario
@@ -64,8 +93,7 @@ data_to_natural <- function(data, type = "undeveloped")
 #' @param cols_to_omit column names that not contain result data or code identifiers. Defaults to "total_area"
 #' @param return_codes a logical value determining whether the codes should be returned along the delta-w values
 #' @return a dataframe containing the delta-w values (and optionally the areas' codes)
-#' @export
-calculate_delta_W <- function(
+calculate_delta_W_1 <- function(
     natural,
     urban,
     cols_to_omit = c("area"),
@@ -107,6 +135,7 @@ calculate_delta_W <- function(
   }
 }
 
+# calculate_delta_W_2 ----------------------------------------------------------
 calculate_delta_W_2 <- function(
     natural,
     urban,
@@ -136,6 +165,7 @@ calculate_delta_W_2 <- function(
   )
 }
 
+# calculate_delta_W_3 ----------------------------------------------------------
 calculate_delta_W_3 <- function(
     natural,
     urban,
@@ -159,14 +189,15 @@ calculate_delta_W_3 <- function(
     )
   }
 
-  natural_selection <- y[y_rows, -1L]
-  diff_matrix <- abs(x[, -1L] - natural_selection)
+  natural_selection <- as.matrix(y[y_rows, -1L])
+  diff_matrix <- abs(as.matrix(x[, -1L]) - natural_selection)
 
   precipitation <- rowSums(natural_selection)
 
   data.frame(
     code = x$code,
-    delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1)
+    delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1),
+    stringsAsFactors = FALSE
   ) %>%
     reset_row_names()
 }

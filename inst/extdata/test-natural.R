@@ -45,15 +45,18 @@ microbenchmark::microbenchmark(
   dw1 = calculate_delta_W(
     natural = nat_results$undeveloped,
     urban = urban_data,
-    return_codes = TRUE
+    return_codes = TRUE,
+    implementation = 1L
   ),
-  dw2 = calculate_delta_W_2(
+  dw2 = calculate_delta_W(
     natural = nat_results$undeveloped,
-    urban = urban_data
+    urban = urban_data,
+    implementation = 2L
   ),
-  dw3 = calculate_delta_W_3(
+  dw3 = calculate_delta_W(
     natural = nat_results$undeveloped,
-    urban = urban_data
+    urban = urban_data,
+    implementation = 3L
   ),
   check = "identical"
 )

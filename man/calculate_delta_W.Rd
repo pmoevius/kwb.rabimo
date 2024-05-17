@@ -4,24 +4,21 @@
 \alias{calculate_delta_W}
 \title{Deviation from Natural Water Balance (Delta-W)}
 \usage{
-calculate_delta_W(
-  natural,
-  urban,
-  cols_to_omit = c("area"),
-  return_codes = FALSE
-)
+calculate_delta_W(natural, urban, ..., implementation = 3L)
 }
 \arguments{
-\item{natural}{R-Abimo results for the natural scenario}
+\item{natural}{R-Abimo results for the "natural" scenario}
 
 \item{urban}{R-Abimo results for the "urban" scenario}
 
-\item{cols_to_omit}{column names that not contain result data or code identifiers. Defaults to "total_area"}
+\item{\dots}{further arguments passed to the implementation function as
+specified in \code{implementation}}
 
-\item{return_codes}{a logical value determining whether the codes should be returned along the delta-w values}
+\item{implementation}{one of 1, 2, 3, indicating a different implementation}
 }
 \value{
-a dataframe containing the delta-w values (and optionally the areas' codes)
+a data frame with the area codes in column \code{code} and the
+delta-W values in column \code{delta_w}
 }
 \description{
 Calculate the deviation from the natural water balance (delta-W) given
