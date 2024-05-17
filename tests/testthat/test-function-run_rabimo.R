@@ -20,6 +20,7 @@ test_that("run_rabimo() works", {
     irrigation = -1,
     main_fraction = c(1, 1, 0.3),
     roof = c(0.1, 0.2, 0.3),
+    green_roof = 0.0,
     swg_roof = 0.2,
     srf1_pvd = 0.5,
     srf2_pvd = 0.5,
@@ -35,12 +36,14 @@ test_that("run_rabimo() works", {
     pvd_rd = 0,
     swg_pvd_rd = c(0.2, 1, 0),
     sealed = 0.1,
+    to_swale = 0.0,
     total_area = 100
   )
 
   config <- list(
     bagrov_values = c(
       roof = 1,
+      green_roof = 1,
       surface1 = 2,
       surface2 = 3,
       surface3 = 4,
@@ -49,14 +52,18 @@ test_that("run_rabimo() works", {
     ),
     runoff_factors = c(
       roof = -1,
+      green_roof = 1,
       surface1 = -2,
       surface2 = -3,
       surface3 = -4,
       surface4 = -5,
       surface5 = -6
-    )
+    ),
+    swale = list(swale_evaporation_factor = 1)
   )
 
-  expect_output(f(data, config))
+  expect_output(result <- f(data, config, check = FALSE, simulate_abimo = FALSE))
+  expect_s3_class(result, "data.frame")
+  expect_true(nrow(result) == nrow(data))
 
 })

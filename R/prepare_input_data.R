@@ -10,16 +10,18 @@
 #'   STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150
 #' @param config configuration object (list) as returned by the function
 #'   \code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}
+#' @param dbg logical indicating whether or not to show debug messages
 #' @return \code{data} with columns renamed and additional columns
 #'  (e.g. ratios calculated from percentages, land type, vegetation class,
 #'  irrigation)
-prepare_input_data <- function(data, config)
+prepare_input_data <- function(data, config, dbg = TRUE)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
   #data <- kwb.abimo::abimo_input_2019
   #data <- berlin_2020_data
   #data <- kwb.utils:::get_cached("berlin_2020_data")
   #config <- abimo_config_to_config(kwb.abimo::read_config())
+  #`%>%` <- magrittr::`%>%`
 
   #
   # See inst/extdata/test-rabimo.R for test data assignments
@@ -40,8 +42,7 @@ prepare_input_data <- function(data, config)
     columns = matching_names(data, pattern = "roof|pvd|srf|area_")
   )
 
-  if (data_format == "format_2020")
-  {
+  if (data_format == "format_2020"){
     # Identify roads
     is_road <- grepl("Stra.e", select_columns(data, "ART"))
 
@@ -69,6 +70,11 @@ prepare_input_data <- function(data, config)
       as.matrix(select_columns(data, surface_class_columns)),
       row_sum = 100
     )
+  } else if (data_format == "format_2019") {
+
+    # add en empty column for surface class 5 for format consistency
+    data <- kwb.utils::insertColumns(
+      data, srf5_pvd = rep(0,nrow(data)), after = "srf4_pvd")
   }
 
   # Create column accessor function
@@ -85,7 +91,14 @@ prepare_input_data <- function(data, config)
   # Convert percentages to fractions
   data <- calculate_fractions(data)
 
+  # insert column with total sealed area
   data[["sealed"]] <- with(data, roof + pvd)
+
+  # insert empty to_swale column (fraction of the area connected to a swale)
+  data[["to_swale"]] <- 0
+
+  # insert empty green-roof column (fraction of roof)
+  data[["green_roof"]] <- 0
 
   # Get (land_type, veg_class, irrigation) tuples based on Berlin-specific codes
   usage_types <- fetch_data(c("berlin_usage", "berlin_type"))
@@ -113,9 +126,13 @@ prepare_input_data <- function(data, config)
   # Set roof area that are NAs to 0 for water bodies
   data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
 
-  # Select only the required columns and use the order as in "column-names.csv"
+  # Read information about the expected data types
+  data_types <- get_expected_data_type()
+
+  # Select only the required columns and convert data types as required
   data %>%
-    select_columns(dplyr::intersect(get_column_selection(), names(data)))
+    select_columns(intersect(get_column_selection(), names(data))) %>%
+    check_or_convert_data_types(data_types, convert = TRUE, dbg = dbg)
 }
 
 # identify_data_format_or_stop -------------------------------------------------
@@ -154,6 +171,12 @@ get_column_renamings <- function()
 }
 
 # read_column_info -------------------------------------------------------------
+
+#' Provide Meta Information About Input Columns
+#'
+#' @returns data frame with columns "rabimo_berlin", "abimo_berlin", "by_100",
+#'   "meaning", "unit", "type", "data_type", "default"
+#' @export
 read_column_info <- function()
 {
   "extdata/column-names.csv" %>%

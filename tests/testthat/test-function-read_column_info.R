@@ -15,7 +15,10 @@ test_that("read_column_info() works", {
     "meaning",
     "unit",
     "type",
-    "data_type"
+    "data_type",
+    "default"
   ))
+
+  expect_true(all(nzchar(result$meaning)))
 
 })

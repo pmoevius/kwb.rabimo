@@ -25,18 +25,25 @@ if (FALSE)
   )
 
   old_abimo_results <- kwb.abimo::run_abimo(
-    input_data = old_inputs$data, config = old_inputs$config)
+    input_data = old_inputs$data,
+    config = old_inputs$config
+  )
 
-  plot_differences(abimo_result = old_abimo_results, rabimo_result = result)
+  plot_differences(
+    abimo_result = old_abimo_results,
+    rabimo_result = result
+  )
 }
 
 # MAIN: Convert raw 2020 data to R-Abimo format --------------------------------
 if (FALSE)
 {
   # Read dbf file
-  berlin_2020_data <- get_path("berlin_2020_combined") %>%
-    foreign::read.dbf(as.is = TRUE) %>%
-    kwb.utils:::cache_and_return(name = "berlin_2020_data")
+  if (FALSE) {
+    berlin_2020_data <- get_path("berlin_2020_combined") %>%
+      foreign::read.dbf(as.is = TRUE) %>%
+      kwb.utils:::cache_and_return(name = "berlin_2020_data")
+  }
 
   # Read data from cache if there is no access to KWB server
   berlin_2020_data <- kwb.utils:::get_cached("berlin_2020_data")
@@ -44,7 +51,7 @@ if (FALSE)
   # Set all NAs to zero (test)
   #berlin_2020_data <- kwb.utils::defaultIfNA(berlin_2020_data, 0)
 
-  inputs_2020 <- kwb.rabimo::prepare_berlin_inputs(
+  rabimo_inputs_2020 <- kwb.rabimo::prepare_berlin_inputs(
     data = berlin_2020_data,
     config = kwb.abimo::read_config()
   )
@@ -52,17 +59,40 @@ if (FALSE)
   # Fehler: Column 'gw_dist' must not contain missing values (NA, found 4
   # times). Please give a value (may be 0) in each row.
   # MANUAL CORRECTION
-  data <- inputs_2020$data
+  data <- rabimo_inputs_2020$data
   data <- data[kwb.utils::matchesCriteria(data, "!is.na(gw_dist)"), ]
+
+  rabimo_inputs_2020$data <- data
+
+  cached <- kwb.utils:::cache_and_return(
+    x = rabimo_inputs_2020,
+    name = "rabimo_inputs_2020"
+  )
 
   # calculate R-ABIMO results
   results <- kwb.rabimo::run_rabimo(
     data = data,
-    config = inputs_2020$config
-  )
+    config = rabimo_inputs_2020$config,
+    simulate_abimo = FALSE,
+    intermediates = FALSE
+  ) %>%
+    kwb.utils:::cache_and_return(name = "rabimo_results_2020")
 
+  # save inputs list in package
+  if (FALSE) {
+    usethis::use_data(rabimo_inputs_2020, overwrite = TRUE)
+  }
+
+  # export 2020 results
+  if (FALSE){
+    foreign::write.dbf(
+      results,
+      file = file.path(get_path("results"), "berlin_2020_v2.dbf")
+    )
+  }
+
+  #kwb.utils::hsOpenWindowsExplorer(get_path("results"))
 }
-
 
 # MAIN: Convert Berlin data (clean 2020) to new structure ----------------------------
 if (FALSE)
@@ -240,7 +270,8 @@ get_path <- kwb.utils::createAccessor(kwb.utils::resolve(list(
   berlin_2020_clean = "<data_2020>/isu5_2020_abimo_cleaned.dbf",
   berlin_2020_raw = "<isu5_2020>/finaler_eingang_von_sensbw/isu5_2020_combined",
   berlin_2020_combined = "<berlin_2020_raw>/isu5_2020_abimo_hyras9120_amarex.dbf",
-  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf"
+  ndvi = "Y:/Z-Exchange/Philipp/Amarex/NDVI R/combined_data_NDVI.dbf",
+  results = "<amarex_ap4>/ABIMO_Daten/results/"
 )))
 
 # Define function: table_with_na() ---------------------------------------------

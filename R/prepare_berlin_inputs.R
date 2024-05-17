@@ -12,6 +12,7 @@
 #'   in \code{\link[kwb.abimo]{abimo_input_2019}}.
 #' @param config optional. List representing an Abimo configuration, as e.g.
 #'   provided by \code{\link[kwb.abimo]{read_config}}.
+#' @param dbg logical indicating whether or not to show debug messages
 #' @return a list object containing elements \code{data},
 #'   the prepared input data and \code{config}, the prepared config object,
 #'   both in a form readable by \code{\link{run_rabimo}}
@@ -20,7 +21,8 @@ prepare_berlin_inputs <- function(
     data_file,
     config_file = kwb.abimo::default_config(),
     data = NULL,
-    config = NULL
+    config = NULL,
+    dbg = TRUE
 )
 {
   # Read config file if config is NULL
@@ -40,14 +42,26 @@ prepare_berlin_inputs <- function(
   # - input data: with corrected precipitation and evaporation
   # - configuration: without correction factor or information on evaporation
   list(
-    data = prepare_input_data(data, config = new_config),
+    data = prepare_input_data(data, config = new_config, dbg = dbg),
     config = prepare_config(new_config)
   )
 }
 
 # prepare_config ---------------------------------------------------------------
-prepare_config <- function(config)
+prepare_config <- function(config, dbg = TRUE)
 {
+  # add evaporation effect of swales (percentage of water that does not infiltrate)
+  config[["swale"]] <- c(swale_evaporation_factor = 0.1)
+
+  # add bagrov value for green roofs
+  current_bagrov <-  config[["bagrov_values"]]
+
+  config[["bagrov_values"]] <- c(
+    current_bagrov[1L],
+    "green_roof" = 0.65,
+    current_bagrov[-1L]
+  )
+
   expected <- c("precipitation_correction_factor", "potential_evaporation")
 
   # Try to get the expected elements (for clear error message, if applicable)
