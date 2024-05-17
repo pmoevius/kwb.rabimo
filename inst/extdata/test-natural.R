@@ -12,7 +12,7 @@ results <- kwb.utils:::get_cached("rabimo_results_2020")
 
 # modify inputs to simulate the natural state
 nat_input_datasets <- list(
-  undeveloped = data_to_natural(inputs$data),
+  undeveloped = data_to_natural(inputs$data, type = "undeveloped"),
   forested = data_to_natural(inputs$data, type = "forested"),
   horticultural = data_to_natural(inputs$data, type = "horticultural")
 )
