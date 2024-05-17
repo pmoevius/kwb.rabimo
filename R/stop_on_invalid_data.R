@@ -91,8 +91,11 @@ get_expected_data_type <- function(x)
 # check_data_types -------------------------------------------------------------
 check_data_types <- function(data, types)
 {
+  columns <- names(types)
+
   for (column in names(types)) {
-    data_type <- mode(select_columns(data, column))
+    #column <- columns[1L]
+    data_type <- class(select_columns(data, column))[1L]
     if (data_type != types[column]) {
       stop_formatted(
         "Column '%s' (%s) does not have the expected data type (%s).",
