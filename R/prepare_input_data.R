@@ -126,9 +126,13 @@ prepare_input_data <- function(data, config, dbg = TRUE)
   # Set roof area that are NAs to 0 for water bodies
   data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
 
-  # Select only the required columns and use the order as in "column-names.csv"
+  # Read information about the expected data types
+  data_types <- get_expected_data_types()
+
+  # Select only the required columns and convert data types as required
   data %>%
-    select_columns(intersect(get_column_selection(), names(data)))
+    select_columns(intersect(get_column_selection(), names(data))) %>%
+    convert_data_types(data_types, dbg = dbg)
 }
 
 # identify_data_format_or_stop -------------------------------------------------
