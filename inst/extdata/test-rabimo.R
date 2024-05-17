@@ -74,14 +74,9 @@ if (FALSE)
     data = data,
     config = rabimo_inputs_2020$config,
     simulate_abimo = FALSE,
-    check = FALSE,
     intermediates = FALSE
-  )
-
-  cached <- kwb.utils:::cache_and_return(
-    x = results,
-    name = "rabimo_results_2020"
-  )
+  ) %>%
+    kwb.utils:::cache_and_return(name = "rabimo_results_2020")
 
   # save inputs list in package
   if (FALSE) {
