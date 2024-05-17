@@ -21,16 +21,22 @@ nat_input_datasets <- list(
   horticultural = data_to_natural(status_quo, type = "horticultural")
 )
 
-# Calculate R-Abimo results for the natural states
-nat_results <- lapply(nat_input_datasets, function(data) {
-  run_rabimo(
-    data = data,
-    config = inputs$config,
-    check = FALSE,
-    intermediates = TRUE,
-    simulate_abimo = FALSE
-  )
-})
+# Try to find natural results in the cache
+nat_results <- kwb.utils:::get_cached("nat_results")
+
+# Calculate R-Abimo results for the natural states if no results were cached
+if (is.null(nat_results)) {
+  nat_results <- lapply(nat_input_datasets, function(data) {
+    run_rabimo(
+      data = data,
+      config = inputs$config,
+      check = FALSE,
+      intermediates = TRUE,
+      simulate_abimo = FALSE
+    )
+  }) %>%
+    kwb.utils:::cache_and_return("nat_results")
+}
 
 # Simulate the selection of some blocks
 urban_data <- dplyr::sample_n(results, 7)
@@ -45,10 +51,12 @@ microbenchmark::microbenchmark(
     natural = nat_results$undeveloped,
     urban = urban_data
   ),
+  dw3 = calculate_delta_W_3(
+    natural = nat_results$undeveloped,
+    urban = urban_data
+  ),
   check = "identical"
 )
-
-identical(dw1, dw2)
 
 # compare natural results
 combined_results <- kwb.utils::rbindAll(nat_results, nameColumn = "source")

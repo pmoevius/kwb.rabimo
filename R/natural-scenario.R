@@ -135,3 +135,38 @@ calculate_delta_W_2 <- function(
     data.frame(delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1))
   )
 }
+
+calculate_delta_W_3 <- function(
+    natural,
+    urban,
+    water_balance_vars = c("surface_runoff", "infiltration", "evaporation"),
+    code_column_name = "code"
+)
+{
+  columns <- c(code_column_name, water_balance_vars)
+
+  x <- select_columns(urban, columns)
+  y <- select_columns(natural, columns)
+
+  y_rows <- match(x$code, y$code)
+  has_no_match <- is.na(y_rows)
+
+  if (any(has_no_match)) {
+    stop_formatted(
+      "Cannot find %d 'urban' codes in 'natural': %s",
+      sum(has_no_match),
+      paste(x$code[has_no_match], collapse = ", ")
+    )
+  }
+
+  natural_selection <- y[y_rows, -1L]
+  diff_matrix <- abs(x[, -1L] - natural_selection)
+
+  precipitation <- rowSums(natural_selection)
+
+  data.frame(
+    code = x$code,
+    delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1)
+  ) %>%
+    reset_row_names()
+}
