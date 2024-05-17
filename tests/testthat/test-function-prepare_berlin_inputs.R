@@ -10,7 +10,7 @@ test_that("prepare_berlin_inputs() works", {
 
   foreign::write.dbf(kwb.abimo::abimo_input_2019, data_file)
 
-  result <- f(data_file)
+  result <- f(data_file, dbg = FALSE)
 
   expect_type(result, "list")
 
