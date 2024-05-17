@@ -43,6 +43,42 @@ clean_stop <- function(...)
   stop(..., call. = FALSE)
 }
 
+# columns_to_named_vector ------------------------------------------------------
+columns_to_named_vector <- function(data, key_column, value_column)
+{
+  select_columns(data, value_column) %>%
+    stats::setNames(select_columns(data, key_column))
+}
+
+# check_or_convert_data_types --------------------------------------------------
+check_or_convert_data_types <- function(
+    data, types, convert = FALSE, dbg = TRUE
+)
+{
+  columns <- intersect(names(data), names(types))
+
+  for (column in columns) {
+    #column <- columns[2L]
+    new_type <- types[[column]]
+    old_type <- class(data[[column]])[1L]
+    if (old_type != new_type) {
+      if (!convert) {
+        stop_formatted(
+          "Column '%s' (%s) does not have the expected data type (%s).",
+          column, old_type, new_type
+        )
+      }
+      cat_and_run(
+        sprintf("Converting %s from %s to %s", column, old_type, new_type),
+        dbg = dbg,
+        data[[column]] <- do.call(paste0("as.", new_type), list(data[[column]]))
+      )
+    }
+  }
+
+  data
+}
+
 # create_accessor --------------------------------------------------------------
 #' @importFrom kwb.utils createAccessor
 create_accessor <- kwb.utils::createAccessor

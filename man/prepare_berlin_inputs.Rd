@@ -8,7 +8,8 @@ prepare_berlin_inputs(
   data_file,
   config_file = kwb.abimo::default_config(),
   data = NULL,
-  config = NULL
+  config = NULL,
+  dbg = TRUE
 )
 }
 \arguments{
@@ -21,6 +22,8 @@ in \code{\link[kwb.abimo]{abimo_input_2019}}.}
 
 \item{config}{optional. List representing an Abimo configuration, as e.g.
 provided by \code{\link[kwb.abimo]{read_config}}.}
+
+\item{dbg}{logical indicating whether or not to show debug messages}
 }
 \value{
 a list object containing elements \code{data},

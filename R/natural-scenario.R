@@ -20,15 +20,12 @@
 #' @export
 data_to_natural <- function(data, type = "undeveloped")
 {
-  # check if data has r-abimo format
-  required_columns <- read_column_info() %>%
-    dplyr::filter(type == "required") %>%
-    dplyr::select(.data[["rabimo_berlin"]]) %>%
-    dplyr::pull()
+  #kwb.utils::assignPackageObjects("kwb.rabimo")
 
-  stopifnot(all(required_columns %in% names(data)))
+  # Check if data has R-Abimo format
+  stop_on_invalid_data(data)
 
-  # define patterns for column names rlated to urbanisation
+  # define patterns for column names related to urbanisation
   patterns <- c("pv", "swg", "roof", "sealed")
   urban_columns <- grep(paste(patterns, collapse = "|"), names(data), value = TRUE)
 
@@ -48,7 +45,9 @@ data_to_natural <- function(data, type = "undeveloped")
     stop("please provide a known natural scenario type: undeveloped, horticultural or forested")
   }
 
-  nat_data
+  # Read information about the expected data types
+  data_types <- get_expected_data_type()
+  check_or_convert_data_types(nat_data, data_types, convert = TRUE)
 }
 
 # calculate_delta_W ------------------------------------------------------------

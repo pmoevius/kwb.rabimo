@@ -10,10 +10,11 @@
 #'   STR_BELAG4, KAN_STR, FLUR, FELD_30, FELD_150
 #' @param config configuration object (list) as returned by the function
 #'   \code{abimo_config_to_config()} used on \code{kwb.abimo::read_config()}
+#' @param dbg logical indicating whether or not to show debug messages
 #' @return \code{data} with columns renamed and additional columns
 #'  (e.g. ratios calculated from percentages, land type, vegetation class,
 #'  irrigation)
-prepare_input_data <- function(data, config)
+prepare_input_data <- function(data, config, dbg = TRUE)
 {
   #kwb.utils::assignPackageObjects("kwb.rabimo")
   #data <- kwb.abimo::abimo_input_2019
@@ -125,9 +126,13 @@ prepare_input_data <- function(data, config)
   # Set roof area that are NAs to 0 for water bodies
   data$roof[land_type_is_waterbody(data$land_type) & is.na(data$roof)] <- 0
 
-  # Select only the required columns and use the order as in "column-names.csv"
+  # Read information about the expected data types
+  data_types <- get_expected_data_type()
+
+  # Select only the required columns and convert data types as required
   data %>%
-    select_columns(intersect(get_column_selection(), names(data)))
+    select_columns(intersect(get_column_selection(), names(data))) %>%
+    check_or_convert_data_types(data_types, convert = TRUE, dbg = dbg)
 }
 
 # identify_data_format_or_stop -------------------------------------------------
