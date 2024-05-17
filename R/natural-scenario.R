@@ -47,7 +47,7 @@ data_to_natural <- function(data, type = "undeveloped")
 
   # Read information about the expected data types
   data_types <- get_expected_data_type()
-  convert_data_types(nat_data, data_types)
+  check_or_convert_data_types(nat_data, data_types, convert = TRUE)
 }
 
 # calculate_delta_W ------------------------------------------------------------

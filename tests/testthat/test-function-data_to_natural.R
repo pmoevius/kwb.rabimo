@@ -11,8 +11,9 @@ test_that("data_to_natural() works", {
   )
 
   data <- kwb.rabimo::rabimo_inputs_2020$data %>%
-    kwb.rabimo:::convert_data_types(
-      data_types = kwb.rabimo:::get_expected_data_type(),
+    kwb.rabimo:::check_or_convert_data_types(
+      types = kwb.rabimo:::get_expected_data_type(),
+      convert = TRUE,
       dbg = FALSE
     )
 

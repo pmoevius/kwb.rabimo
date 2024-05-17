@@ -29,9 +29,10 @@ stop_on_invalid_data <- function(data)
   }
 
   # Stop if a column does not have the expected data type
-  check_data_types(
+  check_or_convert_data_types(
     data = data,
-    types = get_expected_data_type(columns = names(data))
+    types = get_expected_data_type(columns = names(data)),
+    convert = FALSE
   )
 
   # Do not accept any NA
@@ -91,23 +92,6 @@ get_expected_data_type <- function(columns = NULL)
   }
 
   type_info[intersect(names(type_info), columns)]
-}
-
-# check_data_types -------------------------------------------------------------
-check_data_types <- function(data, types)
-{
-  columns <- names(types)
-
-  for (column in names(types)) {
-    #column <- columns[1L]
-    data_type <- class(select_columns(data, column))[1L]
-    if (data_type != types[column]) {
-      stop_formatted(
-        "Column '%s' (%s) does not have the expected data type (%s).",
-        column, data_type, types[column]
-      )
-    }
-  }
 }
 
 # check_sum_up_to_1_or_0 -------------------------------------------------------

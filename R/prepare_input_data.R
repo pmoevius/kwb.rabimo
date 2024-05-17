@@ -132,7 +132,7 @@ prepare_input_data <- function(data, config, dbg = TRUE)
   # Select only the required columns and convert data types as required
   data %>%
     select_columns(intersect(get_column_selection(), names(data))) %>%
-    convert_data_types(data_types, dbg = dbg)
+    check_or_convert_data_types(data_types, convert = TRUE, dbg = dbg)
 }
 
 # identify_data_format_or_stop -------------------------------------------------
