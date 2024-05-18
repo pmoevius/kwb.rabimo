@@ -174,30 +174,31 @@ calculate_delta_W_3 <- function(
 )
 {
   columns <- c(column_code, columns_water_balance)
+  data_urban <- select_columns(urban, columns)
+  data_natural <- select_columns(natural, columns)
 
-  x <- select_columns(urban, columns)
-  y <- select_columns(natural, columns)
+  codes <- data_urban[[1L]]
+  matching_rows <- match(codes, data_natural[[1L]])
+  code_not_found <- is.na(matching_rows)
 
-  y_rows <- match(x$code, y$code)
-  has_no_match <- is.na(y_rows)
-
-  if (any(has_no_match)) {
+  if (any(code_not_found)) {
     stop_formatted(
       "Cannot find %d 'urban' codes in 'natural': %s",
-      sum(has_no_match),
-      paste(x$code[has_no_match], collapse = ", ")
+      sum(code_not_found),
+      paste(codes[code_not_found], collapse = ", ")
     )
   }
 
-  natural_selection <- as.matrix(y[y_rows, -1L])
-  diff_matrix <- abs(as.matrix(x[, -1L]) - natural_selection)
+  # Convert data frames to matrices of the same size
+  m_urban <- as.matrix(data_urban[-1L])
+  m_natural <- as.matrix(data_natural[matching_rows, -1L])
 
-  precipitation <- rowSums(natural_selection)
+  # Calculate delta-W. Precipitation = rowSums(m_natural)
+  delta_ws <- rowSums(abs(m_urban - m_natural)) / rowSums(m_natural) * 100 / 2
 
   data.frame(
-    code = x$code,
-    delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1),
+    code = codes,
+    delta_w = unname(round(delta_ws, digits = 1L)),
     stringsAsFactors = FALSE
-  ) %>%
-    reset_row_names()
+  )
 }
