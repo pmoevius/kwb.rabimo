@@ -42,18 +42,18 @@ if (is.null(nat_results)) {
 urban_data <- dplyr::sample_n(results, 7)
 
 microbenchmark::microbenchmark(
-  dw1 = calculate_delta_W(
+  dw1 = calculate_delta_w(
     natural = nat_results$undeveloped,
     urban = urban_data,
     return_codes = TRUE,
     implementation = 1L
   ),
-  dw2 = calculate_delta_W(
+  dw2 = calculate_delta_w(
     natural = nat_results$undeveloped,
     urban = urban_data,
     implementation = 2L
   ),
-  dw3 = calculate_delta_W(
+  dw3 = calculate_delta_w(
     natural = nat_results$undeveloped,
     urban = urban_data,
     implementation = 3L

@@ -51,7 +51,7 @@ data_to_natural <- function(data, type = "undeveloped")
   )
 }
 
-# calculate_delta_W ------------------------------------------------------------
+# calculate_delta_w ------------------------------------------------------------
 
 #' Deviation from Natural Water Balance (Delta-W)
 #'
@@ -66,14 +66,14 @@ data_to_natural <- function(data, type = "undeveloped")
 #' @return a data frame with the area codes in column \code{code} and the
 #'   delta-W values in column \code{delta_w}
 #' @export
-calculate_delta_W <- function(natural, urban, ..., implementation = 3L)
+calculate_delta_w <- function(natural, urban, ..., implementation = 3L)
 {
   FUN <- if (implementation == 1) {
-    calculate_delta_W_1
+    calculate_delta_w_1
   } else if (implementation == 2) {
-    calculate_delta_W_2
+    calculate_delta_w_2
   } else if (implementation == 3) {
-    calculate_delta_W_3
+    calculate_delta_w_3
   } else {
     clean_stop("implementation must be one of 1, 2, 3.")
   }
@@ -81,7 +81,7 @@ calculate_delta_W <- function(natural, urban, ..., implementation = 3L)
   FUN(natural, urban, ...)
 }
 
-# calculate_delta_W_1 ----------------------------------------------------------
+# calculate_delta_w_1 ----------------------------------------------------------
 
 #' Deviation from Natural Water Balance (Delta-W)
 #'
@@ -93,7 +93,7 @@ calculate_delta_W <- function(natural, urban, ..., implementation = 3L)
 #' @param cols_to_omit column names that not contain result data or code identifiers. Defaults to "total_area"
 #' @param return_codes a logical value determining whether the codes should be returned along the delta-w values
 #' @return a dataframe containing the delta-w values (and optionally the areas' codes)
-calculate_delta_W_1 <- function(
+calculate_delta_w_1 <- function(
     natural,
     urban,
     cols_to_omit = c("area"),
@@ -135,8 +135,8 @@ calculate_delta_W_1 <- function(
   }
 }
 
-# calculate_delta_W_2 ----------------------------------------------------------
-calculate_delta_W_2 <- function(
+# calculate_delta_w_2 ----------------------------------------------------------
+calculate_delta_w_2 <- function(
     natural,
     urban,
     columns_water_balance = c("surface_runoff", "infiltration", "evaporation"),
@@ -165,8 +165,8 @@ calculate_delta_W_2 <- function(
   )
 }
 
-# calculate_delta_W_3 ----------------------------------------------------------
-calculate_delta_W_3 <- function(
+# calculate_delta_w_3 ----------------------------------------------------------
+calculate_delta_w_3 <- function(
     natural,
     urban,
     columns_water_balance = c("surface_runoff", "infiltration", "evaporation"),
