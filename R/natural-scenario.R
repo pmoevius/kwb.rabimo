@@ -139,15 +139,15 @@ calculate_delta_W_1 <- function(
 calculate_delta_W_2 <- function(
     natural,
     urban,
-    water_balance_vars = c("surface_runoff", "infiltration", "evaporation"),
-    code_column_name = "code"
+    columns_water_balance = c("surface_runoff", "infiltration", "evaporation"),
+    column_code = "code"
 )
 {
-  stopifnot(code_column_name %in% names(natural))
-  stopifnot(code_column_name %in% names(urban))
-  stopifnot(all(urban[[code_column_name]] %in% natural[[code_column_name]]))
+  stopifnot(column_code %in% names(natural))
+  stopifnot(column_code %in% names(urban))
+  stopifnot(all(urban[[column_code]] %in% natural[[column_code]]))
 
-  urban_codes <- urban[[code_column_name]]
+  urban_codes <- urban[[column_code]]
 
   natural_selection <- natural %>%
     dplyr::filter(.data[["code"]] %in% urban_codes) %>%
@@ -155,9 +155,9 @@ calculate_delta_W_2 <- function(
     `rownames<-`(NULL)
 
   diff_matrix <- abs(
-    natural_selection[water_balance_vars] - urban[water_balance_vars])
+    natural_selection[columns_water_balance] - urban[columns_water_balance])
 
-  precipitation <- rowSums(natural_selection[water_balance_vars])
+  precipitation <- rowSums(natural_selection[columns_water_balance])
 
   cbind(
     code = urban_codes,
@@ -169,11 +169,11 @@ calculate_delta_W_2 <- function(
 calculate_delta_W_3 <- function(
     natural,
     urban,
-    water_balance_vars = c("surface_runoff", "infiltration", "evaporation"),
-    code_column_name = "code"
+    columns_water_balance = c("surface_runoff", "infiltration", "evaporation"),
+    column_code = "code"
 )
 {
-  columns <- c(code_column_name, water_balance_vars)
+  columns <- c(column_code, columns_water_balance)
 
   x <- select_columns(urban, columns)
   y <- select_columns(natural, columns)
