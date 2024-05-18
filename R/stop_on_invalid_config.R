@@ -3,7 +3,6 @@ stop_on_invalid_config <- function(config)
 {
   stopifnot(is.list(config))
 
-
   check_values_for_surface_types <- function(x) {
     stopifnot(is.numeric(x))
     stopifnot("roof" %in% names(x))

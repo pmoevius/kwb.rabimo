@@ -51,7 +51,7 @@ data_to_natural <- function(data, type = "undeveloped")
   )
 }
 
-# calculate_delta_W ------------------------------------------------------------
+# calculate_delta_w ------------------------------------------------------------
 
 #' Deviation from Natural Water Balance (Delta-W)
 #'
@@ -66,14 +66,14 @@ data_to_natural <- function(data, type = "undeveloped")
 #' @return a data frame with the area codes in column \code{code} and the
 #'   delta-W values in column \code{delta_w}
 #' @export
-calculate_delta_W <- function(natural, urban, ..., implementation = 3L)
+calculate_delta_w <- function(natural, urban, ..., implementation = 3L)
 {
   FUN <- if (implementation == 1) {
-    calculate_delta_W_1
+    calculate_delta_w_1
   } else if (implementation == 2) {
-    calculate_delta_W_2
+    calculate_delta_w_2
   } else if (implementation == 3) {
-    calculate_delta_W_3
+    calculate_delta_w_3
   } else {
     clean_stop("implementation must be one of 1, 2, 3.")
   }
@@ -81,7 +81,7 @@ calculate_delta_W <- function(natural, urban, ..., implementation = 3L)
   FUN(natural, urban, ...)
 }
 
-# calculate_delta_W_1 ----------------------------------------------------------
+# calculate_delta_w_1 ----------------------------------------------------------
 
 #' Deviation from Natural Water Balance (Delta-W)
 #'
@@ -93,7 +93,7 @@ calculate_delta_W <- function(natural, urban, ..., implementation = 3L)
 #' @param cols_to_omit column names that not contain result data or code identifiers. Defaults to "total_area"
 #' @param return_codes a logical value determining whether the codes should be returned along the delta-w values
 #' @return a dataframe containing the delta-w values (and optionally the areas' codes)
-calculate_delta_W_1 <- function(
+calculate_delta_w_1 <- function(
     natural,
     urban,
     cols_to_omit = c("area"),
@@ -135,19 +135,19 @@ calculate_delta_W_1 <- function(
   }
 }
 
-# calculate_delta_W_2 ----------------------------------------------------------
-calculate_delta_W_2 <- function(
+# calculate_delta_w_2 ----------------------------------------------------------
+calculate_delta_w_2 <- function(
     natural,
     urban,
-    water_balance_vars = c("surface_runoff", "infiltration", "evaporation"),
-    code_column_name = "code"
+    columns_water_balance = c("surface_runoff", "infiltration", "evaporation"),
+    column_code = "code"
 )
 {
-  stopifnot(code_column_name %in% names(natural))
-  stopifnot(code_column_name %in% names(urban))
-  stopifnot(all(urban[[code_column_name]] %in% natural[[code_column_name]]))
+  stopifnot(column_code %in% names(natural))
+  stopifnot(column_code %in% names(urban))
+  stopifnot(all(urban[[column_code]] %in% natural[[column_code]]))
 
-  urban_codes <- urban[[code_column_name]]
+  urban_codes <- urban[[column_code]]
 
   natural_selection <- natural %>%
     dplyr::filter(.data[["code"]] %in% urban_codes) %>%
@@ -155,9 +155,9 @@ calculate_delta_W_2 <- function(
     `rownames<-`(NULL)
 
   diff_matrix <- abs(
-    natural_selection[water_balance_vars] - urban[water_balance_vars])
+    natural_selection[columns_water_balance] - urban[columns_water_balance])
 
-  precipitation <- rowSums(natural_selection[water_balance_vars])
+  precipitation <- rowSums(natural_selection[columns_water_balance])
 
   cbind(
     code = urban_codes,
@@ -165,39 +165,40 @@ calculate_delta_W_2 <- function(
   )
 }
 
-# calculate_delta_W_3 ----------------------------------------------------------
-calculate_delta_W_3 <- function(
+# calculate_delta_w_3 ----------------------------------------------------------
+calculate_delta_w_3 <- function(
     natural,
     urban,
-    water_balance_vars = c("surface_runoff", "infiltration", "evaporation"),
-    code_column_name = "code"
+    columns_water_balance = c("surface_runoff", "infiltration", "evaporation"),
+    column_code = "code"
 )
 {
-  columns <- c(code_column_name, water_balance_vars)
+  columns <- c(column_code, columns_water_balance)
+  data_urban <- select_columns(urban, columns)
+  data_natural <- select_columns(natural, columns)
 
-  x <- select_columns(urban, columns)
-  y <- select_columns(natural, columns)
+  codes <- data_urban[[1L]]
+  matching_rows <- match(codes, data_natural[[1L]])
+  code_not_found <- is.na(matching_rows)
 
-  y_rows <- match(x$code, y$code)
-  has_no_match <- is.na(y_rows)
-
-  if (any(has_no_match)) {
+  if (any(code_not_found)) {
     stop_formatted(
       "Cannot find %d 'urban' codes in 'natural': %s",
-      sum(has_no_match),
-      paste(x$code[has_no_match], collapse = ", ")
+      sum(code_not_found),
+      paste(codes[code_not_found], collapse = ", ")
     )
   }
 
-  natural_selection <- as.matrix(y[y_rows, -1L])
-  diff_matrix <- abs(as.matrix(x[, -1L]) - natural_selection)
+  # Convert data frames to matrices of the same size
+  m_urban <- as.matrix(data_urban[-1L])
+  m_natural <- as.matrix(data_natural[matching_rows, -1L])
 
-  precipitation <- rowSums(natural_selection)
+  # Calculate delta-W. Precipitation = rowSums(m_natural)
+  delta_ws <- rowSums(abs(m_urban - m_natural)) / rowSums(m_natural) * 100 / 2
 
   data.frame(
-    code = x$code,
-    delta_w = round(rowSums(diff_matrix)*100/precipitation/2, 1),
+    code = codes,
+    delta_w = unname(round(delta_ws, digits = 1L)),
     stringsAsFactors = FALSE
-  ) %>%
-    reset_row_names()
+  )
 }

@@ -5,9 +5,9 @@
 # tested. Then, delete this comment.
 #
 
-test_that("calculate_delta_W() works", {
+test_that("calculate_delta_w() works", {
 
-  f <- kwb.rabimo::calculate_delta_W
+  f <- kwb.rabimo::calculate_delta_w
 
   expect_error(
     f()
