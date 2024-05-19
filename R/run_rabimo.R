@@ -69,7 +69,7 @@ run_rabimo <- function(data, config, controls = define_controls())
           potential_evaporation = fetch_climate("epot_yr"),
           x_ratio = fetch_climate("x_ratio"),
           bagrov_parameter = rep(x, nrow(data)),
-          use_abimo_algorithm = control("simulate_abimo")
+          use_abimo_algorithm = control("use_abimo_bagrov_solver")
         )
       }) %>%
       do.call(what = data.frame)
@@ -87,7 +87,7 @@ run_rabimo <- function(data, config, controls = define_controls())
       soil_properties = soil_properties,
       min_size_for_parallel = 100L,
       #digits = 3L,
-      use_abimo_algorithm = control("simulate_abimo")
+      use_abimo_algorithm = control("use_abimo_bagrov_solver")
     )
   )
 
@@ -179,7 +179,7 @@ run_rabimo <- function(data, config, controls = define_controls())
     with(data, road_fraction * (1-pvd_rd)) *
     runoff_sealed[, ncol(runoff_sealed)] # last (less sealed) surface class
 
-  fraction_unsealed <- if (control("simulate_abimo")) {
+  fraction_unsealed <- if (control("reproduce_abimo_error")) {
     with(data, 1 - sealed)
   } else {
     with(data, main_fraction * (1 - sealed))
@@ -253,20 +253,24 @@ run_rabimo <- function(data, config, controls = define_controls())
     mget(names(name_mapping)[-1L])
   )
 
-  result_data <- if (control("simulate_abimo")) {
+  output_format <- control("output_format")
+
+  result_data <- if (output_format == "abimo") {
     # Provide the same columns as Abimo does
     rename_columns(result_data_raw, name_mapping)
-  } else {
+  } else if (output_format == "rabimo") {
     remove_columns(result_data_raw, pattern = "_flow") %>%
       remove_columns("total_runoff") %>%
       move_columns_to_front(c("code", "total_area")) %>%
       dplyr::rename_with(~gsub("total_","",.))
+  } else {
+    clean_stop("controls$output_format must be either 'abimo' or 'rabimo'.")
   }
 
   # Round all columns to three digits (skip first column: "CODE")
   result_data[-1L] <- lapply(result_data[-1L], round, 3L)
 
-  if (!control("intermediates")) {
+  if (isFALSE(control("intermediates"))) {
     return(result_data)
   }
 
@@ -330,21 +334,32 @@ yearly_height_to_volume_flow <- function(height, area)
 #'
 #' @param check logical indicating whether the check functions are executed.
 #'   Default: \code{TRUE}.
-#' @param simulate_abimo logical indicating whether or not to simulate exactly
-#'   what Abimo does (including obvious errors!). Default: \code{TRUE}!.
+#' @param use_abimo_bagrov_solver logical indicating whether or not to use the
+#'   (fast!) algorithm implemented in Abimo to solve the Bagrov equations.
+#'   Default: \code{TRUE}.
+#' @param reproduce_abimo_error logical indicating whether or not to reproduce
+#'   the error that is contained in Abimo (missing area fraction factor).
+#'   Default: \code{FALSE}.
+#' @param output_format one of "abimo" (upper case columns: CODE, R, ROW, RI,
+#'   RVOL, ROWVOL, RIVOL, FLAECHE, VERDUNSTUN), "rabimo" (lower case columns:
+#'   code, surface_runoff, infiltration, evaporation).
 #' @param intermediates logical indicating whether the intermediate results are
 #'   returned as attributes. Default: \code{FALSE}.
 #' @returns list with the arguments of this function as list elements
 #' @export
 define_controls <- function(
     check = TRUE,
-    simulate_abimo = TRUE,
+    use_abimo_bagrov_solver = TRUE,
+    reproduce_abimo_error = FALSE,
+    output_format = "rabimo",
     intermediates = FALSE
 )
 {
   list(
     check = check,
-    simulate_abimo = simulate_abimo,
+    use_abimo_bagrov_solver = use_abimo_bagrov_solver,
+    reproduce_abimo_error = reproduce_abimo_error,
+    output_format = output_format,
     intermediates = intermediates
   )
 }

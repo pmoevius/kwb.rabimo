@@ -4,14 +4,29 @@
 \alias{define_controls}
 \title{Define List of "Controls"}
 \usage{
-define_controls(check = TRUE, simulate_abimo = TRUE, intermediates = FALSE)
+define_controls(
+  check = TRUE,
+  use_abimo_bagrov_solver = TRUE,
+  reproduce_abimo_error = FALSE,
+  output_format = "rabimo",
+  intermediates = FALSE
+)
 }
 \arguments{
 \item{check}{logical indicating whether the check functions are executed.
 Default: \code{TRUE}.}
 
-\item{simulate_abimo}{logical indicating whether or not to simulate exactly
-what Abimo does (including obvious errors!). Default: \code{TRUE}!.}
+\item{use_abimo_bagrov_solver}{logical indicating whether or not to use the
+(fast!) algorithm implemented in Abimo to solve the Bagrov equations.
+Default: \code{TRUE}.}
+
+\item{reproduce_abimo_error}{logical indicating whether or not to reproduce
+the error that is contained in Abimo (missing area fraction factor).
+Default: \code{FALSE}.}
+
+\item{output_format}{one of "abimo" (upper case columns: CODE, R, ROW, RI,
+RVOL, ROWVOL, RIVOL, FLAECHE, VERDUNSTUN), "rabimo" (lower case columns:
+code, surface_runoff, infiltration, evaporation).}
 
 \item{intermediates}{logical indicating whether the intermediate results are
 returned as attributes. Default: \code{FALSE}.}
