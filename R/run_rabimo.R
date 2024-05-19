@@ -21,7 +21,7 @@ run_rabimo <- function(data, config, controls = define_controls())
     inputs <- kwb.utils:::get_cached("rabimo_inputs_2020")
     data <- inputs$data
     config <- inputs$config
-    controls <- list(check=TRUE,simulate_abimo=TRUE,intermediates=FALSE)
+    controls <- define_controls()
     `%>%` <- magrittr::`%>%`
   }
 
