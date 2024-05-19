@@ -9,15 +9,15 @@ test_that("run_rabimo() works", {
   data <- data.frame(
     code = "a",
     land_type = "a",
-    prec_yr = 100,
+    prec_yr = 100L,
     prec_s = 100L,
-    epot_yr = c(1,2,4),
-    epot_s = 12.3,
+    epot_yr = c(1L, 2L, 4L),
+    epot_s = 123L,
     ufc30 = -123,
     ufc150 = 1.2,
     gw_dist = c(-1,-2,1),
-    veg_class = 1,
-    irrigation = -1,
+    veg_class = 1L,
+    irrigation = -1L,
     main_fraction = c(1, 1, 0.3),
     roof = c(0.1, 0.2, 0.3),
     green_roof = 0.0,
@@ -26,6 +26,7 @@ test_that("run_rabimo() works", {
     srf2_pvd = 0.5,
     srf3_pvd = c(0, 0, 0),
     srf4_pvd = 0,
+    srf5_pvd = 0,
     srf1_pvd_rd = 0,
     srf2_pvd_rd = 0.1,
     srf3_pvd_rd = 0.9001,
@@ -62,7 +63,8 @@ test_that("run_rabimo() works", {
     swale = list(swale_evaporation_factor = 1)
   )
 
-  expect_output(result <- f(data, config, check = FALSE, simulate_abimo = FALSE))
+  expect_output(result <- f(data, config, controls = define_controls()))
+
   expect_s3_class(result, "data.frame")
   expect_true(nrow(result) == nrow(data))
 
