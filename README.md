@@ -58,8 +58,7 @@ new_inputs <- kwb.rabimo::prepare_berlin_inputs(
 # Run R-Abimo, the R-implementation of Abimo
 rabimo_result <- kwb.rabimo::run_rabimo(
   data = new_inputs$data, 
-  config = new_inputs$config,
-  controls = kwb.rabimo::define_controls()
+  config = new_inputs$config
 )
 
 # Have a look at the first lines of the result data frame
@@ -71,8 +70,7 @@ head(rabimo_result)
 ```r
 rabimo_result_natural <- kwb.rabimo::run_rabimo(
   data = kwb.rabimo::data_to_natural(new_inputs$data), 
-  config = new_inputs$config,
-  controls = kwb.rabimo::define_controls()
+  config = new_inputs$config
 )
 ```
 
