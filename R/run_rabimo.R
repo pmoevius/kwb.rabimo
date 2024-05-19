@@ -6,36 +6,30 @@
 #'   \code{\link{prepare_input_data}}
 #' @param config configuration object (list) as returned by
 #'   \code{\link{abimo_config_to_config}}
-#' @param simulate_abimo logical indicating whether or not to simulate exactly
-#'   what Abimo does (including obvious errors!).
-#'   Default: \code{TRUE}!
-#' @param check logical indicating whether the check functions are executed
-#' @param intermediates logical indicating whether the intermediate results are
-#'   returned as attributes
+#' @param controls list of settings that control how the function should behave.
+#'   Use \code{\link{define_controls}} to define such a list. The default is
+#'   the list returned by \code{define_controls()}.
 #' @return data frame with columns as returned by Abimo
 #' @export
-run_rabimo <- function(
-    data,
-    config,
-    simulate_abimo = TRUE,
-    check = TRUE,
-    intermediates = FALSE
-)
+run_rabimo <- function(data, config, controls = define_controls())
 {
   # Provide functions and variables for debugging
-  # kwb.utils::assignPackageObjects("kwb.rabimo");simulate_abimo = FALSE
-  # inputs <- kwb.utils:::get_cached("rabimo_inputs_2020")
-  # data <- inputs$data
-  # config <- inputs$config
-  # `%>%` <- magrittr::`%>%`
-  # check = FALSE
+  # (Go to inst/extdata/test-rabimo.R to provide data and config for debugging)
+  if (FALSE)
+  {
+    kwb.utils::assignPackageObjects("kwb.rabimo")
+    inputs <- kwb.utils:::get_cached("rabimo_inputs_2020")
+    data <- inputs$data
+    config <- inputs$config
+    controls <- list(check=TRUE,simulate_abimo=TRUE,intermediates=FALSE)
+    `%>%` <- magrittr::`%>%`
+  }
 
-  #
-  # Go to inst/extdata/test-rabimo.R to provide data and config for debugging
-  #
+  # Provide function to access the list of controls
+  control <- create_accessor(controls)
 
   # Check whether data and config have the expected structures
-  if (check) {
+  if (isTRUE(control("check"))) {
     stop_on_invalid_data(data)
     stop_on_invalid_config(config)
   }
@@ -75,7 +69,7 @@ run_rabimo <- function(
           potential_evaporation = fetch_climate("epot_yr"),
           x_ratio = fetch_climate("x_ratio"),
           bagrov_parameter = rep(x, nrow(data)),
-          use_abimo_algorithm = simulate_abimo
+          use_abimo_algorithm = control("simulate_abimo")
         )
       }) %>%
       do.call(what = data.frame)
@@ -93,7 +87,7 @@ run_rabimo <- function(
       soil_properties = soil_properties,
       min_size_for_parallel = 100L,
       #digits = 3L,
-      use_abimo_algorithm = simulate_abimo
+      use_abimo_algorithm = control("simulate_abimo")
     )
   )
 
@@ -185,7 +179,7 @@ run_rabimo <- function(
     with(data, road_fraction * (1-pvd_rd)) *
     runoff_sealed[, ncol(runoff_sealed)] # last (less sealed) surface class
 
-  fraction_unsealed <- if(simulate_abimo) {
+  fraction_unsealed <- if (control("simulate_abimo")) {
     with(data, 1 - sealed)
   } else {
     with(data, main_fraction * (1 - sealed))
@@ -259,7 +253,7 @@ run_rabimo <- function(
     mget(names(name_mapping)[-1L])
   )
 
-  result_data <- if (simulate_abimo) {
+  result_data <- if (control("simulate_abimo")) {
     # Provide the same columns as Abimo does
     rename_columns(result_data_raw, name_mapping)
   } else {
@@ -272,7 +266,7 @@ run_rabimo <- function(
   # Round all columns to three digits (skip first column: "CODE")
   result_data[-1L] <- lapply(result_data[-1L], round, 3L)
 
-  if (!intermediates) {
+  if (!control("intermediates")) {
     return(result_data)
   }
 
@@ -327,4 +321,30 @@ get_climate <- function(input)
 yearly_height_to_volume_flow <- function(height, area)
 {
   height * 3.171 * area / 100000.0
+}
+
+#' Define List of "Controls"
+#'
+#' Define a list of settings that control how the main function
+#' \code{\link{run_rabimo}} should behave.
+#'
+#' @param check logical indicating whether the check functions are executed.
+#'   Default: \code{TRUE}.
+#' @param simulate_abimo logical indicating whether or not to simulate exactly
+#'   what Abimo does (including obvious errors!). Default: \code{TRUE}!.
+#' @param intermediates logical indicating whether the intermediate results are
+#'   returned as attributes. Default: \code{FALSE}.
+#' @returns list with the arguments of this function as list elements
+#' @export
+define_controls <- function(
+    check = TRUE,
+    simulate_abimo = TRUE,
+    intermediates = FALSE
+)
+{
+  list(
+    check = check,
+    simulate_abimo = simulate_abimo,
+    intermediates = intermediates
+  )
 }

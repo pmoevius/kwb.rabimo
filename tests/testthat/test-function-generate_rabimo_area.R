@@ -9,8 +9,10 @@ test_that("generate_rabimo_area() works", {
   expect_no_error(expect_output(kwb.rabimo::run_rabimo(
     data = f(code = "a_code"),
     config = kwb.rabimo::rabimo_inputs_2020$config,
-    check = FALSE,
-    simulate_abimo = FALSE
+    controls = kwb.rabimo::define_controls(
+      check = FALSE,
+      simulate_abimo = FALSE
+    )
   )))
 
 })

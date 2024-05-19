@@ -62,7 +62,11 @@ test_that("run_rabimo() works", {
     swale = list(swale_evaporation_factor = 1)
   )
 
-  expect_output(result <- f(data, config, check = FALSE, simulate_abimo = FALSE))
+  expect_output(result <- f(data, config, controls = define_controls(
+    check = FALSE,
+    simulate_abimo = FALSE
+  )))
+
   expect_s3_class(result, "data.frame")
   expect_true(nrow(result) == nrow(data))
 
