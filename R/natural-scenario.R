@@ -19,7 +19,8 @@
 #' @export
 data_to_natural <- function(data, type = "undeveloped")
 {
-  #kwb.utils::assignPackageObjects("kwb.rabimo")
+  # kwb.utils::assignPackageObjects("kwb.rabimo")
+  # data <- kwb.rabimo::rabimo_inputs_2020$data; type = "undeveloped"
 
   # Check if data has R-Abimo format
   stop_on_invalid_data(data)
@@ -28,14 +29,17 @@ data_to_natural <- function(data, type = "undeveloped")
   urban_columns <- grep("pv|swg|roof|sealed", names(data), value = TRUE)
 
   # non urbanized state: no building, no pavements
-  nat_data <- data %>%
-    dplyr::mutate(dplyr::across(dplyr::all_of(urban_columns), ~ 0))
+  nat_data <- data
+  nat_data[urban_columns] <- 0
 
   if (type == "undeveloped") {
     return(nat_data)
   }
 
-  nat_data[["land_type"]] <- if (type == "forested") {
+  land_types <- select_columns(data, "land_type")
+  is_waterbody <- land_type_is_waterbody(land_types)
+
+  nat_data[["land_type"]][!is_waterbody] <- if (type == "forested") {
     "forested"
   } else if (type == "horticultural") {
     "horticultural"
