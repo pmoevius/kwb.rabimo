@@ -21,7 +21,8 @@ if (FALSE)
   # Run R-Abimo with the new data structures
   result <- kwb.rabimo::run_rabimo(
     data = new_inputs$data,
-    config = new_inputs$config
+    config = new_inputs$config,
+    controls = kwb.rabimo::define_controls(output_format = "abimo")
   )
 
   old_abimo_results <- kwb.abimo::run_abimo(
@@ -38,15 +39,16 @@ if (FALSE)
 # MAIN: Convert raw 2020 data to R-Abimo format --------------------------------
 if (FALSE)
 {
+  # Read data from cache if there is no access to KWB server
+  berlin_2020_data <- kwb.utils:::get_cached("berlin_2020_data")
+
   # Read dbf file
-  if (FALSE) {
+  if (is.null(berlin_2020_data)) {
     berlin_2020_data <- get_path("berlin_2020_combined") %>%
       foreign::read.dbf(as.is = TRUE) %>%
       kwb.utils:::cache_and_return(name = "berlin_2020_data")
   }
 
-  # Read data from cache if there is no access to KWB server
-  berlin_2020_data <- kwb.utils:::get_cached("berlin_2020_data")
 
   # Set all NAs to zero (test)
   #berlin_2020_data <- kwb.utils::defaultIfNA(berlin_2020_data, 0)
@@ -69,12 +71,10 @@ if (FALSE)
     name = "rabimo_inputs_2020"
   )
 
-  # calculate R-ABIMO results
+  # Calculate R-ABIMO results
   results <- kwb.rabimo::run_rabimo(
     data = data,
-    config = rabimo_inputs_2020$config,
-    simulate_abimo = FALSE,
-    intermediates = FALSE
+    config = rabimo_inputs_2020$config
   ) %>%
     kwb.utils:::cache_and_return(name = "rabimo_results_2020")
 
@@ -94,7 +94,7 @@ if (FALSE)
   #kwb.utils::hsOpenWindowsExplorer(get_path("results"))
 }
 
-# MAIN: Convert Berlin data (clean 2020) to new structure ----------------------------
+# MAIN: Convert Berlin data (clean 2020) to new structure ----------------------
 if (FALSE)
 {
   # Read dbf file. Do not convert character to factor (as.is = TRUE)
@@ -139,7 +139,10 @@ if (FALSE)
   # Run R-Abimo with the new data structures
   result <- kwb.rabimo::run_rabimo(
     data = new_inputs$data,
-    config = new_inputs$config
+    config = new_inputs$config,
+    controls = kwb.rabimo::define_controls(
+      output_format = "abimo"
+    )
   )
 
   # Compare new results with old results
@@ -147,7 +150,6 @@ if (FALSE)
 
   # Plot the differences between Abimo and R-Abimo, per variable
   plot_differences(abimo_result = result_old, rabimo_result = result)
-
 }
 
 # MAIN: Provide function arguments for run_rabimo(), prepare_input_data() ------

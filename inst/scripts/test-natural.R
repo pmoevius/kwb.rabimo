@@ -1,20 +1,33 @@
 # Script for calculation of the natural water balance and the deviation from
 # the natural water balance Delta-W
 
-# load data
-inputs <- kwb.rabimo::rabimo_inputs_2020
-results <- kwb.utils:::get_cached("rabimo_results_2020")
-
 # Provide all functions from kwb.rabimo in the global environment
 kwb.utils::assignPackageObjects("kwb.rabimo")
+`%>%` <- magrittr::`%>%`
 
-# simulate_abimo = FALSE;check = FALSE
-# `%>%` <- magrittr::`%>%`
+# Clear the cache
+#kwb.utils:::clear_cache()
+
+# Load data
+inputs <- kwb.rabimo::rabimo_inputs_2020
+
+# Get the status quo data
+status_quo <- select_elements(inputs, "data")
+
+# Load R-Abimo results from cache...
+results <- kwb.utils:::get_cached("rabimo_results_2020")
+
+# ... or recalculate R-Abimo results
+if (is.null(results)) {
+  results <- kwb.rabimo::run_rabimo(
+    data = status_quo,
+    config = select_elements(inputs, "config")
+  ) %>%
+    kwb.utils:::cache_and_return(name = "rabimo_results_2020")
+}
 
 # Convert the "status quo" input data to input data representing different types
 # of "natural states"
-status_quo <- select_elements(inputs, "data")
-
 nat_input_datasets <- list(
   undeveloped = data_to_natural(status_quo, type = "undeveloped"),
   forested = data_to_natural(status_quo, type = "forested"),
@@ -30,9 +43,7 @@ if (is.null(nat_results)) {
     run_rabimo(
       data = data,
       config = inputs$config,
-      check = FALSE,
-      intermediates = TRUE,
-      simulate_abimo = FALSE
+      controls = kwb.rabimo::define_controls()
     )
   }) %>%
     kwb.utils:::cache_and_return("nat_results")
@@ -133,10 +144,7 @@ area_list <- list(
 area_results <- lapply(area_list, function(data) {
   run_rabimo(
     data = data,
-    config = inputs$config,
-    check = FALSE,
-    intermediates = TRUE,
-    simulate_abimo = FALSE
+    config = inputs$config
   )
 }) %>%
   kwb.utils::rbindAll()

@@ -253,19 +253,15 @@ get_area_balance <- function(
     config,
     rabimo_results = NULL,
     wabila_results = NULL,
-    result_cols = c("surface_runoff", "infiltration", "evaporation")
+    result_cols = c("surface_runoff", "infiltration", "evaporation"),
+    ...
 )
 {
   results <- if (is.null(rabimo_results)) {
     run_rabimo(
       data = area,
       config = config,
-      controls = kwb.rabimo::define_controls(
-        check = check,
-        output_format = "rabimo"
-      )
-      simulate_abimo = simulate_abimo,
-
+      controls = kwb.rabimo::define_controls(...)
     )
   } else {
     rabimo_results
