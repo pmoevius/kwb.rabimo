@@ -14,7 +14,7 @@
 run_rabimo <- function(data, config, controls = define_controls())
 {
   # Provide functions and variables for debugging
-  # (Go to inst/extdata/test-rabimo.R to provide data and config for debugging)
+  # (Go to inst/scripts/test-rabimo.R to provide data and config for debugging)
   if (FALSE)
   {
     kwb.utils::assignPackageObjects("kwb.rabimo")

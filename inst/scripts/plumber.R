@@ -32,20 +32,17 @@ function(req, input_dbf, config_xml)
 #* @param n_records number of records (= input rows = "Blockteilflaechen").
 #* @param seed seed value for the random number generator used to randomly select rows
 #* @post /example_data
-function(n_records = 3L, seed = 12345L)
+function(n_records = 7L, seed = as.integer(Sys.time()))
 {
-  data_old <- kwb.abimo::abimo_input_2019
-  config_old <- kwb.abimo::read_config()
+  data <- kwb.utils::selectElements(kwb.rabimo::rabimo_inputs_2020, "data")
 
-  n_max <- nrow(data_old)
-
+  n_rows <- nrow(data)
   set.seed(seed)
-  rows <- sample(n_max, size = min(c(n_max, n_records)))
 
-  kwb.rabimo::prepare_input_data(
-    data = data_old[rows, ],
-    config = kwb.rabimo::abimo_config_to_config(config_old)
-  )
+  rows <- sample(n_rows, size = min(c(n_rows, n_records)))
+
+  length(rows)
+  #data[rows, ]
 }
 
 #* Example configuration for Abimo

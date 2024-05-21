@@ -248,17 +248,25 @@ estimate_swale_area <- function(kf){
 
 
 # get_area_balance -------------------------------------------------------------
-get_area_balance <- function(area, config, rabimo_results = NULL,
-                             wabila_results = NULL,
-                             simulate_abimo = FALSE, check = FALSE,
-                             result_cols = c("surface_runoff",
-                                             "infiltration",
-                                             "evaporation"))
+get_area_balance <- function(
+    area,
+    config,
+    rabimo_results = NULL,
+    wabila_results = NULL,
+    result_cols = c("surface_runoff", "infiltration", "evaporation")
+)
 {
-  results <- if (is.null(rabimo_results)){
-    run_rabimo(data = area, config = config,
-               simulate_abimo = simulate_abimo,
-               check = check)
+  results <- if (is.null(rabimo_results)) {
+    run_rabimo(
+      data = area,
+      config = config,
+      controls = kwb.rabimo::define_controls(
+        check = check,
+        output_format = "rabimo"
+      )
+      simulate_abimo = simulate_abimo,
+
+    )
   } else {
     rabimo_results
   }
@@ -291,8 +299,8 @@ calculate_delta_mod <- function(results_mod_1, results_mod_2,
                                               "evaporation"),
                                 codes_name = "code"){
 
-#   results_mod_1 <- test_res_3a
-#   results_mod_2 <- test_res_3b
+  #   results_mod_1 <- test_res_3a
+  #   results_mod_2 <- test_res_3b
 
   stopifnot(identical(dim(results_mod_1), dim(results_mod_2)))
 
@@ -310,13 +318,13 @@ calculate_delta_mod <- function(results_mod_1, results_mod_2,
   delta_mod <- data.frame(
     delta_mod = rowSums(
       abs(results_mod_1[var_names] - results_mod_2[var_names])
-      ) * 0.5 / precipitation
-    )
+    ) * 0.5 / precipitation
+  )
 
   if(has_codes){
     stopifnot(
       identical(results_mod_1[[codes_name]], results_mod_2[[codes_name]])
-      )
+    )
     codes <- results_mod_1[[codes_name]]
     delta_mod <- cbind(code = codes, delta_mod = delta_mod)
   }

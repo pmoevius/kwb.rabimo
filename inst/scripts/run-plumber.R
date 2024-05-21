@@ -2,7 +2,7 @@
 #remotes::install_github("kwb-r/kwb.rabimo@dev")
 
 plumber_file <- system.file(
-  "extdata/plumber.R",
+  "scripts/plumber.R",
   package = "kwb.rabimo",
   mustWork = TRUE
 )

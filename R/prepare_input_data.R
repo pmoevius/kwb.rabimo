@@ -24,7 +24,7 @@ prepare_input_data <- function(data, config, dbg = TRUE)
   #`%>%` <- magrittr::`%>%`
 
   #
-  # See inst/extdata/test-rabimo.R for test data assignments
+  # See inst/scripts/test-rabimo.R for test data assignments
   #
 
   # Try to identify the "format" of the data frame
