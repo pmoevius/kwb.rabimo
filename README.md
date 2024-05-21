@@ -102,7 +102,7 @@ head(rabimo_result)
 # R-Abimo result
 abimo_result_renamed <- kwb.utils::renameColumns(abimo_result, list(
   FLAECHE = "area",
-  R = "surface_runoff",
+  ROW = "surface_runoff",
   RI = "infiltration",
   VERDUNSTUN = "evaporation"
 ))
