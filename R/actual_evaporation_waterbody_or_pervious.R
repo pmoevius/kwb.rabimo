@@ -27,15 +27,6 @@ actual_evaporation_waterbody_or_pervious <- function(
     digits = NULL
 )
 {
-  if (FALSE)
-  {
-    usage_tuple = fetch_input(c("land_type", "veg_class", "irrigation"))
-    min_size_for_parallel = 100L
-    use_abimo_algorithm = simulate_abimo
-    digits = NULL
-    dbg = TRUE
-  }
-
   # Create accessor functions
   fetch_usage <- create_accessor(usage_tuple)
   fetch_climate <- create_accessor(climate)
