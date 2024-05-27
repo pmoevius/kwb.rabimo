@@ -7,7 +7,7 @@ plumber_file <- system.file(
   mustWork = TRUE
 )
 
-writeLines(readLines(plumber_file))
+#plumber_file <- "./inst/scripts/plumber.R"
 
-plumber_router <- plumber::pr(plumber_file)
-plumber::pr_run(plumber_router)
+pr <- plumber::pr(plumber_file)
+plumber::pr_run(pr)
