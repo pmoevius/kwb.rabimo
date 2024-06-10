@@ -1,23 +1,18 @@
-### Optionally: specify GitHub Personal Access Token (GITHUB_PAT)
-### See here why this might be important for you:
-### https://kwb-r.github.io/kwb.pkgbuild/articles/install.html#set-your-github_pat
-
-#
-# 
 # # Install package "remotes" from CRAN
 # if (! require("remotes")) {
 #   install.packages("remotes", repos = "https://cloud.r-project.org")
 # }
-# 
-# Install KWB package 'kwb.rabimo' from GitHub
-# remotes::install_github("KWB-R/kwb.rabimo@dev", force = TRUE)
 
-# kwb.utils::assignPackageObjects("kwb.rabimo")    
+# Install KWB package 'kwb.rabimo' from GitHub
+#Sys.unsetenv("GITHUB_PAT")
+# remotes::install_github("KWB-R/kwb.utils@dev")
+# remotes::install_github("KWB-R/kwb.rabimo@add-functions-for-calibration", force = TRUE, upgrade = FALSE)
+# remotes::install_github("pmoevius/kwb.rabimo@add-functions-for-calibration", force = TRUE, upgrade = FALSE)
+
 # load pakets
 
 library(magrittr)
 library(ggplot2)
-source(system.file("scripts/calibration-stormwater.R", package = "kwb.rabimo"))
 
 # Preparations for running R-ABIMO & WaBiLa
 inputs <- kwb.rabimo::rabimo_inputs_2020
@@ -27,7 +22,7 @@ data <- inputs$data
 # mean(data$prec_s/data$prec_yr) # ~0.5
 # mean(data$epot_s/data$epot_yr) # ~0.8
 
-# Precepation and "Climate", plus every possibility 
+# Precepation and "Climate", plus every possibility
 epot_yr <- as.integer(c(400, 450, 500, 550, 600, 650, 700, 750, 800))
 prec_yr <- epot_yr + 25L
 
@@ -42,7 +37,7 @@ areas <- kwb.utils::callWith(kwb.rabimo::generate_rabimo_area, areas_climate, ro
 
 # Bagrov_Value Data Frame
 
-bagrov_values <- seq(0.2, 5, by = 0.2)
+bagrov_values <- seq(0.2, 5, by = 0.15)
 
 # Calculate R-ABIMO and correct Format for comparrision with WaBiLa
 
@@ -56,11 +51,11 @@ results_rabimo_df <- dplyr::bind_rows(results_rabimo)
 
 result_columns <- c("surface_runoff", "infiltration", "evaporation")
 
-results_rabimo_df_shares <- results_rabimo_df[, result_columns] %>% 
-  as.matrix() %>% 
-  apply(MARGIN = 1L, FUN = kwb.utils::percentageOfSum, simplify = FALSE) %>% 
-  do.call(what = rbind) %>% 
-  `/`(100) %>% 
+results_rabimo_df_shares <- results_rabimo_df[, result_columns] %>%
+  as.matrix() %>%
+  apply(MARGIN = 1L, FUN = kwb.utils::percentageOfSum, simplify = FALSE) %>%
+  do.call(what = rbind) %>%
+  `/`(100) %>%
   as.data.frame()
 
 # Calculate WaBiLa
@@ -71,13 +66,13 @@ wabila_inputs <- split(wabila_inputs_df, seq_len(nrow(wabila_inputs_df)))
 
 # actual calculation
 
-results_wabila <- lapply(wabila_inputs, FUN = calculate_wabila_green_roof, height = 100, kf = 70, w_diff = 0.5)
+results_wabila <- lapply(wabila_inputs, FUN = kwb.rabimo:::calculate_wabila_green_roof, height = 100, kf = 70, w_diff = 0.5)
 results_wabila_df <- as.data.frame(do.call(rbind, results_wabila))
 names(results_wabila_df) <- result_columns
 
 # Calculate Delta-mod
 
-delta_mod <- calculate_delta_mod(results_rabimo_df_shares, results_wabila_df, has_codes = FALSE)
+delta_mod <- kwb.rabimo:::calculate_delta_mod(results_rabimo_df_shares, results_wabila_df, has_codes = FALSE)
 
 deviation_table <- cbind(
   kwb.utils::addSuffixToColumns(results_rabimo_df_shares, ".rabimo") ,
@@ -88,14 +83,14 @@ deviation_table <- cbind(
 
 deviation_table["epot_by_prec"] <- deviation_table["epot_yr"]/deviation_table["prec_yr"]
 
-# Hauke Methode Analysis
-min_bagrov_values <- deviation_table %>% 
-  dplyr::group_by(code) %>% 
+# Hauke Analysis method
+min_bagrov_values <- deviation_table %>%
+  dplyr::group_by(code) %>%
   dplyr::summarise(bagrov = bagrov[which.min(delta_mod)])
 
 sort(table(min_bagrov_values$bagrov))
 
-# Analysis with ggplot2 
+# Analysis with ggplot2
 
 ggplot(deviation_table, mapping = aes(
   x = bagrov,
