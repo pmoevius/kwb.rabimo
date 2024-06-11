@@ -19,12 +19,13 @@ inputs <- kwb.rabimo::rabimo_inputs_2020
 config <- inputs$config
 data <- inputs$data
 
+# Factor
 # mean(data$prec_s/data$prec_yr) # ~0.5
 # mean(data$epot_s/data$epot_yr) # ~0.8
 
 # Precepation and "Climate", plus every possibility
-epot_yr <- as.integer(c(400, 450, 500, 550, 600, 650, 700, 750, 800))
-prec_yr <- epot_yr + 25L
+epot_yr <- as.integer(c(seq(350, 900, by = 10)))
+prec_yr <- epot_yr + 5L
 
 climates <- kwb.utils::expandGrid(epot_yr = epot_yr, prec_yr = prec_yr)
 climates$epot_s <- as.integer(round(climates$epot_yr * 0.8))
@@ -37,7 +38,7 @@ areas <- kwb.utils::callWith(kwb.rabimo::generate_rabimo_area, areas_climate, ro
 
 # Bagrov_Value Data Frame
 
-bagrov_values <- seq(0.2, 5, by = 0.15)
+bagrov_values <- seq(0.2, 5, by = 0.1)
 
 # Calculate R-ABIMO and correct Format for comparrision with WaBiLa
 
@@ -100,9 +101,7 @@ ggplot(deviation_table, mapping = aes(
 )) +
   #geom_line()+
   geom_boxplot() +
-  scale_x_continuous(n.breaks = 50)
+  scale_x_continuous(n.breaks = 40)
   #geom_point()
   #facet_grid(vars(epot_yr), vars(prec_yr))
   #theme(legend.position = "none")
-
-#kwb.utils::hsOpenWindowsExplorer(system.file("scripts", package = "kwb.rabimo"))
