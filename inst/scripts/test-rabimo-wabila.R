@@ -14,7 +14,7 @@
 library(magrittr)
 library(ggplot2)
 
-# Preparations for running R-ABIMO & WaBiLa
+######################### Preparations for running R-ABIMO & WaBiLa #########################
 inputs <- kwb.rabimo::rabimo_inputs_2020
 config <- inputs$config
 data <- inputs$data
@@ -34,13 +34,17 @@ areas_climate <- cbind(code = sprintf("%03d", seq_len(nrow(climates))), climates
 
 # generate SimAreas
 
-areas <- kwb.utils::callWith(kwb.rabimo::generate_rabimo_area, areas_climate, roof = 1, green_roof = 1, pvd = 0)
+areas <- kwb.utils::callWith(kwb.rabimo::generate_rabimo_area, areas_climate, roof = 0.5, green_roof = 1, pvd = 0.5)
 
 # Bagrov_Value Data Frame
 
 bagrov_values <- seq(0.2, 5, by = 0.1)
 
-# Calculate R-ABIMO and correct Format for comparrision with WaBiLa
+########### Calculate R-ABIMO and correct Format for comparrission with WaBiLa #################
+
+result_columns <- c("surface_runoff", "infiltration", "evaporation")
+
+# for different Bagrov-Value
 
 results_rabimo <- lapply(bagrov_values, FUN = function(bagrov){
   config$bagrov_values["green_roof"] <- bagrov
@@ -50,7 +54,12 @@ results_rabimo <- lapply(bagrov_values, FUN = function(bagrov){
 
 results_rabimo_df <- dplyr::bind_rows(results_rabimo)
 
-result_columns <- c("surface_runoff", "infiltration", "evaporation")
+# for identical Bagrov-Value
+
+config$bagrov_values["green_roof"] <- 0.7
+results_rabimo_df <- kwb.rabimo::run_rabimo(areas, config = config)
+
+# correct form (do always)
 
 results_rabimo_df_shares <- results_rabimo_df[, result_columns] %>%
   as.matrix() %>%
@@ -59,7 +68,8 @@ results_rabimo_df_shares <- results_rabimo_df[, result_columns] %>%
   `/`(100) %>%
   as.data.frame()
 
-# Calculate WaBiLa
+#################################### Calculate WaBiLa ##########################################
+
 # Prepare WaBiLa inputs and connect them to climate
 
 wabila_inputs_df <- dplyr::left_join(results_rabimo_df, areas_climate, by = "code")
@@ -71,9 +81,11 @@ results_wabila <- lapply(wabila_inputs, FUN = kwb.rabimo:::calculate_wabila_gree
 results_wabila_df <- as.data.frame(do.call(rbind, results_wabila))
 names(results_wabila_df) <- result_columns
 
-# Calculate Delta-mod
+################################## Calculate Delta-mod ... #####################################
 
 delta_mod <- kwb.rabimo:::calculate_delta_mod(results_rabimo_df_shares, results_wabila_df, has_codes = FALSE)
+
+# use when different Bagrov-Value
 
 deviation_table <- cbind(
   kwb.utils::addSuffixToColumns(results_rabimo_df_shares, ".rabimo") ,
@@ -82,9 +94,25 @@ deviation_table <- cbind(
   wabila_inputs_df[c("bagrov", "epot_yr", "prec_yr", "code")]
 )
 
+# use when identical Bagrov-Value
+
+deviation_table <- cbind(
+  kwb.utils::addSuffixToColumns(results_rabimo_df_shares, ".rabimo") ,
+  kwb.utils::addSuffixToColumns(results_wabila_df, ".wabila") ,
+  delta_mod ,
+  wabila_inputs_df[c("epot_yr", "prec_yr", "code")]
+)
+
+deviation_table["bagrov"] <- 0.7
+
+# do always
+
 deviation_table["epot_by_prec"] <- deviation_table["epot_yr"]/deviation_table["prec_yr"]
 
+###################################### Analysis ################################################
+
 # Hauke Analysis method
+
 min_bagrov_values <- deviation_table %>%
   dplyr::group_by(code) %>%
   dplyr::summarise(bagrov = bagrov[which.min(delta_mod)])
@@ -101,7 +129,12 @@ ggplot(deviation_table, mapping = aes(
 )) +
   #geom_line()+
   geom_boxplot() +
-  scale_x_continuous(n.breaks = 40)
+  scale_x_continuous(n.breaks = 30) +
+  labs(x = "Bagrov-Value",
+       y = "Delta_mod",
+       title = "Impact Bagrov") +
+  theme_bw() +
+  theme(plot.title = element_text(hjust = 0.5))
   #geom_point()
   #facet_grid(vars(epot_yr), vars(prec_yr))
   #theme(legend.position = "none")
